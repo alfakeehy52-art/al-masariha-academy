@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>الإعدادات</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    body{margin:0;font-family:'Cairo',sans-serif;background:linear-gradient(180deg,#09111f 0%, #0d1628 100%);color:#ecf2ff}
+    .wrap{width:min(900px, calc(100% - 32px));margin:40px auto}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid rgba(255,255,255,.08);border-radius:24px;padding:26px;box-shadow:0 18px 45px rgba(0,0,0,.22)}
+    h1{margin:0 0 10px;font-size:34px}
+    p{color:#9fb0d1;line-height:1.9}
+    .btn{display:inline-block;margin-top:18px;padding:12px 16px;border-radius:14px;text-decoration:none;font-weight:800}
+    .btn-main{background:linear-gradient(135deg,#d4af37,#f5d46b);color:#1a1a1a}
+    .btn-site{background:rgba(255,255,255,.06);color:#fff;border:1px solid rgba(255,255,255,.10);margin-right:10px}
+  </style>
+  <script>
+  if (localStorage.getItem("adminLoggedIn") !== "true") {
+    window.location.href = "admin_login.html";
+  }
+  function adminLogout(){
+    localStorage.removeItem("adminLoggedIn");
+    window.location.href = "admin_login.html";
+  }
+  </script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <h1>الإعدادات</h1>
+      <p>هذه صفحة مبدئية للإعدادات حتى لا يبقى الرابط مكسورًا. لاحقًا نضع فيها إعدادات الأكاديمية، الهوية، والتنقل العام.</p>
+      <a href="admin_dashboard.html" class="btn btn-main">العودة إلى لوحة الإدارة</a>
+      <a href="../index.html" class="btn btn-site">العودة إلى الموقع</a>
+    </div>
+  </div>
+
+  <script src="admin_sidebar.js"></script>
+</body>
+</html>

@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>إدارة الطلبات | أكاديمية المسارحة</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#09111f;--bg-2:#0d1628;--line:rgba(255,255,255,.08);--text:#ecf2ff;--muted:#9fb0d1;--gold:#d4af37;--gold-2:#f5d46b;--shadow:0 18px 45px rgba(0,0,0,.22);--radius:22px}
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;font-family:'Cairo',sans-serif;background:linear-gradient(180deg,var(--bg) 0%, var(--bg-2) 100%);color:var(--text)}
+    body{min-height:100vh}
+    .layout{display:grid;grid-template-columns:290px 1fr;min-height:100vh}
+    .sidebar{background:linear-gradient(180deg, rgba(212,175,55,.12), rgba(255,255,255,.02));border-left:1px solid var(--line);padding:26px 18px;position:sticky;top:0;height:100vh}
+    .brand{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:var(--shadow);margin-bottom:20px}
+    .brand h1{margin:0;font-size:22px;color:var(--gold-2);font-weight:800}
+    .brand p{margin:8px 0 0;color:var(--muted);line-height:1.8;font-size:14px}
+    .main{padding:26px}
+    .topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+    .title-box h2{margin:0;font-size:32px;font-weight:900}
+    .title-box p{margin:8px 0 0;color:var(--muted);font-size:14px;line-height:1.9}
+    .actions{display:flex;gap:12px;flex-wrap:wrap}
+    .btn{display:inline-flex;align-items:center;justify-content:center;padding:14px 18px;border-radius:16px;text-decoration:none;font-weight:900;border:1px solid var(--line);cursor:pointer;font-family:inherit;font-size:15px}
+    .btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold-2));color:#1a1a1a}
+    .btn-secondary{background:rgba(255,255,255,.04);color:#fff}
+    .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:22px}
+    .stat{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:var(--shadow)}
+    .stat span{display:block;color:var(--muted);font-size:13px;margin-bottom:8px;font-weight:700}
+    .stat strong{font-size:28px;color:var(--gold-2);font-weight:900}
+    .card{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+    .card-head{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+    .card-head h3{margin:0;font-size:24px;font-weight:900}
+    .card-head p{margin:0;color:var(--muted);font-size:13px}
+    .card-body{padding:20px}
+    .filters{display:grid;grid-template-columns:1.2fr repeat(4,.8fr) auto;gap:14px;margin-bottom:18px}
+    input,select,textarea{width:100%;background:rgba(7,12,22,.72);color:var(--text);border:1px solid rgba(255,255,255,.10);border-radius:14px;padding:14px 16px;font-family:inherit;font-size:14px;outline:none}
+    input:focus,select:focus,textarea:focus{border-color:rgba(212,175,55,.4);box-shadow:0 0 0 3px rgba(212,175,55,.10)}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:16px 14px;text-align:right;border-bottom:1px solid rgba(255,255,255,.06);vertical-align:top}
+    th{color:#dfe7ff;font-size:14px;font-weight:800}
+    td{color:#eef2ff;font-size:14px}
+    .request-title{font-weight:900;display:block;margin-bottom:4px}
+    .subtext{color:var(--muted);font-size:12px;line-height:1.7}
+    .tag{display:inline-flex;align-items:center;justify-content:center;padding:8px 12px;border-radius:999px;font-weight:900;font-size:12px;border:1px solid transparent;white-space:nowrap}
+    .tag-type{background:rgba(55,125,255,.12);border-color:rgba(55,125,255,.22);color:#b9d2ff}
+    .status-new{background:rgba(213,143,42,.13);border-color:rgba(213,143,42,.22);color:#ffd89d}
+    .status-review{background:rgba(55,125,255,.13);border-color:rgba(55,125,255,.22);color:#bdd0ff}
+    .status-approved{background:rgba(39,174,96,.13);border-color:rgba(39,174,96,.22);color:#bdf3d1}
+    .status-rejected{background:rgba(224,91,91,.13);border-color:rgba(224,91,91,.22);color:#ffd0d0}
+    .status-pending{background:rgba(212,175,55,.13);border-color:rgba(212,175,55,.22);color:#ffe79c}
+    .row-actions{display:flex;gap:8px;flex-wrap:wrap}
+    .mini-btn{background:rgba(255,255,255,.04);color:#fff;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px 12px;font-family:inherit;font-weight:900;cursor:pointer;font-size:13px}
+    .mini-btn.accept{border-color:rgba(39,174,96,.26);color:#bdf3d1}.mini-btn.reject{border-color:rgba(224,91,91,.26);color:#ffd0d0}.mini-btn.review{border-color:rgba(55,125,255,.26);color:#bdd0ff}.mini-btn.more{border-color:rgba(212,175,55,.26);color:#ffe79c}
+    .note-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:22px}
+    .note-box{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:var(--shadow)}
+    .note-box h4{margin:0 0 10px;font-size:20px;font-weight:900}.note-box p{margin:0;color:var(--muted);line-height:1.9;font-size:14px}
+    .modal-overlay{position:fixed;inset:0;background:rgba(3,8,18,.72);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:18px;z-index:9999}
+    .modal-overlay.show{display:flex}.modal{width:min(980px,100%);max-height:90vh;overflow:auto;background:linear-gradient(180deg, rgba(18,27,47,.98), rgba(11,18,33,.98));border:1px solid rgba(255,255,255,.10);border-radius:28px;box-shadow:0 24px 70px rgba(0,0,0,.40)}
+    .modal-head{padding:22px 24px;border-bottom:1px solid rgba(255,255,255,.08);display:flex;align-items:flex-start;justify-content:space-between;gap:16px}.modal-head h3{margin:0;font-size:28px;font-weight:900}.modal-head p{margin:8px 0 0;color:var(--muted);font-size:14px;line-height:1.8}
+    .close-btn{width:46px;height:46px;min-width:46px;border-radius:14px;border:1px solid rgba(255,255,255,.10);background:rgba(255,255,255,.04);color:#fff;font-size:22px;font-weight:900;cursor:pointer}
+    .modal-body{padding:24px}.detail-grid{display:grid;grid-template-columns:1.1fr .9fr;gap:20px}.panel{background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);border-radius:22px;padding:18px}.panel h4{margin:0 0 14px;font-size:20px;font-weight:900}
+    .detail-list{display:grid;gap:12px}.detail-item{display:flex;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid rgba(255,255,255,.06)}.detail-item:last-child{border-bottom:none}.detail-item strong{color:var(--muted);font-size:13px}.detail-item span{color:#fff;font-weight:800;text-align:left}
+    .request-note{margin-top:14px;padding:14px;border-radius:18px;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.08);color:var(--muted);line-height:1.9;font-size:14px}
+    .modal-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}.action-btn{border:none;border-radius:16px;padding:14px 18px;font-family:inherit;font-weight:900;cursor:pointer;font-size:14px}
+    .action-accept{background:rgba(39,174,96,.15);color:#caffdd;border:1px solid rgba(39,174,96,.28)}.action-reject{background:rgba(224,91,91,.15);color:#ffd7d7;border:1px solid rgba(224,91,91,.28)}.action-pending{background:rgba(212,175,55,.15);color:#ffe79c;border:1px solid rgba(212,175,55,.28)}.action-secondary{background:rgba(255,255,255,.05);color:#fff;border:1px solid rgba(255,255,255,.08)}
+    @media (max-width:1280px){.stats{grid-template-columns:repeat(3,1fr)}.filters{grid-template-columns:1fr 1fr 1fr}}
+    @media (max-width:1100px){.layout{grid-template-columns:1fr}.sidebar{position:relative;height:auto;border-left:none;border-bottom:1px solid var(--line)}.stats{grid-template-columns:repeat(2,1fr)}.note-grid,.detail-grid{grid-template-columns:1fr}}
+    @media (max-width:780px){.stats{grid-template-columns:1fr}.filters{grid-template-columns:1fr}.card-head{align-items:flex-start}th,td{padding:12px 10px;font-size:13px}.row-actions{flex-direction:column}.mini-btn{width:100%}.modal-head h3{font-size:22px}}
+  
+    .toast-wrap{position:fixed;left:20px;bottom:20px;display:flex;flex-direction:column;gap:10px;z-index:10001}
+    .toast{
+      min-width:280px;max-width:420px;padding:14px 16px;border-radius:16px;
+      border:1px solid rgba(255,255,255,.10);
+      background:linear-gradient(180deg, rgba(18,27,47,.98), rgba(11,18,33,.98));
+      color:#fff;box-shadow:0 20px 45px rgba(0,0,0,.35);
+      font-size:14px;line-height:1.8;font-weight:800;
+      animation:toastIn .22s ease;
+    }
+    .toast.success{border-color:rgba(39,174,96,.32);color:#ccffdf}
+    .toast.warn{border-color:rgba(212,175,55,.32);color:#ffe79c}
+    .toast.error{border-color:rgba(224,91,91,.32);color:#ffd7d7}
+    @keyframes toastIn{
+      from{transform:translateY(10px);opacity:0}
+      to{transform:translateY(0);opacity:1}
+    }
+
+  </style>
+  <script>
+    if (localStorage.getItem('adminLoggedIn') !== 'true') {
+      window.location.href = 'admin_login.html';
+    }
+    function adminLogout(){
+      localStorage.removeItem('adminLoggedIn');
+      window.location.href = 'admin_login.html';
+    }
+  </script>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>أكاديمية كرة القدم</h1>
+        <p>مركز إدارة طلبات الانضمام والمراجعة والاعتماد قبل إنشاء العضويات والبطاقات.</p>
+      </div>
+      <div id="admin-sidebar"></div>
+    </aside>
+
+    <main class="main">
+      <div class="topbar">
+        <div class="title-box">
+          <h2>إدارة الطلبات</h2>
+          <p>هذه الصفحة تمثل نقطة التحويل بين الطلبات القادمة من صفحة "انضم إلينا" وبين العضويات الفعلية التي ستُعتمد لاحقًا داخل النظام.</p>
+        </div>
+        <div class="actions">
+          <button type="button" class="btn btn-secondary" id="exportRequestsBtn">تصدير الطلبات</button>
+          <button type="button" class="btn btn-primary" id="reviewNewRequestsBtn">مراجعة الطلبات الجديدة</button>
+        </div>
+      </div>
+
+      <section class="stats">
+        <div class="stat"><span>إجمالي الطلبات</span><strong>42</strong></div>
+        <div class="stat"><span>طلبات جديدة</span><strong>11</strong></div>
+        <div class="stat"><span>جاهز للمراجعة</span><strong>8</strong></div>
+        <div class="stat"><span>تم اعتمادها</span><strong>17</strong></div>
+        <div class="stat"><span>بانتظار استكمال</span><strong>6</strong></div>
+      </section>
+
+      <section class="card">
+        <div class="card-head"><div><h3>سجل الطلبات</h3><p>فلترة حسب النوع والحالة والبحث بالاسم أو رقم الجوال.</p></div></div>
+        <div class="card-body">
+          <div class="filters">
+            <input type="text" id="searchInput" placeholder="ابحث بالاسم أو الجوال أو البريد..." />
+            <select id="typeFilter"><option>كل أنواع الطلبات</option><option>لاعب</option><option>ولي أمر</option><option>مدرب</option><option>داعم</option><option>متطوع</option></select>
+            <select id="statusFilter"><option>الطلبات النشطة</option><option>كل الحالات</option><option>جديد</option><option>جاهز للمراجعة</option><option>مقبول</option><option>مرفوض</option><option>بانتظار استكمال</option></select>
+            <select id="dateFilter"><option>الكل</option><option>اليوم</option><option>آخر 7 أيام</option><option>هذا الشهر</option></select>
+            <select id="sortFilter"><option>ترتيب: الأحدث أولاً</option><option>الأقدم أولاً</option><option>الأعلى أولوية</option></select>
+            <button class="btn btn-secondary" type="button" id="applyFiltersBtn">تصفية</button>
+          </div>
+          <div style="overflow:auto;">
+            <table>
+              <thead><tr><th>رقم المرجع</th><th>الطلب</th><th>النوع</th><th>الحالة</th><th>بيانات التواصل</th><th>تاريخ الإرسال</th><th>الإجراءات</th></tr></thead>
+              <tbody id="requestsTableBody">
+                <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px 14px;font-weight:800">جاري تحميل الطلبات من قاعدة البيانات...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+
+      <section class="note-grid">
+        <article class="note-box"><h4>دور هذه الصفحة في النظام</h4><p>هذه الصفحة لا تمثل العضوية نفسها، بل تمثل مرحلة ما قبل العضوية. كل ما يأتي من صفحة "انضم إلينا" يجب أن يمر هنا أولاً: طلب جديد → مراجعة → قبول / رفض / استكمال → تحويل إلى عضو فعلي.</p></article>
+        <article class="note-box"><h4>الربط الحالي</h4><p>هذه الصفحة مرتبطة الآن بقاعدة البيانات، وتدعم قبول اللاعب والمدرب وولي الأمر، مع إنشاء السجلات وربط ولي الأمر باللاعب عند توفر بيانات الربط.</p></article>
+      </section>
+    </main>
+  </div>
+
+  <div class="modal-overlay" id="requestModal">
+    <div class="modal">
+      <div class="modal-head">
+        <div><h3>تفاصيل الطلب</h3><p id="modalSubtitle">بيانات تفصيلية للطلب المختار</p></div>
+        <button class="close-btn" type="button" id="closeModal">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="detail-grid">
+          <section class="panel">
+            <h4>البيانات الأساسية</h4>
+            <div class="detail-list">
+              <div class="detail-item"><strong>الاسم الكامل</strong><span id="d_name">-</span></div>
+              <div class="detail-item"><strong>نوع الطلب</strong><span id="d_type">-</span></div>
+              <div class="detail-item"><strong>الحالة</strong><span id="d_status">-</span></div>
+              <div class="detail-item"><strong>رقم المرجع</strong><span id="d_reference">-</span></div>
+              <div class="detail-item"><strong>رقم الجوال</strong><span id="d_phone">-</span></div>
+              <div class="detail-item"><strong>البريد الإلكتروني</strong><span id="d_email">-</span></div>
+              <div class="detail-item"><strong>تاريخ الإرسال</strong><span id="d_date">-</span></div>
+            </div>
+          </section>
+          <section class="panel">
+            <h4>تفاصيل إضافية</h4>
+            <div class="detail-list">
+              <div class="detail-item"><strong>الفئة / المسار</strong><span id="d_category">-</span></div>
+              <div class="detail-item"><strong>المركز / الغرض</strong><span id="d_position">-</span></div>
+              <div class="detail-item"><strong>المستوى / العلاقة</strong><span id="d_level">-</span></div>
+              <div class="detail-item"><strong>المدينة</strong><span id="d_city">-</span></div>
+              <div class="detail-item"><strong>الأولوية</strong><span id="d_priority">-</span></div>
+              <div class="detail-item"><strong>المرفقات</strong><span id="d_files">لا توجد حاليًا</span></div>
+            </div>
+          </section>
+        </div>
+        <div class="request-note" id="d_notes">-</div>
+        <div class="modal-actions">
+          <button class="action-btn action-accept" type="button" id="modalAcceptBtn">قبول الطلب</button>
+          <button class="action-btn action-reject" type="button" id="modalRejectBtn">رفض الطلب</button>
+          <button class="action-btn action-pending" type="button" id="modalCompleteBtn">طلب استكمال</button>
+          <button class="action-btn action-secondary" type="button" id="closeModal2">إغلاق</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast-wrap" id="toastWrap"></div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="admin_sidebar.js"></script>
+  <script>
+    const SUPABASE_URL = "https://uwmyqlydenrzkzrymhvl.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3bXlxbHlkZW5yemt6cnltaHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NDQ2NjAsImV4cCI6MjA5MzAyMDY2MH0.TCPgHAHhILaD5tFsZiFIgLvH7yuxkrtJ29F5J5oHQrw";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let requests = [];
+    let currentRequestId = null;
+
+    const modal = document.getElementById('requestModal');
+    const closeModal = document.getElementById('closeModal');
+    const closeModal2 = document.getElementById('closeModal2');
+    const modalAcceptBtn = document.getElementById('modalAcceptBtn');
+    const modalRejectBtn = document.getElementById('modalRejectBtn');
+    const modalCompleteBtn = document.getElementById('modalCompleteBtn');
+
+    const TYPE_LABELS = {
+      player:'لاعب',
+      guardian:'ولي أمر',
+      coach:'مدرب',
+      supporter:'داعم',
+      volunteer:'متطوع'
+    };
+
+    const STATUS_LABELS = {
+      new:'جديد',
+      review:'جاهز للمراجعة',
+      reviewing:'جاهز للمراجعة',
+      approved:'مقبول',
+      rejected:'مرفوض',
+      pending:'بانتظار استكمال',
+      needs_completion:'بانتظار استكمال'
+    };
+
+    function showToast(message, type = 'success'){
+      const wrap = document.getElementById('toastWrap');
+      if (!wrap) return;
+      const toast = document.createElement('div');
+      toast.className = 'toast ' + type;
+      toast.textContent = message;
+      wrap.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        toast.style.transform = 'translateY(8px)';
+        toast.style.transition = '.2s ease';
+        setTimeout(() => toast.remove(), 220);
+      }, 2800);
+    }
+
+    function escapeHtml(value){
+      return String(value ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    function formatDate(value){
+      if (!value) return '-';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return String(value);
+      return date.toLocaleDateString('ar-SA', { year:'numeric', month:'2-digit', day:'2-digit' });
+    }
+
+    function formatTime(value){
+      if (!value) return '';
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return '';
+      return date.toLocaleTimeString('ar-SA', { hour:'2-digit', minute:'2-digit' });
+    }
+
+    function getTypeLabel(type){ return TYPE_LABELS[type] || type || '-'; }
+    function getStatusLabel(status){ return STATUS_LABELS[status] || status || 'جديد'; }
+
+    function getReferenceCode(request){
+      if (request.reference_code) return request.reference_code;
+      const date = request.created_at ? new Date(request.created_at) : new Date();
+      const yyyy = date.getFullYear();
+      const mm = String(date.getMonth() + 1).padStart(2, '0');
+      const dd = String(date.getDate()).padStart(2, '0');
+      const shortId = String(request.id || '').replace(/-/g, '').slice(0, 6).toUpperCase() || '000000';
+      return `REQ-${yyyy}${mm}${dd}-${shortId}`;
+    }
+
+    function isActiveRequest(request){
+      const status = String(request.status || 'new');
+      return ['new', 'review', 'reviewing', 'pending', 'needs_completion'].includes(status);
+    }
+
+    function getStatusClass(status){
+      const label = getStatusLabel(status);
+      if (label === 'جديد') return 'status-new';
+      if (label === 'جاهز للمراجعة') return 'status-review';
+      if (label === 'مقبول') return 'status-approved';
+      if (label === 'مرفوض') return 'status-rejected';
+      return 'status-pending';
+    }
+
+    function getRequestCategory(request){
+      if (request.request_type === 'player') return request.age_category || 'لاعب';
+      if (request.request_type === 'guardian') return request.guardian_goal || 'ولي أمر';
+      if (request.request_type === 'coach') return request.coach_specialty || request.specialty || request.coach_category || request.category || 'مدرب';
+      if (request.request_type === 'supporter') return request.support_level || request.support_type || 'داعم';
+      if (request.request_type === 'volunteer') return request.volunteer_field || 'متطوع';
+      return '-';
+    }
+
+    function getRequestPosition(request){
+      if (request.request_type === 'player') return request.position || '-';
+      if (request.request_type === 'guardian') return request.relationship || request.child_name || '-';
+      if (request.request_type === 'coach') return request.coach_job_title || request.job_title || request.coach_certification || request.certification || '-';
+      if (request.request_type === 'supporter') return request.support_method || request.entity_name || '-';
+      if (request.request_type === 'volunteer') return request.availability || '-';
+      return '-';
+    }
+
+    function getRequestLevel(request){
+      if (request.request_type === 'player') return request.player_age ? `العمر: ${request.player_age}` : 'طلب لاعب';
+      if (request.request_type === 'guardian') return request.children_count ? `عدد الأبناء: ${request.children_count}` : 'ولي أمر';
+      if (request.request_type === 'coach') { const y = request.coach_experience_years || request.experience_years; return y ? `${y} سنة خبرة` : 'مدرب'; }
+      if (request.request_type === 'supporter') return request.support_type || 'داعم';
+      if (request.request_type === 'volunteer') return 'تطوع';
+      return '-';
+    }
+
+    function getRequestNotes(request){
+      return request.player_notes || request.guardian_notes || request.coach_notes || request.bio || request.notes || request.support_notes || request.volunteer_notes || '-';
+    }
+
+    function buildSubtext(request){
+      return [`طلب ${getTypeLabel(request.request_type)}`, getRequestCategory(request), getRequestPosition(request)].filter(Boolean).join(' - ');
+    }
+
+    async function fetchRequests(){
+      const tbody = document.getElementById('requestsTableBody');
+      if (tbody) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px 14px;font-weight:800">جاري تحميل الطلبات من قاعدة البيانات...</td></tr>';
+      }
+
+      const { data, error } = await supabaseClient
+        .from('join_requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Supabase fetch error:', error);
+        if (tbody) {
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#ffd0d0;padding:26px 14px;font-weight:800">تعذر تحميل الطلبات من قاعدة البيانات. تأكد من جدول join_requests وسياسات RLS.</td></tr>';
+        }
+        showToast('تعذر تحميل الطلبات من قاعدة البيانات.', 'error');
+        return;
+      }
+
+      requests = Array.isArray(data) ? data : [];
+      renderRequestsTable();
+    }
+
+    function getFilteredRequests(){
+      const search = (document.getElementById('searchInput')?.value || '').trim().toLowerCase();
+      const typeFilter = document.getElementById('typeFilter')?.value || 'كل أنواع الطلبات';
+      const statusFilter = document.getElementById('statusFilter')?.value || 'الطلبات النشطة';
+      const dateFilter = document.getElementById('dateFilter')?.value || 'الكل';
+      const sortFilter = document.getElementById('sortFilter')?.value || 'ترتيب: الأحدث أولاً';
+      const now = new Date();
+
+      let data = [...requests];
+
+      data = data.filter(request => {
+        const textBlob = [
+          getReferenceCode(request),
+          request.full_name, request.phone, request.email, request.city,
+          getRequestCategory(request), getRequestPosition(request), getRequestNotes(request)
+        ].join(' ').toLowerCase();
+
+        const matchesSearch = !search || textBlob.includes(search);
+        const matchesType = typeFilter === 'كل أنواع الطلبات' || getTypeLabel(request.request_type) === typeFilter;
+        const matchesStatus = statusFilter === 'الطلبات النشطة'
+          ? isActiveRequest(request)
+          : (statusFilter === 'كل الحالات' || getStatusLabel(request.status || 'new') === statusFilter);
+
+        let matchesDate = true;
+        if (dateFilter !== 'الكل' && request.created_at){
+          const created = new Date(request.created_at);
+          if (dateFilter === 'اليوم') matchesDate = created.toDateString() === now.toDateString();
+          else if (dateFilter === 'آخر 7 أيام') matchesDate = (now - created) <= 7 * 24 * 60 * 60 * 1000;
+          else if (dateFilter === 'هذا الشهر') matchesDate = created.getFullYear() === now.getFullYear() && created.getMonth() === now.getMonth();
+        }
+
+        return matchesSearch && matchesType && matchesStatus && matchesDate;
+      });
+
+      data.sort((a,b) => {
+        const da = new Date(a.created_at || 0).getTime();
+        const db = new Date(b.created_at || 0).getTime();
+        if (sortFilter === 'الأقدم أولاً') return da - db;
+        return db - da;
+      });
+
+      return data;
+    }
+
+    function renderRequestsTable(){
+      const tbody = document.getElementById('requestsTableBody');
+      if (!tbody) return;
+
+      const data = getFilteredRequests();
+
+      const rows = data.map(request => {
+        const statusLabel = getStatusLabel(request.status || 'new');
+        const rejectBtn = statusLabel === 'مرفوض' ? '' : `<button class="mini-btn reject request-action" data-action="rejected" data-id="${request.id}">رفض</button>`;
+        const acceptBtn = statusLabel === 'مقبول' ? '' : `<button class="mini-btn accept request-action" data-action="approved" data-id="${request.id}">قبول</button>`;
+        const pendingLabel = statusLabel === 'بانتظار استكمال' ? 'بانتظار استكمال' : 'استكمال';
+        const referenceCode = getReferenceCode(request);
+
+        return `
+          <tr>
+            <td><span class="tag tag-type">${escapeHtml(referenceCode)}</span></td>
+            <td>
+              <span class="request-title">${escapeHtml(request.full_name || 'طلب بدون اسم')}</span>
+              <span class="subtext">${escapeHtml(buildSubtext(request))}</span>
+            </td>
+            <td><span class="tag tag-type">${escapeHtml(getTypeLabel(request.request_type))}</span></td>
+            <td><span class="tag ${getStatusClass(request.status || 'new')}">${escapeHtml(statusLabel)}</span></td>
+            <td><div>${escapeHtml(request.phone || '-')}</div><div class="subtext">${escapeHtml(request.email || '-')}</div></td>
+            <td><div>${escapeHtml(formatDate(request.created_at))}</div><div class="subtext">${escapeHtml(formatTime(request.created_at))}</div></td>
+            <td>
+              <div class="row-actions">
+                <button class="mini-btn review open-request" data-id="${request.id}">عرض</button>
+                ${acceptBtn}
+                ${rejectBtn}
+                <button class="mini-btn more request-action" data-action="pending" data-id="${request.id}">${pendingLabel}</button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }).join('');
+
+      tbody.innerHTML = rows || '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px 14px;font-weight:800">لا توجد طلبات نشطة مطابقة حاليًا.</td></tr>';
+      bindRowEvents();
+      updateStats();
+    }
+
+    function updateStats(){
+      const all = requests;
+      const setText = (selector, value) => {
+        const el = document.querySelector(selector);
+        if (el) el.textContent = value;
+      };
+      setText('.stats .stat:nth-child(1) strong', all.length);
+      setText('.stats .stat:nth-child(2) strong', all.filter(r => getStatusLabel(r.status || 'new') === 'جديد').length);
+      setText('.stats .stat:nth-child(3) strong', all.filter(r => getStatusLabel(r.status) === 'جاهز للمراجعة').length);
+      setText('.stats .stat:nth-child(4) strong', all.filter(r => getStatusLabel(r.status) === 'مقبول').length);
+      setText('.stats .stat:nth-child(5) strong', all.filter(r => getStatusLabel(r.status) === 'بانتظار استكمال').length);
+    }
+
+    function findRequest(id){
+      return requests.find(request => String(request.id) === String(id));
+    }
+
+    function openRequest(id){
+      const data = findRequest(id);
+      if(!data) return;
+
+      currentRequestId = data.id;
+      document.getElementById('modalSubtitle').textContent = getTypeLabel(data.request_type) + ' — ' + getStatusLabel(data.status || 'new');
+      document.getElementById('d_name').textContent = data.full_name || '-';
+      document.getElementById('d_type').textContent = getTypeLabel(data.request_type);
+      document.getElementById('d_status').textContent = getStatusLabel(data.status || 'new');
+      document.getElementById('d_reference').textContent = getReferenceCode(data);
+      document.getElementById('d_phone').textContent = data.phone || '-';
+      document.getElementById('d_email').textContent = data.email || '-';
+      document.getElementById('d_date').textContent = `${formatDate(data.created_at)} ${formatTime(data.created_at)}`;
+      document.getElementById('d_category').textContent = getRequestCategory(data);
+      document.getElementById('d_position').textContent = getRequestPosition(data);
+      document.getElementById('d_level').textContent = getRequestLevel(data);
+      document.getElementById('d_city').textContent = data.city || '-';
+      document.getElementById('d_priority').textContent = data.request_type === 'supporter' ? 'عالية' : 'متوسطة';
+      document.getElementById('d_notes').textContent = getRequestNotes(data);
+
+      modal.classList.add('show');
+      document.body.style.overflow = 'hidden';
+    }
+
+    function hideRequest(){
+      modal.classList.remove('show');
+      document.body.style.overflow = '';
+      currentRequestId = null;
+    }
+
+    function buildPlayerPayloadFromRequest(request){
+      const cleanCategory = String(request.age_category || '').replace('فئة ', '').trim() || null;
+      const codeSuffix = String(request.id || '').replace(/-/g, '').slice(0, 8).toUpperCase();
+
+      return {
+        source_request_id: request.id,
+        code: `PLY-${codeSuffix}`,
+        full_name: request.full_name || null,
+        phone: request.phone || null,
+        email: request.email || null,
+        city: request.city || null,
+        category: cleanCategory,
+        position: request.position || null,
+        birth_date: request.birth_date || null,
+        age: request.player_age ? Number(request.player_age) : null,
+        status: 'active',
+        player_status: 'نشط',
+        notes: request.player_notes || 'تم إنشاء اللاعب تلقائيًا من طلب الانضمام بعد اعتماد الإدارة.'
+      };
+    }
+
+    async function createPlayerFromApprovedRequest(request){
+      if (request.request_type !== 'player') return { skipped: true };
+
+      const payload = buildPlayerPayloadFromRequest(request);
+
+      const { data: existingPlayer, error: existingError } = await supabaseClient
+        .from('players')
+        .select('id')
+        .eq('source_request_id', request.id)
+        .maybeSingle();
+
+      if (existingError) throw existingError;
+      if (existingPlayer) return { exists: true };
+
+      const { error: insertError } = await supabaseClient
+        .from('players')
+        .insert([payload]);
+
+      if (insertError) throw insertError;
+      return { created: true };
+    }
+
+    function buildCoachPayloadFromRequest(request){
+      const years = request.experience_years || request.experienceYears || request.coach_experience_years || null;
+      return {
+        full_name: request.full_name || null,
+        job_title: request.job_title || request.jobTitle || request.coach_job_title || 'مدرب',
+        specialty: request.specialty || request.coach_specialty || null,
+        category: request.category || request.age_category || request.coach_category || null,
+        experience_years: years ? Number(years) : null,
+        certification: request.certification || request.coach_certification || null,
+        phone: request.phone || null,
+        status: 'نشط',
+        bio: request.bio || request.coach_bio || request.coach_notes || request.notes || null,
+        notes: request.coach_notes || request.notes || 'تم إنشاء المدرب تلقائيًا من طلب الانضمام بعد اعتماد الإدارة.',
+        image: request.image || null
+      };
+    }
+
+    async function createCoachFromApprovedRequest(request){
+      if (request.request_type !== 'coach') return { skipped: true };
+
+      const payload = buildCoachPayloadFromRequest(request);
+
+      const { data: existingCoaches, error: existingError } = await supabaseClient
+        .from('coaches')
+        .select('id')
+        .eq('full_name', payload.full_name || '')
+        .limit(1);
+
+      if (existingError) throw existingError;
+      if (Array.isArray(existingCoaches) && existingCoaches.length) return { exists: true };
+
+      const { error: insertError } = await supabaseClient
+        .from('coaches')
+        .insert([payload]);
+
+      if (insertError) throw insertError;
+      return { created: true };
+    }
+
+
+    function getGuardianMode(request){
+      const raw = String(request.guardian_goal || request.guardian_mode || request.guardian_request_type || '').trim();
+      const normalized = raw.toLowerCase();
+      if (["register_new_player", "new_player", "تسجيل لاعب جديد", "طلب تسجيل لاعب", "تسجيل لاعب", "تسجيل ولد جديد", "إضافة لاعب جديد"].includes(raw) || normalized.includes('new_player') || normalized.includes('register')) return 'new_player';
+      if (["link_existing_player", "existing_player", "ربط بلاعب موجود", "متابعة لاعب", "ولي أمر لاعب مسجل مسبقًا", "لاعب موجود"].includes(raw) || normalized.includes('existing') || normalized.includes('link')) return 'existing_player';
+      if (["guardian_member_only", "member_only", "عضوية فقط", "عضوية ولي أمر", "متابع فقط", "مشجع", "عضو"].includes(raw) || normalized.includes('member')) return 'member_only';
+      if (request.child_name || request.childName) return 'new_player';
+      if (request.existing_player_id || request.player_id || request.linked_player_id || request.existing_player_name) return 'existing_player';
+      return 'member_only';
+    }
+
+    function buildGuardianPayloadFromRequest(request){
+      return {
+        full_name: request.full_name || null,
+        phone: request.phone || null,
+        email: request.email || null,
+        city: request.city || null,
+        relationship: request.relationship || null,
+        status: 'active',
+        notes: request.guardian_notes || request.notes || null,
+        source_request_id: request.id,
+        reference_code: getReferenceCode(request)
+      };
+    }
+
+    async function createGuardianFromRequest(request){
+      if (request.request_type !== 'guardian') return null;
+
+      const payload = buildGuardianPayloadFromRequest(request);
+
+      const { data: byRequest, error: byRequestError } = await supabaseClient
+        .from('guardians')
+        .select('id')
+        .eq('source_request_id', request.id)
+        .maybeSingle();
+
+      if (byRequestError) throw byRequestError;
+      if (byRequest) return byRequest;
+
+      if (payload.phone) {
+        const { data: byPhone, error: byPhoneError } = await supabaseClient
+          .from('guardians')
+          .select('id')
+          .eq('phone', payload.phone)
+          .limit(1)
+          .maybeSingle();
+        if (byPhoneError) throw byPhoneError;
+        if (byPhone) return byPhone;
+      }
+
+      const { data, error } = await supabaseClient
+        .from('guardians')
+        .insert([payload])
+        .select('id')
+        .single();
+
+      if (error) throw error;
+      return data;
+    }
+
+    function buildPlayerPayloadFromGuardianRequest(request, guardian){
+      const codeSuffix = String(request.id || '').replace(/-/g, '').slice(0, 8).toUpperCase();
+      const childName = request.child_name || request.childName || request.player_child_name || request.full_name || 'لاعب بدون اسم';
+      const childCategory = request.guardian_player_category || request.child_category || request.child_age_category || request.age_category || request.category || null;
+      const childPosition = request.guardian_player_position || request.child_position || request.position || null;
+      const childAge = request.guardian_player_age || request.child_age || request.player_age || null;
+      const childBirthDate = request.child_birth_date || request.birth_date || null;
+
+      return {
+        source_request_id: request.id,
+        reference_code: getReferenceCode(request),
+        code: `PLY-${codeSuffix}`,
+        full_name: childName,
+        phone: request.phone || null,
+        email: request.email || null,
+        city: request.city || null,
+        category: childCategory,
+        position: childPosition,
+        birth_date: childBirthDate || null,
+        age: childAge ? Number(childAge) : null,
+        guardian_id: guardian?.id || null,
+        guardian_name: request.full_name || null,
+        status: 'active',
+        player_status: 'نشط',
+        notes: request.guardian_notes || 'تم إنشاء اللاعب تلقائيًا من طلب ولي أمر بعد اعتماد الإدارة.'
+      };
+    }
+
+    async function createPlayerForGuardianRequest(request, guardian){
+      const payload = buildPlayerPayloadFromGuardianRequest(request, guardian);
+
+      const { data: existingPlayer, error: existingError } = await supabaseClient
+        .from('players')
+        .select('id')
+        .eq('source_request_id', request.id)
+        .maybeSingle();
+
+      if (existingError) throw existingError;
+      if (existingPlayer) return existingPlayer;
+
+      const { data, error } = await supabaseClient
+        .from('players')
+        .insert([payload])
+        .select('id')
+        .single();
+
+      if (error) throw error;
+      return data;
+    }
+
+    async function findExistingPlayerForGuardian(request){
+      const directId = request.existing_player_id || request.player_id || request.linked_player_id;
+      if (directId) {
+        const { data, error } = await supabaseClient
+          .from('players')
+          .select('id')
+          .eq('id', directId)
+          .maybeSingle();
+        if (error) throw error;
+        return data;
+      }
+
+      const searchName = String(request.existing_player_search || request.existing_player_name || request.child_name || request.childName || '').trim();
+      if (!searchName) return null;
+
+      const escaped = searchName.replace(/[%_]/g, '');
+      const { data, error } = await supabaseClient
+        .from('players')
+        .select('id, full_name, code, phone')
+        .or(`full_name.ilike.%${escaped}%,code.ilike.%${escaped}%,phone.ilike.%${escaped}%`)
+        .limit(1)
+        .maybeSingle();
+
+      if (error) throw error;
+      return data;
+    }
+
+    async function linkGuardianToPlayer(player, guardian, request){
+      if (!player?.id || !guardian?.id) return;
+
+      const payload = {
+        player_id: player.id,
+        guardian_id: guardian.id,
+        relationship: request.relationship || null,
+        is_primary: true,
+        status: 'active'
+      };
+
+      const { error } = await supabaseClient
+        .from('player_guardians')
+        .upsert([payload], { onConflict: 'player_id,guardian_id' });
+
+      if (error) throw error;
+
+      const { error: updateError } = await supabaseClient
+        .from('players')
+        .update({ guardian_id: guardian.id, guardian_name: request.full_name || null })
+        .eq('id', player.id);
+      if (updateError) throw updateError;
+    }
+
+    async function handleGuardianApprovedRequest(request){
+      if (request.request_type !== 'guardian') return { skipped: true };
+
+      const guardian = await createGuardianFromRequest(request);
+      const mode = getGuardianMode(request);
+
+      if (mode === 'new_player') {
+        const player = await createPlayerForGuardianRequest(request, guardian);
+        await linkGuardianToPlayer(player, guardian, request);
+        return { guardian: true, player: true, linked: true, mode };
+      }
+
+      if (mode === 'existing_player') {
+        const player = await findExistingPlayerForGuardian(request);
+        if (player) {
+          await linkGuardianToPlayer(player, guardian, request);
+          return { guardian: true, linked: true, mode };
+        }
+        return { guardian: true, linked: false, mode };
+      }
+
+      return { guardian: true, mode };
+    }
+
+    async function updateRequestStatus(requestId, status){
+      const request = findRequest(requestId);
+      if (!request) return;
+
+      const ok = window.confirm(`تأكيد تحديث حالة الطلب إلى: ${getStatusLabel(status)}؟`);
+      if (!ok) return;
+
+      try {
+        let guardianResult = null;
+
+        if (status === 'approved' && request.request_type === 'player') {
+          await createPlayerFromApprovedRequest(request);
+        }
+
+        if (status === 'approved' && request.request_type === 'coach') {
+          await createCoachFromApprovedRequest(request);
+        }
+
+        if (status === 'approved' && request.request_type === 'guardian') {
+          guardianResult = await handleGuardianApprovedRequest(request);
+        }
+
+        const updatePayload = {
+          status,
+          reviewed_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+
+        const { error } = await supabaseClient
+          .from('join_requests')
+          .update(updatePayload)
+          .eq('id', requestId);
+
+        if (error) throw error;
+
+        request.status = status;
+        request.reviewed_at = updatePayload.reviewed_at;
+        request.updated_at = updatePayload.updated_at;
+        renderRequestsTable();
+
+        if (currentRequestId && String(currentRequestId) === String(requestId)) hideRequest();
+
+        if (status === 'approved' && request.request_type === 'player') {
+          showToast('تم قبول الطلب وإنشاء اللاعب تلقائيًا في قائمة اللاعبين.', 'success');
+        } else if (status === 'approved' && request.request_type === 'coach') {
+          showToast('تم قبول الطلب وإنشاء المدرب تلقائيًا في قائمة المدربين.', 'success');
+        } else if (status === 'approved' && request.request_type === 'guardian') {
+          if (guardianResult?.mode === 'new_player') {
+            showToast('تم قبول طلب ولي الأمر وإنشاء اللاعب وربطه بولي الأمر.', 'success');
+          } else if (guardianResult?.mode === 'existing_player' && guardianResult?.linked) {
+            showToast('تم قبول طلب ولي الأمر وربطه باللاعب الموجود.', 'success');
+          } else if (guardianResult?.mode === 'existing_player') {
+            showToast('تم إنشاء ولي الأمر، لكن لم يتم العثور على اللاعب المطلوب للربط.', 'warn');
+          } else {
+            showToast('تم قبول طلب ولي الأمر كعضوية/متابع بدون لاعب.', 'success');
+          }
+        } else {
+          showToast(`تم تحديث حالة الطلب إلى: ${getStatusLabel(status)}`, status === 'rejected' ? 'error' : 'success');
+        }
+      } catch (error) {
+        console.error('Supabase action error:', error);
+        showToast('تعذر تنفيذ العملية. راجع Console لمعرفة السبب، وتأكد من الجداول وسياسات الصلاحيات.', 'error');
+      }
+    }
+
+    function bindRowEvents(){
+      document.querySelectorAll('.open-request').forEach(btn => {
+        btn.addEventListener('click', () => openRequest(btn.dataset.id));
+      });
+
+      document.querySelectorAll('.request-action').forEach(btn => {
+        btn.addEventListener('click', () => updateRequestStatus(btn.dataset.id, btn.dataset.action));
+      });
+    }
+
+    closeModal.addEventListener('click', hideRequest);
+    closeModal2.addEventListener('click', hideRequest);
+    modal.addEventListener('click', (e) => { if(e.target === modal) hideRequest(); });
+    document.addEventListener('keydown', (e) => { if(e.key === 'Escape') hideRequest(); });
+
+    modalAcceptBtn.addEventListener('click', () => {
+      if (currentRequestId) updateRequestStatus(currentRequestId, 'approved');
+    });
+    modalRejectBtn.addEventListener('click', () => {
+      if (currentRequestId) updateRequestStatus(currentRequestId, 'rejected');
+    });
+    modalCompleteBtn.addEventListener('click', () => {
+      if (currentRequestId) updateRequestStatus(currentRequestId, 'pending');
+    });
+
+    document.getElementById('applyFiltersBtn')?.addEventListener('click', renderRequestsTable);
+    document.getElementById('searchInput')?.addEventListener('input', renderRequestsTable);
+    document.getElementById('typeFilter')?.addEventListener('change', renderRequestsTable);
+    document.getElementById('statusFilter')?.addEventListener('change', renderRequestsTable);
+    document.getElementById('dateFilter')?.addEventListener('change', renderRequestsTable);
+    document.getElementById('sortFilter')?.addEventListener('change', renderRequestsTable);
+
+    document.getElementById('reviewNewRequestsBtn')?.addEventListener('click', () => {
+      const statusFilter = document.getElementById('statusFilter');
+      if (statusFilter) statusFilter.value = 'جديد';
+      renderRequestsTable();
+      showToast('تم عرض الطلبات الجديدة فقط.', 'success');
+    });
+
+    document.getElementById('exportRequestsBtn')?.addEventListener('click', () => {
+      const rows = [['رقم المرجع','الاسم','النوع','الحالة','الجوال','البريد','التاريخ','الفئة','المركز','المدينة','الملاحظات']];
+      getFilteredRequests().forEach(request => {
+        rows.push([
+          getReferenceCode(request),
+          request.full_name || '',
+          getTypeLabel(request.request_type),
+          getStatusLabel(request.status || 'new'),
+          request.phone || '',
+          request.email || '',
+          `${formatDate(request.created_at)} ${formatTime(request.created_at)}`,
+          getRequestCategory(request),
+          getRequestPosition(request),
+          request.city || '',
+          getRequestNotes(request)
+        ]);
+      });
+      const csv = rows.map(row => row.map(value => `"${String(value).replace(/"/g,'""')}"`).join(',')).join('\n');
+      const blob = new Blob(["\ufeff" + csv], {type: 'text/csv;charset=utf-8;'});
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'academy_join_requests.csv';
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      showToast('تم تصدير الطلبات بنجاح.', 'success');
+    });
+
+    fetchRequests();
+</script>
+</body>
+</html>

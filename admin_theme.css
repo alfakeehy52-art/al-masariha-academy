@@ -1,0 +1,94 @@
+@import url("https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap");
+
+:root{
+  --admin-bg:#05110b;
+  --admin-bg-2:#06140e;
+  --admin-panel:#081a12;
+  --admin-panel-2:#0b2117;
+  --admin-soft:#10281b;
+  --admin-soft-2:#0d2318;
+  --admin-line:rgba(255,255,255,.08);
+  --admin-line-strong:rgba(213,177,90,.18);
+  --admin-gold:#d5b15a;
+  --admin-gold-soft:#f0d58f;
+  --admin-text:#f3f4ef;
+  --admin-muted:#b6c1b8;
+  --admin-green:#0d6c48;
+  --admin-danger:#b74242;
+  --admin-shadow:0 18px 45px rgba(0,0,0,.22);
+  --admin-shadow-soft:0 10px 28px rgba(0,0,0,.16);
+  --admin-radius:22px;
+  --admin-radius-sm:16px;
+}
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+html{scroll-behavior:smooth}
+body, body *{font-family:'Cairo',system-ui,sans-serif}
+body{
+  background:
+    radial-gradient(circle at top, rgba(213,177,90,.08), transparent 24%),
+    linear-gradient(180deg,#030a07,#06130d 22%, #041009 100%);
+  color:var(--admin-text);
+}
+a{color:inherit}
+input,select,textarea,button{font:inherit}
+button{cursor:pointer}
+img{max-width:100%}
+.admin-page-shell,.layout{min-height:100vh}
+.main{min-width:0}
+.panel,.card,.stat-card,.table-wrap,.empty-state{border-radius:var(--admin-radius);box-shadow:var(--admin-shadow)}
+.card,.panel,.stat-card{
+  background:linear-gradient(180deg,rgba(9,28,19,.95),rgba(5,17,11,.98));
+  border:1px solid var(--admin-line);
+}
+.empty-state{background:rgba(255,255,255,.03);border:1px dashed rgba(213,177,90,.24);color:var(--admin-muted);padding:24px;text-align:center}
+.table-wrap{overflow:auto;border:1px solid var(--admin-line);background:linear-gradient(180deg,rgba(9,28,19,.96),rgba(5,17,11,.98))}
+table{width:100%;border-collapse:collapse}
+th,td{padding:14px 12px;border-bottom:1px solid rgba(255,255,255,.06);text-align:right}
+th{color:var(--admin-gold-soft);font-weight:800;background:rgba(255,255,255,.02)}
+td{color:var(--admin-text)}
+.badge{display:inline-flex;align-items:center;justify-content:center;min-height:30px;padding:0 12px;border-radius:999px;font-size:13px;font-weight:800;border:1px solid var(--admin-line);background:rgba(255,255,255,.04)}
+.badge.gold{color:var(--admin-gold-soft);border-color:rgba(213,177,90,.25);background:rgba(213,177,90,.08)}
+.badge.green{color:#cfe9dc;border-color:rgba(13,108,72,.35);background:rgba(13,108,72,.18)}
+.badge.red{color:#ffd8d8;border-color:rgba(183,66,66,.34);background:rgba(183,66,66,.16)}
+
+/* واضح وسهل السحب */
+*{
+  scrollbar-width:auto;
+  scrollbar-color:rgba(213,177,90,.78) rgba(255,255,255,.07);
+}
+::-webkit-scrollbar{width:14px;height:14px}
+::-webkit-scrollbar-track{background:rgba(255,255,255,.06);border-radius:999px}
+::-webkit-scrollbar-thumb{
+  background:linear-gradient(180deg, rgba(240,213,143,.95), rgba(213,177,90,.82));
+  border-radius:999px;
+  border:3px solid rgba(0,0,0,.14);
+}
+::-webkit-scrollbar-thumb:hover{
+  background:linear-gradient(180deg, rgba(255,227,155,1), rgba(221,183,86,.95));
+}
+::-webkit-scrollbar-corner{background:transparent}
+
+/* تحسينات أساسية مشتركة */
+.page-section-title{margin:0 0 10px;font-size:32px;color:var(--admin-gold-soft);font-weight:900}
+.page-section-desc{margin:0;color:var(--admin-muted);line-height:1.9}
+.btn, .button{
+  display:inline-flex;align-items:center;justify-content:center;gap:10px;
+  min-height:46px;padding:0 18px;border-radius:16px;border:1px solid var(--admin-line);
+  background:rgba(255,255,255,.04);color:var(--admin-text);font-weight:800;text-decoration:none;
+  transition:transform .18s ease, border-color .18s ease, background .18s ease, box-shadow .18s ease;
+}
+.btn:hover,.button:hover{transform:translateY(-1px);border-color:var(--admin-line-strong)}
+.btn.primary,.button.primary{background:linear-gradient(180deg,#e2c06d,#d5b15a);color:#08110b;border-color:rgba(213,177,90,.45)}
+.btn.success,.button.success{background:linear-gradient(180deg,#138256,#0d6e49);color:#fff;border-color:rgba(13,108,72,.45)}
+.btn.danger,.button.danger{background:linear-gradient(90deg, rgba(183,66,66,.24), rgba(255,255,255,.04));border-color:rgba(183,66,66,.32)}
+.input,.select,.textarea{
+  width:100%;min-height:52px;padding:12px 16px;border-radius:16px;
+  background:rgba(255,255,255,.04);color:var(--admin-text);border:1px solid rgba(255,255,255,.09);outline:none;
+}
+.textarea{min-height:120px;resize:vertical}
+.input:focus,.select:focus,.textarea:focus{
+  border-color:rgba(213,177,90,.48);
+  box-shadow:0 0 0 3px rgba(213,177,90,.12);
+}
