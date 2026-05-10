@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>المباريات</title>
+<link rel="stylesheet" href="shared-layout.css">
+<style>
+body{
+  margin:0 !important;
+  padding:0 !important;
+  font-family:'Cairo', system-ui, sans-serif !important;
+
+  background:#05110c;
+  color:#fff;
+}
+
+.matches-container{
+  width:min(1200px,90%);
+  margin:40px auto;
+}
+
+.matches-title{
+  font-size:36px;
+  font-weight:900;
+  margin-bottom:20px;
+}
+
+.matches-grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
+  gap:20px;
+}
+
+.match-card{
+  background:#0c1d15;
+  border-radius:20px;
+  padding:20px;
+  border:1px solid rgba(255,255,255,.08);
+  text-align:center;
+  transition:.2s;
+}
+
+.match-card:hover{
+  transform:translateY(-5px);
+}
+
+.teams{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:15px;
+}
+
+.team{
+  font-weight:900;
+}
+
+.score{
+  font-size:28px;
+  color:#d5b15a;
+}
+
+.match-info{
+  color:#bbb;
+  font-size:14px;
+}
+
+</style>
+
+<style id="page-base-hardfix">
+html, body{
+  margin:0 !important;
+  padding:0 !important;
+  font-family:'Cairo', system-ui, sans-serif !important;
+}
+</style>
+
+</head>
+<body>
+
+<div id="site-header"></div>
+
+<div class="matches-container">
+<h1 class="matches-title">المباريات</h1>
+
+<div class="matches-grid">
+
+<a class="match-card" href="al_masariha_match_details.html" style="text-decoration:none;color:inherit;display:block;">
+<div class="teams">
+<div class="team">المسارحة</div>
+<div class="score">2 - 1</div>
+<div class="team">النخبة</div>
+</div>
+<div class="match-info">📅 2026/05/12</div>
+<div class="match-info">📍 ملعب الأكاديمية</div>
+</a>
+
+<a class="match-card" href="al_masariha_match_details.html" style="text-decoration:none;color:inherit;display:block;">
+<div class="teams">
+<div class="team">المسارحة</div>
+<div class="score">1 - 1</div>
+<div class="team">الشباب</div>
+</div>
+<div class="match-info">📅 2026/05/20</div>
+<div class="match-info">📍 ملعب المدينة</div>
+</a>
+
+<a class="match-card" href="al_masariha_match_details.html" style="text-decoration:none;color:inherit;display:block;">
+<div class="teams">
+<div class="team">المسارحة</div>
+<div class="score">-</div>
+<div class="team">النجوم</div>
+</div>
+<div class="match-info">📅 قادمة</div>
+<div class="match-info">📍 سيتم التحديد</div>
+</div>
+
+</a>
+</div>
+
+<div id="site-footer"></div>
+<script src="shared-layout.js"></script>
+
+</body>
+</html>

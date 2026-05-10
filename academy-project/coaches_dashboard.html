@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>قائمة المدربين</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0b1220;--line:rgba(255,255,255,.08);--text:#ecf2ff;--muted:#9fb0d1;--gold:#d4af37;--gold-2:#f5d46b;--shadow:0 18px 45px rgba(0,0,0,.22);--radius:22px;--success:#2ecc71;--info:#58a6ff;--danger:#ff6b6b}
+*{box-sizing:border-box}html,body{margin:0;padding:0;font-family:'Cairo',sans-serif;background:linear-gradient(180deg,#09111f 0%,#0d1628 100%);color:var(--text)}body{min-height:100vh}
+.layout{display:grid;grid-template-columns:290px 1fr;min-height:100vh}.sidebar{background:linear-gradient(180deg,rgba(212,175,55,.12),rgba(255,255,255,.02));border-left:1px solid var(--line);padding:26px 18px;position:sticky;top:0;height:100vh}.brand,.card,.stat{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));border:1px solid var(--line);box-shadow:var(--shadow)}.brand{border-radius:20px;padding:18px;margin-bottom:20px}.brand h1{margin:0;font-size:22px;color:var(--gold-2);font-weight:800}.brand p{margin:8px 0 0;color:var(--muted);line-height:1.8;font-size:14px}
+.menu{display:flex;flex-direction:column;gap:10px;margin-top:18px}.menu a{text-decoration:none;color:var(--text);background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:16px;padding:13px 14px;font-weight:700;transition:.25s ease}.menu a:hover,.menu a.active{background:linear-gradient(90deg,rgba(212,175,55,.18),rgba(255,255,255,.05));border-color:rgba(212,175,55,.35);transform:translateY(-1px)}.menu .logout-link{background:linear-gradient(90deg,rgba(199,59,59,.18),rgba(255,255,255,.05));border-color:rgba(199,59,59,.30)}.menu .site-link{background:linear-gradient(90deg,rgba(212,175,55,.14),rgba(255,255,255,.05));border-color:rgba(212,175,55,.24);color:#f5d46b}
+.main{padding:26px}.topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:24px;flex-wrap:wrap}.title-box h2{margin:0;font-size:30px;font-weight:900}.title-box p{margin:6px 0 0;color:var(--muted);font-size:14px}.actions{display:flex;gap:12px;flex-wrap:wrap}.btn{border:none;border-radius:14px;padding:13px 18px;font-family:inherit;font-weight:900;cursor:pointer;transition:.25s ease;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px}.btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold-2));color:#1a1a1a;box-shadow:0 10px 30px rgba(212,175,55,.20)}.btn-secondary{background:rgba(255,255,255,.05);color:var(--text);border:1px solid var(--line)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px}.stat{border-radius:20px;padding:18px}.stat span{display:block;color:var(--muted);font-size:13px;margin-bottom:8px;font-weight:700}.stat strong{font-size:28px;color:var(--gold-2)}
+.card{border-radius:var(--radius);overflow:hidden}.card-head{padding:18px 20px;border-bottom:1px solid var(--line)}.card-head h3{margin:0;font-size:20px}.card-head p{margin:4px 0 0;color:var(--muted);font-size:13px}.card-body{padding:20px}
+.filters{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:14px;margin-bottom:18px}.field input,.field select{width:100%;background:rgba(7,12,22,.72);color:var(--text);border:1px solid rgba(255,255,255,.10);border-radius:14px;padding:14px;font-family:inherit;font-size:14px;outline:none;min-height:50px}
+.table-wrap{overflow:auto;border:1px solid var(--line);border-radius:18px;background:rgba(255,255,255,.02)}table{width:100%;border-collapse:collapse;min-width:1120px}thead th{background:rgba(255,255,255,.04);color:#f8fbff;font-size:13px;text-align:right;padding:16px 14px;border-bottom:1px solid var(--line);white-space:nowrap}tbody td{padding:15px 14px;border-bottom:1px solid rgba(255,255,255,.06);font-size:14px;color:#eaf1ff;vertical-align:middle}
+.coach-cell{display:flex;align-items:center;gap:12px;min-width:240px}.avatar{width:54px;height:54px;border-radius:16px;background:linear-gradient(135deg,rgba(212,175,55,.35),rgba(255,255,255,.05));display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--gold-2);flex-shrink:0;border:1px solid rgba(212,175,55,.25);overflow:hidden}.avatar img{width:100%;height:100%;object-fit:cover;display:block}.coach-name{font-weight:800;margin-bottom:3px}.coach-sub{font-size:12px;color:var(--muted)}
+.badge{display:inline-flex;align-items:center;justify-content:center;padding:7px 11px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap}.badge-success{background:rgba(46,204,113,.10);color:#9cf0bf;border:1px solid rgba(46,204,113,.24)}.badge-warn{background:rgba(212,175,55,.10);color:#f5d46b;border:1px solid rgba(212,175,55,.24)}.badge-info{background:rgba(88,166,255,.10);color:#aad1ff;border:1px solid rgba(88,166,255,.24)}.badge-danger{background:rgba(255,107,107,.10);color:#ffc0c0;border:1px solid rgba(255,107,107,.24)}
+.row-actions{display:flex;gap:8px;flex-wrap:wrap}.icon-btn{border:none;border-radius:12px;padding:9px 12px;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;color:var(--text);background:rgba(255,255,255,.05);border:1px solid var(--line)}.footer-bar{margin-top:16px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.hint{color:var(--muted);font-size:13px;line-height:1.8;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:16px;padding:13px 14px;margin-top:16px}
+@media (max-width:1200px){.filters{grid-template-columns:1fr 1fr}}@media (max-width:1100px){.layout{grid-template-columns:1fr}.sidebar{position:relative;height:auto;border-left:none;border-bottom:1px solid var(--line)}.stats{grid-template-columns:repeat(2,1fr)}}@media (max-width:700px){.main{padding:16px}.stats{grid-template-columns:1fr}.filters{grid-template-columns:1fr}.title-box h2{font-size:24px}}
+</style>
+<script>if(localStorage.getItem('adminLoggedIn')!=='true'){window.location.href='admin_login.html';}function adminLogout(){localStorage.removeItem('adminLoggedIn');window.location.href='admin_login.html';}</script>
+</head>
+<body>
+<div class="layout"><aside class="sidebar">
+      <div class="brand"><h1>أكاديمية كرة القدم</h1><p>إدارة شاملة للمدربين مع البحث والفلترة والمعاينة والحذف والتصدير وعدد اللاعبين المرتبطين بكل مدرب.</p></div>
+      <div id="admin-sidebar"></div>
+    </aside>
+<main class="main"><div class="topbar"><div class="title-box"><h2>قائمة المدربين</h2><p>السجل الفعلي للمدربين مرتبط ببيانات محفوظة وقابل للتوسعة لاحقًا.</p></div><div class="actions"><button class="btn btn-secondary" type="button" id="exportCoachesBtn">تصدير القائمة</button><a class="btn btn-primary" href="coaches_add_dashboard.html">+ إضافة مدرب جديد</a></div></div>
+<section class="stats"><div class="stat"><span>إجمالي المدربين</span><strong id="statTotalCoaches">0</strong></div><div class="stat"><span>التخصص الأعلى</span><strong id="statTopSpecialty">-</strong></div><div class="stat"><span>ملفات مكتملة</span><strong id="statCompleteCoaches">0</strong></div><div class="stat"><span>ملفات تحتاج مراجعة</span><strong id="statNeedReview">0</strong></div></section>
+<section class="card"><div class="card-head"><h3>سجل المدربين</h3><p>ابحث بالاسم أو الكود أو الجوال، وصفِّ حسب الفئة والتخصص والحالة.</p></div><div class="card-body"><div class="filters"><div class="field"><input type="text" id="searchInput" placeholder="ابحث بالاسم أو الكود أو الجوال..."></div><div class="field"><select id="categoryFilter"><option>كل الفئات</option><option>براعم</option><option>ناشئين</option><option>شباب</option><option>فريق أول</option><option>كل الفئات</option></select></div><div class="field"><select id="specialtyFilter"><option>كل التخصصات</option><option>التدريب الفني</option><option>اللياقة البدنية</option><option>تدريب الحراس</option><option>التحليل الفني</option><option>الإعداد الذهني</option></select></div><div class="field"><select id="statusFilter"><option>كل الحالات</option><option>نشط</option><option>مكتمل</option><option>بانتظار المراجعة</option><option>موقوف</option></select></div><button class="btn btn-secondary" type="button" id="applyFiltersBtn">تصفية</button></div><div class="table-wrap"><table><thead><tr><th>المدرب</th><th>الكود</th><th>المسمى</th><th>التخصص</th><th>الفئة</th><th>الخبرة</th><th>الجوال</th><th>الحالة</th><th>عدد اللاعبين</th><th>اكتمال الملف</th><th>الإجراءات</th></tr></thead><tbody id="coachesTableBody"></tbody></table></div><div class="footer-bar"><div id="coachesCountText" style="color:var(--muted);font-size:13px;">لا يوجد مدربين حتى الآن</div></div><div class="hint">تم تحويل صفحة المدربين من واجهة ثابتة إلى صفحة ديناميكية مرتبطة ببيانات فعلية في المتصفح، بنفس منطق اللاعبين ولكن بشكل أنظف ومخصص للمدربين.</div></div></section></main></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin_sidebar.js"></script>
+<script>
+const SUPABASE_URL = "https://uwmyqlydenrzkzrymhvl.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3bXlxbHlkZW5yemt6cnltaHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NDQ2NjAsImV4cCI6MjA5MzAyMDY2MH0.TCPgHAHhILaD5tFsZiFIgLvH7yuxkrtJ29F5J5oHQrw";
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+let allCoaches = [];
+let allPlayers = [];
+
+function escapeHtml(v){
+  return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+function getInitials(name){
+  const text=String(name||'').trim(); if(!text)return'؟';
+  const parts=text.split(/\s+/).filter(Boolean);
+  return parts.length===1?parts[0].slice(0,2):(parts[0][0]||'')+(parts[1][0]||'');
+}
+function normalizeStatus(status){
+  const value = String(status || 'نشط').trim();
+  const map = { active:'نشط', pending:'بانتظار المراجعة', suspended:'موقوف' };
+  return map[value] || value || 'نشط';
+}
+function getStatusBadgeClass(status){
+  const v = normalizeStatus(status);
+  if(['نشط','مكتمل'].includes(v))return'badge-success';
+  if(['بانتظار المراجعة','بانتظار استكمال'].includes(v))return'badge-warn';
+  if(['موقوف','مرفوض'].includes(v))return'badge-danger';
+  return'badge-info';
+}
+function coachCode(coach){ return `COA-${String((coach.id || '').toString().slice(0,8)).toUpperCase()}`; }
+function getLinkedPlayersCount(coach){
+  const id = String(coach.id || '').trim();
+  const name = String(coach.full_name || '').trim();
+  const code = coachCode(coach);
+  return allPlayers.filter(player => {
+    const coachIdChecks=[player.coach_id,player.assigned_coach_id,player.supervisor_coach_id,player.linked_coach_id].map(v=>String(v||'').trim());
+    if(coachIdChecks.includes(id)) return true;
+    const coachNameChecks=[player.coach_name,player.assigned_coach_name,player.supervisor_coach_name,player.linked_coach_name].map(v=>String(v||'').trim());
+    if(coachNameChecks.includes(name)) return true;
+    const coachCodeChecks=[player.coach_code,player.assigned_coach_code,player.linked_coach_code].map(v=>String(v||'').trim());
+    return coachCodeChecks.includes(code);
+  }).length;
+}
+function isComplete(c){return !!(c.full_name && c.job_title && c.specialty && c.category && c.phone && c.bio)}
+function completionLabel(c){return isComplete(c)?'100%':'75%'}
+
+async function loadData(){
+  const tbody=document.getElementById('coachesTableBody');
+  tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:32px;color:var(--muted);font-weight:800">جاري تحميل المدربين من قاعدة البيانات...</td></tr>';
+
+  const [coachesRes, playersRes] = await Promise.all([
+    supabaseClient.from('coaches').select('*').order('created_at', { ascending:false }),
+    supabaseClient.from('players').select('id, full_name, coach_id, coach_name, coach_code, assigned_coach_id, assigned_coach_name, assigned_coach_code, supervisor_coach_id, supervisor_coach_name, linked_coach_id, linked_coach_name, linked_coach_code')
+  ]);
+
+  if (coachesRes.error) {
+    console.error('Supabase coaches fetch error:', coachesRes.error);
+    tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:32px;color:#ffd0d0;font-weight:800">تعذر تحميل المدربين من قاعدة البيانات. تأكد من جدول coaches وسياسات RLS.</td></tr>';
+    return;
+  }
+  if (playersRes.error) console.warn('Supabase players linked fetch warning:', playersRes.error);
+
+  allCoaches = Array.isArray(coachesRes.data) ? coachesRes.data : [];
+  allPlayers = Array.isArray(playersRes.data) ? playersRes.data : [];
+  applyFilters();
+}
+
+function renderStats(cs){
+  document.getElementById('statTotalCoaches').textContent=cs.length;
+  const counts={};
+  cs.forEach(c=>{const sp=String(c.specialty||'').trim(); if(sp)counts[sp]=(counts[sp]||0)+1;});
+  document.getElementById('statTopSpecialty').textContent=Object.entries(counts).sort((a,b)=>b[1]-a[1])[0]?.[0]||'-';
+  const complete=cs.filter(isComplete).length;
+  document.getElementById('statCompleteCoaches').textContent=complete;
+  document.getElementById('statNeedReview').textContent=cs.length-complete;
+}
+function renderCountText(filtered,total){document.getElementById('coachesCountText').textContent=total===0?'لا يوجد مدربين حتى الآن':`عرض ${filtered} من أصل ${total} مدرب`;}
+function renderRows(cs){
+  const tbody=document.getElementById('coachesTableBody');
+  if(!cs.length){tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:32px;color:var(--muted);font-weight:800">لا يوجد مدربين مطابقين حاليًا</td></tr>';return}
+  tbody.innerHTML=cs.map(c=>{
+    const id = String(c.id || '');
+    const fullName=escapeHtml(c.full_name||'-');
+    const code=escapeHtml(coachCode(c));
+    const jobTitle=escapeHtml(c.job_title||'-');
+    const specialty=escapeHtml(c.specialty||'-');
+    const category=escapeHtml(c.category||'-');
+    const experience=escapeHtml(c.experience_years ? c.experience_years+' سنة' : '-');
+    const phone=escapeHtml(c.phone||'-');
+    const status=escapeHtml(normalizeStatus(c.status));
+    const linkedPlayersCount=getLinkedPlayersCount(c);
+    const complete=completionLabel(c);
+    const statusClass=getStatusBadgeClass(c.status||'نشط');
+    const completeClass=complete==='100%'?'badge-success':'badge-warn';
+    const avatarHtml=c.image?`<img src="${escapeHtml(c.image)}" alt="${fullName}">`:escapeHtml(getInitials(c.full_name||''));
+    return`<tr><td><div class="coach-cell"><div class="avatar">${avatarHtml}</div><div><div class="coach-name">${fullName}</div><div class="coach-sub">${jobTitle} • ${category}</div></div></div></td><td>${code}</td><td>${jobTitle}</td><td><span class="badge badge-info">${specialty}</span></td><td>${category}</td><td>${experience}</td><td>${phone}</td><td><span class="badge ${statusClass}">${status}</span></td><td><span class="badge badge-info">${linkedPlayersCount} لاعب</span></td><td><span class="badge ${completeClass}">${complete}</span></td><td><div class="row-actions"><button class="icon-btn" type="button" onclick="viewCoach('${escapeHtml(id)}')">عرض</button><button class="icon-btn" type="button" onclick="editCoach('${escapeHtml(id)}')">تعديل</button><button class="icon-btn" type="button" onclick="deleteCoach('${escapeHtml(id)}')">حذف</button></div></td></tr>`;
+  }).join('');
+}
+function applyFilters(){
+  const search=document.getElementById('searchInput').value.trim().toLowerCase();
+  const category=document.getElementById('categoryFilter').value;
+  const specialty=document.getElementById('specialtyFilter').value;
+  const status=document.getElementById('statusFilter').value;
+  const filtered=allCoaches.filter(c=>{
+    const name=String(c.full_name||'').toLowerCase();
+    const code=String(coachCode(c)||'').toLowerCase();
+    const phone=String(c.phone||'').toLowerCase();
+    const cc=String(c.category||'').trim();
+    const cspec=String(c.specialty||'').trim();
+    const cstatus=normalizeStatus(c.status||'نشط');
+    return(!search||[name,code,phone].some(v=>v.includes(search)))&&(category==='كل الفئات'||cc===category)&&(specialty==='كل التخصصات'||cspec===specialty)&&(status==='كل الحالات'||cstatus===status);
+  });
+  renderStats(allCoaches); renderRows(filtered); renderCountText(filtered.length, allCoaches.length);
+}
+function exportCoaches(){
+  if(!allCoaches.length){alert('لا يوجد مدربين للتصدير');return}
+  const rows=[['الكود','الاسم','المسمى','التخصص','الفئة','الخبرة','الجوال','الحالة','الشهادة']];
+  allCoaches.forEach(c=>rows.push([coachCode(c),c.full_name||'',c.job_title||'',c.specialty||'',c.category||'',c.experience_years||'',c.phone||'',normalizeStatus(c.status),c.certification||'']));
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
+  const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='coaches_list.csv';document.body.appendChild(link);link.click();link.remove();
+}
+async function deleteCoach(id){
+  if(!id || !confirm('هل تريد حذف هذا المدرب من قاعدة البيانات؟'))return;
+  const { error } = await supabaseClient.from('coaches').delete().eq('id', id);
+  if (error) { console.error('Supabase delete coach error:', error); alert('تعذر حذف المدرب من قاعدة البيانات.'); return; }
+  allCoaches = allCoaches.filter(c => String(c.id) !== String(id));
+  applyFilters();
+}
+function viewCoach(id){if(!id)return;window.location.href=`coach_view_dashboard.html?id=${encodeURIComponent(id)}`;}
+function editCoach(id){if(!id)return;alert('سيتم ربط صفحة تعديل المدرب في الخطوة التالية. رقم المدرب: '+id);}
+
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('applyFiltersBtn').addEventListener('click',applyFilters);
+  document.getElementById('searchInput').addEventListener('input',applyFilters);
+  document.getElementById('categoryFilter').addEventListener('change',applyFilters);
+  document.getElementById('specialtyFilter').addEventListener('change',applyFilters);
+  document.getElementById('statusFilter').addEventListener('change',applyFilters);
+  document.getElementById('exportCoachesBtn').addEventListener('click',exportCoaches);
+  loadData();
+});
+</script>
+</body>
+</html>

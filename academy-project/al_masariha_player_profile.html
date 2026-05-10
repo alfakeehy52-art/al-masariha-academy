@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ملف اللاعب - أكاديمية المسارحة</title>
+  <link rel="stylesheet" href="shared-layout.css">
+  <style>
+    :root{
+      --pp-gold:#d5b15a;
+      --pp-gold-soft:#f0d78d;
+      --pp-bg-1:#04100b;
+      --pp-bg-2:#081711;
+      --pp-panel:#0c1d15;
+      --pp-line:rgba(255,255,255,.08);
+      --pp-text:#f4f4ef;
+      --pp-muted:#b8c3ba;
+      --pp-green:#14754d;
+      --pp-red:#8b2030;
+    }
+
+    body{
+      background:
+        radial-gradient(circle at top, rgba(213,177,90,.10), transparent 28%),
+        linear-gradient(180deg, var(--pp-bg-1), var(--pp-bg-2) 55%, #05110c 100%);
+      color:var(--pp-text);
+    }
+
+    .player-profile-page{
+      width:min(1420px, calc(100% - 34px));
+      margin:30px auto 0;
+    }
+
+    .profile-hero{
+      position:relative;
+      display:grid;
+      grid-template-columns:330px 1fr;
+      gap:26px;
+      padding:28px;
+      border-radius:34px;
+      overflow:hidden;
+      background:
+        linear-gradient(135deg, rgba(213,177,90,.10), rgba(8,20,14,.95) 35%, rgba(11,29,21,.95) 100%);
+      border:1px solid rgba(213,177,90,.14);
+      box-shadow:0 24px 60px rgba(0,0,0,.24);
+    }
+
+    .profile-hero::before{
+      content:"";
+      position:absolute;
+      inset:auto -80px -80px auto;
+      width:280px;
+      height:280px;
+      border-radius:50%;
+      background:radial-gradient(circle, rgba(213,177,90,.12), transparent 70%);
+      pointer-events:none;
+    }
+
+    .player-card-xl{
+      position:relative;
+      border-radius:30px;
+      overflow:hidden;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)),
+        radial-gradient(circle at top, rgba(213,177,90,.08), transparent 35%),
+        linear-gradient(180deg, #0b1b14 0%, #08130f 100%);
+      border:1px solid rgba(213,177,90,.14);
+      box-shadow:0 22px 46px rgba(0,0,0,.24);
+      min-height:100%;
+    }
+
+    .player-card-xl::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      background:
+        linear-gradient(180deg, rgba(213,177,90,.06), transparent 24%),
+        radial-gradient(circle at top right, rgba(213,177,90,.10), transparent 35%);
+      pointer-events:none;
+    }
+
+    .card-xl-top{
+      position:relative;
+      z-index:1;
+      padding:22px 22px 0;
+      display:grid;
+      grid-template-columns:72px 1fr 72px;
+      align-items:start;
+      gap:10px;
+    }
+
+    .card-xl-rating{
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+      width:72px;
+      height:94px;
+      border-radius:20px;
+      background:linear-gradient(180deg, #ead08b, #caa245);
+      color:#15120b;
+      font-weight:950;
+      box-shadow:0 10px 24px rgba(0,0,0,.18);
+    }
+
+    .card-xl-rating strong{
+      font-size:30px;
+      line-height:1;
+    }
+
+    .card-xl-rating span{
+      font-size:13px;
+      margin-top:4px;
+      font-weight:900;
+    }
+
+    .card-xl-position{
+      text-align:center;
+      padding-top:12px;
+      color:var(--pp-gold-soft);
+      font-weight:900;
+      font-size:20px;
+      letter-spacing:.5px;
+    }
+
+    .card-xl-number{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:72px;
+      height:72px;
+      border-radius:20px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.08);
+      color:#fff;
+      font-weight:950;
+      font-size:30px;
+    }
+
+    .card-xl-avatar-wrap{
+      position:relative;
+      z-index:1;
+      display:flex;
+      justify-content:center;
+      margin-top:14px;
+    }
+
+    .card-xl-avatar{
+      width:190px;
+      height:190px;
+      border-radius:50%;
+      display:grid;
+      place-items:center;
+      font-size:70px;
+      color:#fff;
+      background:
+        radial-gradient(circle at 30% 30%, rgba(255,255,255,.12), transparent 30%),
+        linear-gradient(180deg, rgba(18,116,76,.92), rgba(7,36,24,.95));
+      border:5px solid rgba(213,177,90,.24);
+      box-shadow:
+        0 0 0 10px rgba(213,177,90,.05),
+        0 18px 36px rgba(0,0,0,.24);
+    }
+
+    .card-xl-info{
+      position:relative;
+      z-index:1;
+      text-align:center;
+      padding:18px 22px 10px;
+    }
+
+    .card-xl-info h1{
+      margin:0;
+      font-size:32px;
+      line-height:1.2;
+      font-weight:950;
+    }
+
+    .card-xl-info p{
+      margin:8px 0 0;
+      color:var(--pp-muted);
+      font-weight:700;
+      font-size:15px;
+    }
+
+    .card-xl-meta{
+      margin-top:18px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .card-meta-chip{
+      padding:8px 12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.08);
+      color:#e9ede7;
+      font-weight:800;
+      font-size:13px;
+    }
+
+    .card-xl-footer{
+      position:relative;
+      z-index:1;
+      padding:18px;
+    }
+
+    .back-btn{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:100%;
+      padding:15px 18px;
+      border-radius:18px;
+      text-decoration:none;
+      font-weight:900;
+      font-size:16px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+    }
+
+    .profile-main{
+      display:flex;
+      flex-direction:column;
+      gap:20px;
+      position:relative;
+      z-index:1;
+    }
+
+    .headline-row{
+      display:flex;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:18px;
+      flex-wrap:wrap;
+    }
+
+    .headline-row h2{
+      margin:0;
+      font-size:clamp(34px, 3.6vw, 54px);
+      line-height:1.08;
+      font-weight:950;
+    }
+
+    .headline-row p{
+      margin:10px 0 0;
+      color:var(--pp-muted);
+      line-height:1.9;
+      max-width:760px;
+      font-size:16px;
+    }
+
+    .status-chip{
+      padding:12px 16px;
+      border-radius:999px;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(213,177,90,.16);
+      color:var(--pp-gold-soft);
+      font-weight:900;
+      white-space:nowrap;
+    }
+
+    .summary-grid{
+      display:grid;
+      grid-template-columns:repeat(4, minmax(0,1fr));
+      gap:14px;
+    }
+
+    .summary-box{
+      padding:18px;
+      border-radius:24px;
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--pp-line);
+      box-shadow:0 14px 30px rgba(0,0,0,.14);
+    }
+
+    .summary-box strong{
+      display:block;
+      font-size:14px;
+      color:var(--pp-muted);
+      margin-bottom:8px;
+      font-weight:800;
+    }
+
+    .summary-box span{
+      font-size:28px;
+      font-weight:950;
+      color:var(--pp-gold-soft);
+    }
+
+    .profile-section{
+      padding:24px;
+      border-radius:28px;
+      background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid var(--pp-line);
+      box-shadow:0 16px 34px rgba(0,0,0,.14);
+    }
+
+    .section-title{
+      margin:0 0 18px;
+      font-size:24px;
+      font-weight:900;
+    }
+
+    .stats-bars{
+      display:grid;
+      grid-template-columns:repeat(2, minmax(0,1fr));
+      gap:14px 18px;
+    }
+
+    .stat-bar{
+      display:grid;
+      grid-template-columns:72px 1fr 48px;
+      gap:12px;
+      align-items:center;
+    }
+
+    .stat-bar label{
+      font-weight:900;
+      color:#eef2ec;
+    }
+
+    .bar-track{
+      height:12px;
+      border-radius:999px;
+      background:rgba(255,255,255,.06);
+      overflow:hidden;
+      border:1px solid rgba(255,255,255,.05);
+    }
+
+    .bar-fill{
+      height:100%;
+      border-radius:999px;
+      background:linear-gradient(90deg, #c79e44, #f0d78d);
+      box-shadow:0 0 12px rgba(213,177,90,.28);
+    }
+
+    .stat-value{
+      text-align:left;
+      font-weight:950;
+      color:var(--pp-gold-soft);
+    }
+
+    .details-grid{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0,1fr));
+      gap:14px;
+    }
+
+    .detail-item{
+      padding:16px 18px;
+      border-radius:20px;
+      background:rgba(255,255,255,.03);
+      border:1px solid rgba(255,255,255,.06);
+    }
+
+    .detail-item strong{
+      display:block;
+      color:var(--pp-muted);
+      font-size:13px;
+      margin-bottom:8px;
+      font-weight:800;
+    }
+
+    .detail-item span{
+      font-size:20px;
+      font-weight:900;
+      color:#f5f5f0;
+    }
+
+    .achievements-grid{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0,1fr));
+      gap:14px;
+    }
+
+    .achievement-card{
+      padding:18px;
+      border-radius:22px;
+      background:
+        linear-gradient(180deg, rgba(213,177,90,.08), rgba(255,255,255,.02)),
+        rgba(255,255,255,.02);
+      border:1px solid rgba(213,177,90,.16);
+    }
+
+    .achievement-card strong{
+      display:block;
+      font-size:26px;
+      color:var(--pp-gold-soft);
+      margin-bottom:6px;
+      font-weight:950;
+    }
+
+    .achievement-card span{
+      color:var(--pp-muted);
+      font-weight:800;
+    }
+
+    .media-strip{
+      display:grid;
+      grid-template-columns:repeat(3, minmax(0,1fr));
+      gap:14px;
+    }
+
+    .media-box{
+      height:180px;
+      border-radius:22px;
+      background:
+        linear-gradient(135deg, rgba(18,116,76,.62), rgba(5,24,16,.95)),
+        linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));
+      border:1px solid rgba(255,255,255,.06);
+      display:flex;
+      align-items:flex-end;
+      padding:18px;
+      font-weight:900;
+      color:#fff;
+      box-shadow:0 14px 28px rgba(0,0,0,.14);
+    }
+
+    .player-note{
+      margin-top:18px;
+      color:var(--pp-muted);
+      font-size:14px;
+      text-align:center;
+    }
+
+    @media (max-width: 1180px){
+      .profile-hero{
+        grid-template-columns:290px 1fr;
+      }
+
+      .summary-grid{
+        grid-template-columns:repeat(2, minmax(0,1fr));
+      }
+
+      .details-grid,
+      .achievements-grid{
+        grid-template-columns:repeat(2, minmax(0,1fr));
+      }
+    }
+
+    @media (max-width: 860px){
+      .profile-hero{
+        grid-template-columns:1fr;
+      }
+
+      .stats-bars{
+        grid-template-columns:1fr;
+      }
+
+      .media-strip{
+        grid-template-columns:1fr;
+      }
+    }
+
+    @media (max-width: 640px){
+      .player-profile-page{
+        width:min(100% - 18px, 1420px);
+      }
+
+      .profile-hero{
+        padding:18px;
+        border-radius:24px;
+      }
+
+      .card-xl-top{
+        grid-template-columns:58px 1fr 58px;
+        padding:18px 18px 0;
+      }
+
+      .card-xl-rating{
+        width:58px;
+        height:78px;
+        border-radius:16px;
+      }
+
+      .card-xl-rating strong{
+        font-size:24px;
+      }
+
+      .card-xl-number{
+        width:58px;
+        height:58px;
+        font-size:24px;
+      }
+
+      .card-xl-avatar{
+        width:150px;
+        height:150px;
+        font-size:56px;
+      }
+
+      .card-xl-info h1{
+        font-size:26px;
+      }
+
+      .headline-row h2{
+        font-size:32px;
+      }
+
+      .summary-grid,
+      .details-grid,
+      .achievements-grid{
+        grid-template-columns:1fr;
+      }
+
+      .profile-section{
+        padding:18px;
+        border-radius:22px;
+      }
+
+      .stat-bar{
+        grid-template-columns:62px 1fr 40px;
+      }
+    }
+  </style>
+<script>
+if (localStorage.getItem("adminLoggedIn") !== "true") {
+  window.location.href = "admin_login.html";
+}
+function adminLogout(){
+  localStorage.removeItem("adminLoggedIn");
+  window.location.href = "admin_login.html";
+}
+</script>
+
+<style id="admin-nav-fix">
+.menu .logout-link{
+  background:linear-gradient(90deg, rgba(199,59,59,.18), rgba(255,255,255,.05)) !important;
+  border-color:rgba(199,59,59,.30) !important;
+  color:#fff !important;
+}
+.menu .site-link{
+  background:linear-gradient(90deg, rgba(212,175,55,.14), rgba(255,255,255,.05)) !important;
+  border-color:rgba(212,175,55,.24) !important;
+  color:#f5d46b !important;
+}
+</style>
+
+</head>
+<body>
+  <div id="site-header"></div>
+
+  <main class="player-profile-page">
+    <section class="profile-hero">
+      <aside class="player-card-xl">
+        <div class="card-xl-top">
+          <div class="card-xl-rating"><strong>84</strong><span>OVR</span></div>
+          <div class="card-xl-position">ST</div>
+          <div class="card-xl-number">9</div>
+        </div>
+
+        <div class="card-xl-avatar-wrap">
+          <div class="card-xl-avatar">👤</div>
+        </div>
+
+        <div class="card-xl-info">
+          <h1>سامي الحربي</h1>
+          <p>مهاجم صريح — لاعب تجريبي</p>
+          <div class="card-xl-meta">
+            <span class="card-meta-chip">العمر 17</span>
+            <span class="card-meta-chip">178 سم</span>
+            <span class="card-meta-chip">القدم اليمنى</span>
+          </div>
+        </div>
+
+        <div class="card-xl-footer">
+          <a class="back-btn" href="players_list_dashboard.html">العودة إلى صفحة اللاعبين</a>
+        </div>
+      </aside>
+
+      <div class="profile-main">
+        <div class="headline-row">
+          <div>
+            <h2>ملف اللاعب الاحترافي</h2>
+            <p>هذه صفحة تجريبية فخمة لعرض بيانات اللاعب الفردية بأسلوب قريب من بطاقات الألعاب الاحترافية، مع توزيع واضح للإحصائيات والمعلومات الأساسية والإنجازات، لتجربة الشكل النهائي قبل إدخال البيانات الحقيقية.</p>
+          </div>
+          <div class="status-chip">جاهز للتحديث بالبيانات الحقيقية</div>
+        </div>
+
+        <div class="summary-grid">
+          <div class="summary-box"><strong>المباريات</strong><span>26</span></div>
+          <div class="summary-box"><strong>الأهداف</strong><span>14</span></div>
+          <div class="summary-box"><strong>التمريرات الحاسمة</strong><span>9</span></div>
+          <div class="summary-box"><strong>متوسط التقييم</strong><span>8.3</span></div>
+        </div>
+
+        <section class="profile-section">
+          <h3 class="section-title">الإحصائيات الأساسية</h3>
+          <div class="stats-bars">
+            <div class="stat-bar"><label>PAC</label><div class="bar-track"><div class="bar-fill" style="width:91%"></div></div><div class="stat-value">91</div></div>
+            <div class="stat-bar"><label>SHO</label><div class="bar-track"><div class="bar-fill" style="width:86%"></div></div><div class="stat-value">86</div></div>
+            <div class="stat-bar"><label>PAS</label><div class="bar-track"><div class="bar-fill" style="width:74%"></div></div><div class="stat-value">74</div></div>
+            <div class="stat-bar"><label>DRI</label><div class="bar-track"><div class="bar-fill" style="width:83%"></div></div><div class="stat-value">83</div></div>
+            <div class="stat-bar"><label>DEF</label><div class="bar-track"><div class="bar-fill" style="width:42%"></div></div><div class="stat-value">42</div></div>
+            <div class="stat-bar"><label>PHY</label><div class="bar-track"><div class="bar-fill" style="width:78%"></div></div><div class="stat-value">78</div></div>
+          </div>
+        </section>
+
+        <section class="profile-section">
+          <h3 class="section-title">بيانات اللاعب</h3>
+          <div class="details-grid">
+            <div class="detail-item"><strong>الاسم الكامل</strong><span>سامي الحربي</span></div>
+            <div class="detail-item"><strong>المركز</strong><span>مهاجم صريح</span></div>
+            <div class="detail-item"><strong>رقم القميص</strong><span>9</span></div>
+            <div class="detail-item"><strong>العمر</strong><span>17 سنة</span></div>
+            <div class="detail-item"><strong>الطول</strong><span>178 سم</span></div>
+            <div class="detail-item"><strong>القدم المفضلة</strong><span>اليمنى</span></div>
+          </div>
+        </section>
+
+        <section class="profile-section">
+          <h3 class="section-title">أبرز الإنجازات</h3>
+          <div class="achievements-grid">
+            <div class="achievement-card"><strong>14</strong><span>هدف خلال الموسم</span></div>
+            <div class="achievement-card"><strong>9</strong><span>صناعة أهداف</span></div>
+            <div class="achievement-card"><strong>3</strong><span>جوائز أفضل لاعب</span></div>
+          </div>
+        </section>
+
+        <section class="profile-section">
+          <h3 class="section-title">معرض اللاعب</h3>
+          <div class="media-strip">
+            <div class="media-box">لقطة مباراة — صورة تجريبية</div>
+            <div class="media-box">تدريب فردي — صورة تجريبية</div>
+            <div class="media-box">مناسبة تكريمية — صورة تجريبية</div>
+          </div>
+        </section>
+      </div>
+    </section>
+
+    <div class="player-note">البيانات الحالية تجريبية لاختبار الشكل العام، ويمكن لاحقًا استبدالها بسهولة بصور اللاعب الحقيقية وأرقامه الفعلية.</div>
+  </main>
+
+  <div id="site-footer"></div>
+  <script src="shared-layout.js"></script>
+
+  <script src="admin_sidebar.js"></script>
+</body>
+</html>

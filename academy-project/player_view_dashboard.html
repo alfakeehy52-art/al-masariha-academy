@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ملف اللاعب | لوحة الإدارة</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --bg:#07110d;--bg2:#0b1812;--line:rgba(255,255,255,.08);--text:#f4f7f2;--muted:#b7c6bc;
+      --gold:#d7b35f;--gold-2:#efd07d;--danger:#e36b6b;--shadow:0 22px 55px rgba(0,0,0,.28);--radius:26px;
+    }
+    *{box-sizing:border-box}
+    html,body{margin:0;padding:0;font-family:'Cairo',sans-serif;background:radial-gradient(circle at top, rgba(215,179,95,.10), transparent 35%),linear-gradient(180deg,var(--bg) 0%, var(--bg2) 100%);color:var(--text)}
+    body{min-height:100vh}
+    .layout{display:flex;min-height:100vh}
+    .sidebar{width:290px;flex-shrink:0;background:linear-gradient(180deg, rgba(212,175,55,.11), rgba(255,255,255,.02));border-left:1px solid var(--line);padding:26px 18px;position:sticky;top:0;height:100vh}
+    .brand{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:var(--shadow);margin-bottom:20px}
+    .brand h1{margin:0;font-size:22px;font-weight:900;color:var(--gold-2)}
+    .brand p{margin:8px 0 0;color:var(--muted);line-height:1.9;font-size:14px}
+    .main{flex:1;padding:28px;min-width:0}
+    .page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:22px;flex-wrap:wrap}
+    .page-title h2{margin:0;font-size:36px;font-weight:900}
+    .page-title p{margin:8px 0 0;color:var(--muted);font-size:14px;line-height:1.9}
+    .head-actions{display:flex;gap:12px;flex-wrap:wrap}
+    .btn{border:none;border-radius:16px;padding:14px 18px;font-family:inherit;font-weight:900;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:.22s ease}
+    .btn:hover{transform:translateY(-2px)}
+    .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-2));color:#17140c;box-shadow:0 14px 30px rgba(215,179,95,.18)}
+    .btn-dark{background:rgba(255,255,255,.05);color:var(--text);border:1px solid var(--line)}
+    .btn-danger{background:rgba(227,107,107,.12);color:#ffd8d8;border:1px solid rgba(227,107,107,.22)}
+    .hero{display:grid;grid-template-columns:minmax(0,1fr);gap:22px;margin-bottom:22px}
+    .panel{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+    .profile-card{display:grid;grid-template-columns:340px minmax(0,1fr);gap:18px;padding:24px;min-height:560px;background:radial-gradient(circle at 22% 18%, rgba(74,181,120,.18), transparent 20%),linear-gradient(180deg, rgba(12,38,27,.94), rgba(6,22,16,.98))}
+    .fifa-card{border:1px solid rgba(215,179,95,.14);border-radius:28px;padding:22px;position:relative;background:radial-gradient(circle at 50% 30%, rgba(26,152,92,.18), transparent 28%),linear-gradient(90deg, rgba(215,179,95,.12), rgba(255,255,255,.02) 35%, rgba(38,122,80,.12));min-height:100%;box-shadow:inset 0 0 0 1px rgba(255,255,255,.03)}
+    .card-top{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+    .shirt-number,.ovr-box{min-width:82px;border-radius:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:18px 12px;font-weight:900}
+    .shirt-number{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);color:#fff;font-size:22px}
+    .position-box{align-self:center;color:var(--gold-2);font-size:34px;font-weight:900;letter-spacing:.5px}
+    .ovr-box{background:linear-gradient(180deg, #edd07b, #d2ac53);color:#16120b;font-size:22px;box-shadow:0 12px 25px rgba(215,179,95,.18)}
+    .ovr-box small{font-size:14px;margin-top:4px}
+    .avatar-wrap{width:220px;height:220px;border-radius:50%;margin:26px auto 18px;background:radial-gradient(circle at 35% 30%, rgba(255,255,255,.16), transparent 18%),linear-gradient(180deg, #117347, #063d29);border:6px solid rgba(90,180,105,.36);box-shadow:0 0 0 14px rgba(215,179,95,.05);display:flex;align-items:center;justify-content:center;font-size:88px;color:#fff;overflow:hidden}
+    .avatar-wrap img{width:100%;height:100%;object-fit:cover;display:block;border-radius:50%}
+    .avatar-fallback{font-size:88px;line-height:1}
+    .player-main-name{margin:0;font-size:34px;font-weight:900;text-align:center;line-height:1.2}
+    .player-role{text-align:center;color:var(--muted);font-size:20px;font-weight:800;margin-top:8px}
+    .meta-pills{display:flex;justify-content:center;flex-wrap:wrap;gap:10px;margin-top:20px}
+    .pill{display:inline-flex;align-items:center;justify-content:center;padding:10px 14px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);color:#eef6f0;font-weight:800;font-size:14px;white-space:nowrap}
+    .stat-card{padding:24px;display:flex;flex-direction:column;gap:18px;background:radial-gradient(circle at top, rgba(215,179,95,.08), transparent 35%),linear-gradient(180deg, rgba(9,26,19,.96), rgba(5,19,14,.98))}
+    .stats-grid-top{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+    .mini-stat{padding:18px;border-radius:20px;border:1px solid var(--line);background:rgba(255,255,255,.03);min-height:112px}
+    .mini-stat span{display:block;color:var(--muted);font-size:13px;font-weight:700;margin-bottom:14px}
+    .mini-stat strong{font-size:28px;color:var(--gold-2);font-weight:900}
+    .block{border:1px solid var(--line);border-radius:24px;background:rgba(255,255,255,.03);padding:22px}
+    .block h3{margin:0 0 18px;font-size:30px;font-weight:900}
+    .ratings{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+    .rating-col{display:flex;flex-direction:column;gap:16px}
+    .rating-row{display:grid;grid-template-columns:56px 1fr 54px;align-items:center;gap:14px}
+    .rating-row label{font-weight:900;font-size:16px;color:#f1f4ef;letter-spacing:.5px}
+    .bar{height:16px;background:rgba(255,255,255,.08);border-radius:999px;overflow:hidden;border:1px solid rgba(255,255,255,.05)}
+    .bar > span{display:block;height:100%;width:0%;background:linear-gradient(90deg, #d7b35f, #f1d68d);border-radius:999px}
+    .rating-row strong{font-size:16px;color:#fff;font-weight:900}
+    .info-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px;margin-top:22px}
+    .info-box{border:1px solid var(--line);border-radius:22px;background:rgba(255,255,255,.03);padding:20px}
+    .info-box h4{margin:0 0 14px;font-size:24px;font-weight:900}
+    .detail-list{display:grid;gap:12px}
+    .detail{display:flex;justify-content:space-between;gap:14px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.06)}
+    .detail:last-child{border-bottom:none}
+    .detail strong{color:var(--muted);font-size:14px;font-weight:800}
+    .detail span{color:#fff;font-size:15px;font-weight:900;text-align:left}
+    .note-box{margin-top:22px;border:1px solid var(--line);border-radius:22px;background:rgba(255,255,255,.03);padding:18px 20px;color:var(--muted);line-height:1.9;font-size:14px}
+.fifa-card,.stat-card,.block,.info-box{min-width:0}
+    .empty-state{padding:50px 24px;text-align:center;color:var(--muted);font-size:18px;line-height:2}
+    .admin-sidebar-unified .menu .logout-link{background:linear-gradient(90deg, rgba(199,59,59,.18), rgba(255,255,255,.05)) !important;border-color:rgba(199,59,59,.30) !important;color:#fff !important}
+    .admin-sidebar-unified .menu .site-link{background:linear-gradient(90deg, rgba(212,175,55,.14), rgba(255,255,255,.05)) !important;border-color:rgba(212,175,55,.24) !important;color:#f5d46b !important}
+    @media (max-width:1300px){.hero{grid-template-columns:1fr}.profile-card{grid-template-columns:1fr}.stats-grid-top{grid-template-columns:repeat(2,1fr)}}
+    @media (max-width:1100px){.layout{display:block}.sidebar{width:100%;position:relative;height:auto;border-left:none;border-bottom:1px solid var(--line)}.profile-card{grid-template-columns:1fr}}
+    @media (max-width:780px){.main{padding:16px}.page-title h2{font-size:28px}.stats-grid-top{grid-template-columns:1fr}.ratings{grid-template-columns:1fr}.info-grid{grid-template-columns:1fr}.player-main-name{font-size:28px}.profile-card{padding:16px}.stat-card{padding:16px}}
+    .toast-wrap{position:fixed;left:20px;bottom:20px;display:flex;flex-direction:column;gap:10px;z-index:10050}
+    .toast{min-width:280px;max-width:430px;padding:14px 16px;border-radius:16px;border:1px solid rgba(255,255,255,.10);background:linear-gradient(180deg, rgba(15,35,25,.98), rgba(6,22,16,.98));color:#fff;box-shadow:0 20px 45px rgba(0,0,0,.38);font-size:14px;line-height:1.8;font-weight:800;animation:toastIn .22s ease}
+    .toast.success{border-color:rgba(39,174,96,.32);color:#ccffdf}
+    .toast.warn{border-color:rgba(212,175,55,.36);color:#ffe79c}
+    .toast.error{border-color:rgba(227,107,107,.34);color:#ffd7d7}
+    @keyframes toastIn{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+    .confirm-overlay{position:fixed;inset:0;background:rgba(2,8,6,.72);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:18px;z-index:10040}
+    .confirm-overlay.show{display:flex}
+    .confirm-box{width:min(460px,100%);border-radius:24px;background:linear-gradient(180deg, rgba(15,35,25,.98), rgba(6,22,16,.98));border:1px solid rgba(255,255,255,.10);box-shadow:0 28px 70px rgba(0,0,0,.42);padding:22px}
+    .confirm-box h3{margin:0 0 8px;font-size:24px;font-weight:900;color:#fff}
+    .confirm-box p{margin:0;color:var(--muted);line-height:1.9;font-size:14px}
+    .confirm-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px;justify-content:flex-start}
+    .confirm-actions .btn{padding:12px 16px}
+
+  </style>
+  <script>
+    if (localStorage.getItem("adminLoggedIn") !== "true") {
+      window.location.href = "admin_login.html";
+    }
+    function adminLogout(){
+      localStorage.removeItem("adminLoggedIn");
+      window.location.href = "admin_login.html";
+    }
+  </script>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>أكاديمية كرة القدم</h1>
+        <p>عرض الملف الكامل للاعب داخل لوحة الإدارة مع البيانات الأساسية والإحصائيات والملاحظات.</p>
+      </div>
+      <div id="admin-sidebar"></div>
+    </aside>
+
+    <main class="main">
+      <div class="page-head">
+        <div class="page-title">
+          <h2>ملف اللاعب</h2>
+          <p>هذه الصفحة مخصصة للإدارة فقط، وتعرض بيانات اللاعب الكاملة مع الإحصائيات الأساسية ومعلومات السجل.</p>
+        </div>
+        <div class="head-actions">
+          <a class="btn btn-dark" href="players_list_dashboard.html">العودة لقائمة اللاعبين</a>
+          <button class="btn btn-gold" type="button" id="editPlayerBtn">تعديل اللاعب</button>
+          <button class="btn btn-danger" type="button" id="deletePlayerBtn">حذف اللاعب</button>
+        </div>
+      </div>
+
+      <div id="playerViewRoot"></div>
+    </main>
+  </div>
+
+  <div class="confirm-overlay" id="confirmOverlay" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
+    <div class="confirm-box">
+      <h3 id="confirmTitle">تأكيد الحذف</h3>
+      <p id="confirmMessage">هل تريد حذف هذا اللاعب من قاعدة البيانات؟ لا يمكن التراجع عن هذه العملية.</p>
+      <div class="confirm-actions">
+        <button class="btn btn-danger" type="button" id="confirmYesBtn">نعم، حذف اللاعب</button>
+        <button class="btn btn-dark" type="button" id="confirmNoBtn">إلغاء</button>
+      </div>
+    </div>
+  </div>
+  <div class="toast-wrap" id="toastWrap"></div>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="admin_sidebar.js"></script>
+  <script>
+    const SUPABASE_URL = "https://uwmyqlydenrzkzrymhvl.supabase.co";
+    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3bXlxbHlkZW5yemt6cnltaHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NDQ2NjAsImV4cCI6MjA5MzAyMDY2MH0.TCPgHAHhILaD5tFsZiFIgLvH7yuxkrtJ29F5J5oHQrw";
+    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+    let currentPlayer = null;
+
+    function showToast(message, type = "success"){
+      const wrap = document.getElementById("toastWrap");
+      if (!wrap) return;
+      const toast = document.createElement("div");
+      toast.className = "toast " + type;
+      toast.textContent = message;
+      wrap.appendChild(toast);
+      setTimeout(() => {
+        toast.style.opacity = "0";
+        toast.style.transform = "translateY(8px)";
+        toast.style.transition = ".2s ease";
+        setTimeout(() => toast.remove(), 220);
+      }, 2800);
+    }
+
+    function askConfirm(message){
+      return new Promise(resolve => {
+        const overlay = document.getElementById("confirmOverlay");
+        const msg = document.getElementById("confirmMessage");
+        const yes = document.getElementById("confirmYesBtn");
+        const no = document.getElementById("confirmNoBtn");
+        if (!overlay || !yes || !no){ resolve(false); return; }
+        msg.textContent = message || "هل تريد تأكيد العملية؟";
+        overlay.classList.add("show");
+        document.body.style.overflow = "hidden";
+        const cleanup = (value) => {
+          overlay.classList.remove("show");
+          document.body.style.overflow = "";
+          yes.removeEventListener("click", onYes);
+          no.removeEventListener("click", onNo);
+          overlay.removeEventListener("click", onOverlay);
+          document.removeEventListener("keydown", onEsc);
+          resolve(value);
+        };
+        const onYes = () => cleanup(true);
+        const onNo = () => cleanup(false);
+        const onOverlay = (e) => { if (e.target === overlay) cleanup(false); };
+        const onEsc = (e) => { if (e.key === "Escape") cleanup(false); };
+        yes.addEventListener("click", onYes);
+        no.addEventListener("click", onNo);
+        overlay.addEventListener("click", onOverlay);
+        document.addEventListener("keydown", onEsc);
+      });
+    }
+
+    function getQueryParam(name){
+      return new URLSearchParams(window.location.search).get(name);
+    }
+
+    function escapeHtml(value){
+      return String(value ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    function normalizeCategory(category){
+      const value = String(category || "").trim();
+      if (!value) return "-";
+      return value.replace("فئة ", "");
+    }
+
+    function getInitials(name){
+      const text = String(name || "").trim();
+      if(!text) return "؟";
+      const parts = text.split(/\s+/).filter(Boolean);
+      if(parts.length === 1) return parts[0].slice(0,2);
+      return (parts[0][0] || "") + (parts[1][0] || "");
+    }
+
+    function buildPlayerRatings(player){
+      const seed = String(player.id || "1").split('').reduce((sum, ch) => sum + ch.charCodeAt(0), 0);
+      return {
+        pac: Number(player.pac) || Math.min(95, 60 + (seed * 3 % 31)),
+        sho: Number(player.sho) || Math.min(95, 58 + (seed * 5 % 29)),
+        pas: Number(player.pas) || Math.min(95, 55 + (seed * 7 % 33)),
+        dri: Number(player.dri) || Math.min(95, 57 + (seed * 4 % 35)),
+        def: Number(player.def) || Math.min(95, 45 + (seed * 6 % 40)),
+        phy: Number(player.phy) || Math.min(95, 52 + (seed * 2 % 38))
+      };
+    }
+
+    function overallFromRatings(r){
+      return Math.round((r.pac + r.sho + r.pas + r.dri + r.def + r.phy) / 6);
+    }
+
+    function calcAge(player){
+      if (player.age) return player.age;
+      if (player.birth_date) {
+        const birth = new Date(player.birth_date);
+        if (!Number.isNaN(birth.getTime())) {
+          const now = new Date();
+          let age = now.getFullYear() - birth.getFullYear();
+          const m = now.getMonth() - birth.getMonth();
+          if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) age--;
+          return age > 0 ? age : "-";
+        }
+      }
+      return "-";
+    }
+
+    function formatDate(value){
+      if (!value) return "غير محدد";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return String(value || "غير محدد");
+      return date.toLocaleDateString('ar-SA', {year:'numeric', month:'2-digit', day:'2-digit'});
+    }
+
+    function safeValue(value, fallback = "غير محدد"){
+      const text = String(value ?? "").trim();
+      return text || fallback;
+    }
+
+    function redirectToPlayersList(delay = 1800){
+      setTimeout(() => {
+        window.location.href = "players_list_dashboard.html";
+      }, delay);
+    }
+
+    function detail(label, value){
+      return `
+        <div class="detail">
+          <strong>${escapeHtml(label)}</strong>
+          <span>${escapeHtml(safeValue(value))}</span>
+        </div>
+      `;
+    }
+
+    function renderEmpty(message = "لم يتم العثور على اللاعب المطلوب.", shouldRedirect = false){
+      document.getElementById("playerViewRoot").innerHTML = `
+        <section class="panel">
+          <div class="empty-state">
+            ${escapeHtml(message)}<br>
+            سيتم إعادتك إلى قائمة اللاعبين تلقائيًا.
+          </div>
+        </section>
+      `;
+      document.getElementById("editPlayerBtn").style.display = "none";
+      document.getElementById("deletePlayerBtn").style.display = "none";
+      if (shouldRedirect) redirectToPlayersList();
+    }
+
+    function renderLoading(){
+      document.getElementById("playerViewRoot").innerHTML = `
+        <section class="panel">
+          <div class="empty-state">جاري تحميل بيانات اللاعب من قاعدة البيانات...</div>
+        </section>
+      `;
+    }
+
+    async function loadPlayer(){
+      const id = String(getQueryParam("id") || "").trim();
+      if (!id) {
+        renderEmpty("لم يتم تمرير رقم اللاعب في الرابط.", true);
+        return;
+      }
+
+      renderLoading();
+      const { data, error } = await supabaseClient
+        .from("players")
+        .select("*")
+        .eq("id", id)
+        .maybeSingle();
+
+      if (error) {
+        console.error("Supabase player fetch error:", error);
+        renderEmpty("تعذر تحميل اللاعب من قاعدة البيانات.", true);
+        return;
+      }
+
+      if (!data) {
+        renderEmpty("لم يتم العثور على اللاعب المطلوب أو ربما تم حذفه.", true);
+        return;
+      }
+
+      currentPlayer = data;
+      renderPlayer(data);
+    }
+
+    function renderPlayer(player){
+      const ratings = buildPlayerRatings(player);
+      const overall = player.overall || overallFromRatings(ratings);
+      const age = calcAge(player);
+      const category = safeValue(normalizeCategory(player.category));
+      const position = safeValue(player.position, "لاعب");
+      const foot = safeValue(player.preferred_foot || player.preferredFoot);
+      const height = safeValue(player.height);
+      const shirtNumber = safeValue(player.shirt_number || player.shirtNumber || player.code);
+      const code = safeValue(player.code || player.shirt_number || player.shirtNumber);
+      const city = safeValue(player.city);
+      const phone = safeValue(player.phone);
+      const email = safeValue(player.email);
+      const coachName = safeValue(player.coach_name || player.coachName);
+      const coachCode = safeValue(player.coach_code || player.coachCode);
+      const level = safeValue(player.level || player.player_status || player.status);
+      const joinedAt = formatDate(player.created_at || player.joined_at || player.joinedAt);
+      const status = safeValue(player.player_status || player.status, "نشط");
+      const notes = player.notes || "لا توجد ملاحظات إضافية لهذا اللاعب حاليًا.";
+      const sourceRequestId = safeValue(player.reference_code || player.source_request_id);
+      const matches = player.matches || 0;
+      const goals = player.goals || 0;
+      const assists = player.assists || 0;
+      const avg = player.avg_rate || player.avgRate || (overall / 10).toFixed(1);
+      const image = player.image || "";
+      const playerName = safeValue(player.full_name || player.fullName, "لاعب بدون اسم");
+
+      document.getElementById("playerViewRoot").innerHTML = `
+        <section class="hero">
+          <article class="panel profile-card">
+            <div class="fifa-card">
+              <div class="card-top">
+                <div class="shirt-number">${escapeHtml(shirtNumber)}</div>
+                <div class="position-box">${escapeHtml(position)}</div>
+                <div class="ovr-box">${escapeHtml(overall)}<small>OVR</small></div>
+              </div>
+
+              <div class="avatar-wrap">
+                ${image ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(playerName)}">` : `<div class="avatar-fallback">${escapeHtml(getInitials(playerName))}</div>`}
+              </div>
+
+              <h3 class="player-main-name">${escapeHtml(playerName)}</h3>
+              <div class="player-role">${escapeHtml(position)} — ${escapeHtml(status)}</div>
+
+              <div class="meta-pills">
+                <span class="pill">العمر ${escapeHtml(age)}</span>
+                <span class="pill">${escapeHtml(height)}</span>
+                <span class="pill">${escapeHtml(foot)}</span>
+              </div>
+            </div>
+
+            <div class="stat-card">
+              <div class="stats-grid-top">
+                <div class="mini-stat"><span>المباريات</span><strong>${escapeHtml(matches)}</strong></div>
+                <div class="mini-stat"><span>الأهداف</span><strong>${escapeHtml(goals)}</strong></div>
+                <div class="mini-stat"><span>التمريرات الحاسمة</span><strong>${escapeHtml(assists)}</strong></div>
+                <div class="mini-stat"><span>متوسط التقييم</span><strong>${escapeHtml(avg)}</strong></div>
+              </div>
+
+              <section class="block">
+                <h3>الإحصائيات الأساسية</h3>
+                <div class="ratings">
+                  <div class="rating-col">
+                    <div class="rating-row"><label>السرعة</label><div class="bar"><span style="width:${ratings.pac}%"></span></div><strong>${ratings.pac}</strong></div>
+                    <div class="rating-row"><label>التسديد</label><div class="bar"><span style="width:${ratings.sho}%"></span></div><strong>${ratings.sho}</strong></div>
+                    <div class="rating-row"><label>التمرير</label><div class="bar"><span style="width:${ratings.pas}%"></span></div><strong>${ratings.pas}</strong></div>
+                  </div>
+                  <div class="rating-col">
+                    <div class="rating-row"><label>المهارة</label><div class="bar"><span style="width:${ratings.dri}%"></span></div><strong>${ratings.dri}</strong></div>
+                    <div class="rating-row"><label>الدفاع</label><div class="bar"><span style="width:${ratings.def}%"></span></div><strong>${ratings.def}</strong></div>
+                    <div class="rating-row"><label>اللياقة</label><div class="bar"><span style="width:${ratings.phy}%"></span></div><strong>${ratings.phy}</strong></div>
+                  </div>
+                </div>
+              </section>
+
+              <div class="info-grid">
+                <section class="info-box">
+                  <h4>بيانات اللاعب</h4>
+                  <div class="detail-list">
+                    ${detail("الاسم الكامل", playerName)}
+                    ${detail("رقم اللاعب", code)}
+                    ${detail("الفئة", category)}
+                    ${detail("الفريق", player.team)}
+                    ${detail("المركز", position)}
+                    ${detail("المدينة", city)}
+                    ${detail("الحالة", status)}
+                  </div>
+                </section>
+
+                <section class="info-box">
+                  <h4>بيانات السجل</h4>
+                  <div class="detail-list">
+                    ${detail("الجوال", phone)}
+                    ${detail("البريد الإلكتروني", email)}
+                    ${detail("اسم ولي الأمر", player.guardian_name || player.guardian)}
+                    ${detail("المدرب المشرف", coachName)}
+                    ${detail("كود المدرب", coachCode)}
+                    ${detail("المسار / المستوى", level)}
+                    ${detail("تاريخ الإنشاء", joinedAt)}
+                    ${detail("رقم الطلب المرتبط", sourceRequestId)}
+                    ${detail("القدم المفضلة", foot)}
+                  </div>
+                </section>
+              </div>
+
+              <div class="note-box">
+                <strong style="display:block;color:#fff;margin-bottom:8px">ملاحظات الإدارة</strong>
+                ${escapeHtml(notes)}
+              </div>
+            </div>
+          </article>
+        </section>
+      `;
+
+      document.getElementById("editPlayerBtn").onclick = () => {
+        window.location.href = `edit_player_dashboard.html?id=${encodeURIComponent(player.id)}`;
+      };
+
+      document.getElementById("deletePlayerBtn").onclick = deleteCurrentPlayer;
+    }
+
+    async function deleteCurrentPlayer(){
+      if (!currentPlayer?.id) return;
+      const ok = await askConfirm("هل تريد حذف هذا اللاعب من قاعدة البيانات؟ لا يمكن التراجع عن هذه العملية.");
+      if (!ok) return;
+
+      const deleteBtn = document.getElementById("deletePlayerBtn");
+      if (deleteBtn){
+        deleteBtn.disabled = true;
+        deleteBtn.textContent = "جاري الحذف...";
+      }
+
+      const { error } = await supabaseClient
+        .from("players")
+        .delete()
+        .eq("id", currentPlayer.id);
+
+      if (error) {
+        console.error("Supabase delete player error:", error);
+        showToast("تعذر حذف اللاعب. تحقق من صلاحيات قاعدة البيانات أو الاتصال.", "error");
+        if (deleteBtn){
+          deleteBtn.disabled = false;
+          deleteBtn.textContent = "حذف اللاعب";
+        }
+        return;
+      }
+
+      showToast("تم حذف اللاعب بنجاح.", "success");
+      setTimeout(() => { window.location.href = "players_list_dashboard.html"; }, 700);
+    }
+
+    document.addEventListener("DOMContentLoaded", loadPlayer);
+  </script>
+</body>
+</html>
