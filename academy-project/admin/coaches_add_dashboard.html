@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة إضافة المدربين</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#0b1220;--panel:#111a2e;--panel-2:#16233d;--line:rgba(255,255,255,.08);--text:#ecf2ff;--muted:#9fb0d1;--gold:#d4af37;--gold-2:#f5d46b;--danger:#ff6b6b;--success:#2ecc71;--info:#58a6ff;--shadow:0 18px 45px rgba(0,0,0,.22);--radius:22px}
+    *{box-sizing:border-box} html,body{margin:0;padding:0;font-family:'Cairo',sans-serif;background:linear-gradient(180deg,#09111f 0%, #0d1628 100%);color:var(--text)} body{min-height:100vh}
+    .layout{display:grid;grid-template-columns:290px 1fr;min-height:100vh}.sidebar{background:linear-gradient(180deg, rgba(212,175,55,.12), rgba(255,255,255,.02));border-left:1px solid var(--line);padding:26px 18px;backdrop-filter: blur(8px);position:sticky;top:0;height:100vh}
+    .brand{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:var(--shadow);margin-bottom:20px}.brand h1{margin:0;font-size:22px;color:var(--gold-2);font-weight:800}.brand p{margin:8px 0 0;color:var(--muted);line-height:1.8;font-size:14px}
+    .menu{display:flex;flex-direction:column;gap:10px;margin-top:18px}.menu a{text-decoration:none;color:var(--text);background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:16px;padding:13px 14px;font-weight:700;transition:.25s ease}.menu a:hover,.menu a.active{background:linear-gradient(90deg, rgba(212,175,55,.18), rgba(255,255,255,.05));border-color:rgba(212,175,55,.35);transform:translateY(-1px)} .menu .logout-link{background:linear-gradient(90deg, rgba(199,59,59,.18), rgba(255,255,255,.05));border-color:rgba(199,59,59,.30)} .menu .site-link{background:linear-gradient(90deg, rgba(212,175,55,.14), rgba(255,255,255,.05));border-color:rgba(212,175,55,.24);color:#f5d46b}
+    .main{padding:26px}.topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;margin-bottom:24px;flex-wrap:wrap}.title-box h2{margin:0;font-size:30px;font-weight:900}.title-box p{margin:6px 0 0;color:var(--muted);font-size:14px}.actions{display:flex;gap:12px;flex-wrap:wrap}
+    .btn{border:none;border-radius:14px;padding:13px 18px;font-family:inherit;font-weight:900;cursor:pointer;transition:.25s ease;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px}.btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold-2));color:#1a1a1a;box-shadow:0 10px 30px rgba(212,175,55,.20)}.btn-secondary{background:rgba(255,255,255,.05);color:var(--text);border:1px solid var(--line)}.btn:hover{transform:translateY(-2px)}
+    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px}.stat{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:var(--shadow)}.stat span{display:block;color:var(--muted);font-size:13px;margin-bottom:8px;font-weight:700}.stat strong{font-size:28px;color:var(--gold-2)}
+    .content-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:20px;align-items:start}.card{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
+    .card-head{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.card-head h3{margin:0;font-size:20px}.card-head p{margin:4px 0 0;color:var(--muted);font-size:13px}.card-body{padding:20px}
+    .form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}.field.full{grid-column:1 / -1}.field label{display:block;margin-bottom:8px;font-size:14px;font-weight:700;color:#f4f7ff}.field input,.field select,.field textarea{width:100%;background:rgba(7,12,22,.72);color:var(--text);border:1px solid rgba(255,255,255,.10);border-radius:14px;padding:14px 14px;font-family:inherit;font-size:14px;outline:none;transition:.2s ease}.field textarea{min-height:110px;resize:vertical}.field input:focus,.field select:focus,.field textarea:focus{border-color:rgba(212,175,55,.55);box-shadow:0 0 0 3px rgba(212,175,55,.09)}
+    .upload-box{border:1.5px dashed rgba(212,175,55,.45);border-radius:20px;padding:22px;text-align:center;background:rgba(212,175,55,.05)}.upload-preview{width:120px;height:120px;margin:0 auto 14px;border-radius:22px;background:linear-gradient(135deg,#1d2943,#0c1321);border:2px solid rgba(212,175,55,.35);display:flex;align-items:center;justify-content:center;font-size:34px;color:var(--gold-2);overflow:hidden}.upload-preview img{width:100%;height:100%;object-fit:cover}.upload-box p{color:var(--muted);margin:0 0 12px;font-size:14px;line-height:1.8}.upload-box input{display:none}
+    .mini-list{display:flex;flex-direction:column;gap:12px}.mini-item{display:flex;align-items:center;justify-content:space-between;gap:12px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:16px;padding:14px}.mini-item .meta{display:flex;align-items:center;gap:12px}.avatar{width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg, rgba(212,175,55,.35), rgba(255,255,255,.05));display:flex;align-items:center;justify-content:center;font-weight:800;color:var(--gold-2);flex-shrink:0;overflow:hidden}.avatar img{width:100%;height:100%;object-fit:cover;display:block}.meta h4{margin:0 0 4px;font-size:15px}.meta small{color:var(--muted);font-size:12px}.tag{background:rgba(46,204,113,.10);color:#9cf0bf;border:1px solid rgba(46,204,113,.24);padding:7px 10px;border-radius:999px;font-size:12px;font-weight:800;white-space:nowrap}
+    .form-actions{display:flex;gap:12px;justify-content:flex-start;margin-top:20px;flex-wrap:wrap}.note{margin-top:16px;background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:16px;padding:14px;color:var(--muted);font-size:13px;line-height:1.9}
+    .toast-wrap{position:fixed;left:20px;bottom:20px;display:flex;flex-direction:column;gap:10px;z-index:10001}.toast{min-width:280px;max-width:420px;padding:14px 16px;border-radius:16px;border:1px solid rgba(255,255,255,.10);background:linear-gradient(180deg, rgba(18,27,47,.98), rgba(11,18,33,.98));color:#fff;box-shadow:0 20px 45px rgba(0,0,0,.35);font-size:14px;line-height:1.8;font-weight:800;animation:toastIn .22s ease}.toast.success{border-color:rgba(39,174,96,.32);color:#ccffdf}.toast.warn{border-color:rgba(212,175,55,.32);color:#ffe79c}.toast.error{border-color:rgba(224,91,91,.32);color:#ffd7d7}@keyframes toastIn{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
+    @media (max-width:1100px){.layout{grid-template-columns:1fr}.sidebar{position:relative;height:auto;border-left:none;border-bottom:1px solid var(--line)}.stats{grid-template-columns:repeat(2,1fr)}.content-grid{grid-template-columns:1fr}} @media (max-width:700px){.main{padding:16px}.stats{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.title-box h2{font-size:24px}}
+  </style>
+  <script>if (localStorage.getItem("adminLoggedIn") !== "true") { window.location.href = "admin_login.html"; } function adminLogout(){ localStorage.removeItem("adminLoggedIn"); window.location.href = "admin_login.html"; }</script>
+</head>
+<body>
+<div class="layout"><aside class="sidebar">
+      <div class="brand"><h1>أكاديمية كرة القدم</h1><p>لوحة احترافية لإضافة المدربين وربط ملفاتهم وخبراتهم ومسؤولياتهم داخل الأكاديمية.</p></div>
+      <div id="admin-sidebar"></div>
+    </aside>
+<main class="main">
+<div class="topbar"><div class="title-box"><h2>لوحة إضافة المدربين</h2><p>واجهة احترافية لبناء ملف المدرب وربطه لاحقًا بصفحة المدربين والصفحة الرئيسية.</p></div><div class="actions"><button class="btn btn-secondary" type="button" id="previewRecordBtn">معاينة السجل</button><button class="btn btn-primary" type="button" id="saveCoachTopBtn">حفظ المدرب</button></div></div>
+<section class="stats"><div class="stat"><span>إجمالي المدربين</span><strong id="statTotalCoaches">0</strong></div><div class="stat"><span>مدربون نشطون</span><strong id="statActiveCoaches">0</strong></div><div class="stat"><span>شهادات مضافة</span><strong id="statCertifiedCoaches">0</strong></div><div class="stat"><span>المضافون هذا الشهر</span><strong id="statAddedThisMonth">0</strong></div></section>
+<section class="content-grid">
+<div class="card"><div class="card-head"><div><h3>بيانات المدرب</h3><p>اعتمدت حقولًا احترافية مناسبة للعرض الإداري وللواجهة العامة.</p></div></div><div class="card-body">
+<form class="form-grid" id="addCoachForm">
+<div class="field"><label for="fullName">الاسم الكامل</label><input id="fullName" type="text" placeholder="مثال: أحمد محمد حكمي" /></div>
+<div class="field"><label for="jobTitle">المسمى الفني</label><select id="jobTitle"><option>اختر المسمى</option><option>مدرب رئيسي</option><option>مدرب مساعد</option><option>مدرب لياقة</option><option>مدرب حراس</option><option>محلل أداء</option><option>إداري فريق</option></select></div>
+<div class="field"><label for="specialty">التخصص</label><select id="specialty"><option>اختر التخصص</option><option>التدريب الفني</option><option>اللياقة البدنية</option><option>تدريب الحراس</option><option>التحليل الفني</option><option>الإعداد الذهني</option></select></div>
+<div class="field"><label for="category">الفئة المشرف عليها</label><select id="category"><option>اختر الفئة</option><option>براعم</option><option>ناشئين</option><option>شباب</option><option>فريق أول</option><option>كل الفئات</option></select></div>
+<div class="field"><label for="experienceYears">سنوات الخبرة</label><input id="experienceYears" type="number" min="0" placeholder="مثال: 8" /></div>
+<div class="field"><label for="certification">أبرز شهادة / اعتماد</label><input id="certification" type="text" placeholder="مثال: AFC C أو شهادة لياقة معتمدة" /></div>
+<div class="field"><label for="phone">رقم الجوال</label><input id="phone" type="tel" placeholder="05xxxxxxxx" /></div>
+<div class="field"><label for="status">الحالة</label><select id="status"><option>نشط</option><option>بانتظار المراجعة</option><option>مكتمل</option><option>موقوف</option></select></div>
+<div class="field full"><label for="bio">نبذة تعريفية مختصرة</label><textarea id="bio" placeholder="نبذة احترافية قصيرة تظهر في بطاقة المدرب وصفحته لاحقًا..."></textarea></div>
+<div class="field full"><label for="notes">ملاحظات إدارية</label><textarea id="notes" placeholder="ملاحظات داخلية خاصة بالإدارة فقط..."></textarea></div>
+</form>
+<div class="form-actions"><button class="btn btn-primary" type="button" id="saveCoachBtn">حفظ المدرب الآن</button><button class="btn btn-secondary" type="reset" id="resetFormBtn">تفريغ الحقول</button></div>
+<div class="note">تم اعتماد الحقول التالية كنسخة احترافية متوازنة: الاسم، المسمى الفني، التخصص، الفئة، الخبرة، الشهادة، الجوال، الحالة، الصورة، والنبذة. هذه كافية جدًا للعرض الإداري وربط الواجهة العامة بدون تشويه أو نقص.</div>
+</div></div>
+<div style="display:grid; gap:20px;">
+<div class="card"><div class="card-head"><div><h3>صورة المدرب</h3><p>تظهر في القائمة ولوحة المعاينة وصفحات الزوار لاحقًا.</p></div></div><div class="card-body"><div class="upload-box"><div class="upload-preview" id="previewBox"><span>👔</span></div><p>ارفع صورة واضحة مربعة أو رأسية باقتصاص مناسب لواجهة احترافية.</p><label class="btn btn-primary" for="coachImage" style="display:inline-block;">اختيار صورة</label><input type="file" id="coachImage" accept="image/*" /></div></div></div>
+<div class="card"><div class="card-head"><div><h3>آخر المدربين المضافين</h3><p>معاينة سريعة لأحدث السجلات.</p></div></div><div class="card-body"><div class="mini-list" id="recentCoachesList"><div class="note" style="margin-top:0">لا يوجد مدربون مضافون بعد.</div></div></div></div>
+</div></section></main></div>
+<div class="toast-wrap" id="toastWrap"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="admin_sidebar.js"></script>
+<script>
+const SUPABASE_URL = "https://uwmyqlydenrzkzrymhvl.supabase.co";
+const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3bXlxbHlkZW5yemt6cnltaHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NDQ2NjAsImV4cCI6MjA5MzAyMDY2MH0.TCPgHAHhILaD5tFsZiFIgLvH7yuxkrtJ29F5J5oHQrw";
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+let currentImageData = "";
+const fileInput = document.getElementById('coachImage');
+const previewBox = document.getElementById('previewBox');
+const form = document.getElementById('addCoachForm');
+
+function showToast(message, type = "success"){
+  const wrap = document.getElementById("toastWrap");
+  const toast = document.createElement("div");
+  toast.className = "toast " + type;
+  toast.textContent = message;
+  wrap.appendChild(toast);
+  setTimeout(() => {
+    toast.style.opacity = "0";
+    toast.style.transform = "translateY(8px)";
+    toast.style.transition = ".2s ease";
+    setTimeout(() => toast.remove(), 220);
+  }, 2600);
+}
+
+function getInitials(name){
+  const text = String(name || "").trim();
+  if(!text) return "؟";
+  const parts = text.split(/\s+/).filter(Boolean);
+  return parts.length === 1 ? parts[0].slice(0,2) : (parts[0][0] || "") + (parts[1][0] || "");
+}
+
+function escapeHtml(value){
+  return String(value ?? "")
+    .replace(/&/g,"&amp;")
+    .replace(/</g,"&lt;")
+    .replace(/>/g,"&gt;")
+    .replace(/"/g,"&quot;")
+    .replace(/'/g,"&#039;");
+}
+
+async function fetchCoaches(){
+  const { data, error } = await supabaseClient
+    .from("coaches")
+    .select("*")
+    .order("created_at", { ascending:false });
+
+  if (error) {
+    console.error("Supabase coaches fetch error:", error);
+    showToast("تعذر تحميل المدربين من قاعدة البيانات.", "error");
+    return [];
+  }
+  return Array.isArray(data) ? data : [];
+}
+
+async function updateStats(){
+  const coaches = await fetchCoaches();
+  const total = coaches.length;
+  const active = coaches.filter(c => ["نشط","مكتمل","active"].includes(String(c.status || "نشط"))).length;
+  const certified = coaches.filter(c => String(c.certification || "").trim() !== "").length;
+  const now = new Date();
+  const addedThisMonth = coaches.filter(c => {
+    if (!c.created_at) return false;
+    const d = new Date(c.created_at);
+    return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+  }).length;
+
+  document.getElementById("statTotalCoaches").textContent = total;
+  document.getElementById("statActiveCoaches").textContent = active;
+  document.getElementById("statCertifiedCoaches").textContent = certified;
+  document.getElementById("statAddedThisMonth").textContent = addedThisMonth;
+}
+
+async function renderRecentCoaches(){
+  const list = document.getElementById("recentCoachesList");
+  const coaches = (await fetchCoaches()).slice(0, 3);
+
+  if (!coaches.length){
+    list.innerHTML = '<div class="note" style="margin-top:0">لا يوجد مدربون مضافون بعد.</div>';
+    return;
+  }
+
+  list.innerHTML = coaches.map(coach => `
+    <div class="mini-item">
+      <div class="meta">
+        <div class="avatar">${coach.image ? `<img src="${escapeHtml(coach.image)}" alt="${escapeHtml(coach.full_name || '')}">` : escapeHtml(getInitials(coach.full_name))}</div>
+        <div>
+          <h4>${escapeHtml(coach.full_name || "-")}</h4>
+          <small>${escapeHtml(coach.job_title || "-")} • ${escapeHtml(coach.category || "-")}</small>
+        </div>
+      </div>
+      <span class="tag">${escapeHtml(coach.status || "نشط")}</span>
+    </div>
+  `).join("");
+}
+
+function buildCoachPayload(){
+  const clean = (value, blocked) => {
+    const text = String(value || "").trim();
+    return (!text || blocked.includes(text)) ? null : text;
+  };
+
+  return {
+    full_name: document.getElementById("fullName").value.trim(),
+    job_title: clean(document.getElementById("jobTitle").value, ["اختر المسمى"]),
+    specialty: clean(document.getElementById("specialty").value, ["اختر التخصص"]),
+    category: clean(document.getElementById("category").value, ["اختر الفئة"]),
+    experience_years: document.getElementById("experienceYears").value ? Number(document.getElementById("experienceYears").value) : null,
+    certification: document.getElementById("certification").value.trim() || null,
+    phone: document.getElementById("phone").value.trim() || null,
+    status: document.getElementById("status").value.trim() || "نشط",
+    bio: document.getElementById("bio").value.trim() || null,
+    notes: document.getElementById("notes").value.trim() || null,
+    image: currentImageData || null
+  };
+}
+
+function validateCoach(payload){
+  if (!payload.full_name){
+    showToast("الاسم الكامل مطلوب.", "warn");
+    document.getElementById("fullName").focus();
+    return false;
+  }
+  if (!payload.job_title){
+    showToast("اختر المسمى الفني.", "warn");
+    document.getElementById("jobTitle").focus();
+    return false;
+  }
+  if (!payload.category){
+    showToast("اختر الفئة المشرف عليها.", "warn");
+    document.getElementById("category").focus();
+    return false;
+  }
+  return true;
+}
+
+async function isDuplicateCoach(payload){
+  if (!payload.full_name || !payload.phone) return false;
+  const { data, error } = await supabaseClient
+    .from("coaches")
+    .select("id")
+    .eq("full_name", payload.full_name)
+    .eq("phone", payload.phone)
+    .limit(1);
+
+  if (error) {
+    console.error("Duplicate coach check error:", error);
+    return false;
+  }
+  return Array.isArray(data) && data.length > 0;
+}
+
+async function saveCoach(){
+  const payload = buildCoachPayload();
+  if (!validateCoach(payload)) return;
+
+  const buttons = [document.getElementById("saveCoachBtn"), document.getElementById("saveCoachTopBtn")].filter(Boolean);
+  buttons.forEach(btn => {
+    btn.disabled = true;
+    btn.textContent = "جاري الحفظ...";
+  });
+
+  try {
+    const duplicate = await isDuplicateCoach(payload);
+    if (duplicate) {
+      showToast("يوجد مدرب مطابق بنفس الاسم ورقم الجوال.", "error");
+      return;
+    }
+
+    const { data, error } = await supabaseClient
+      .from("coaches")
+      .insert([payload])
+      .select("id")
+      .single();
+
+    if (error) throw error;
+
+    showToast("تم حفظ المدرب في قاعدة البيانات بنجاح.", "success");
+    await updateStats();
+    await renderRecentCoaches();
+
+    setTimeout(() => {
+      window.location.href = `coach_view_dashboard.html?id=${encodeURIComponent(data.id)}`;
+    }, 600);
+  } catch (error) {
+    console.error("Supabase insert coach error:", error);
+    showToast("تعذر حفظ المدرب: " + (error.message || error.details || error.code || "راجع الصلاحيات والحقول"), "error");
+  } finally {
+    buttons.forEach(btn => {
+      btn.disabled = false;
+      btn.textContent = btn.id === "saveCoachTopBtn" ? "حفظ المدرب" : "حفظ المدرب الآن";
+    });
+  }
+}
+
+function previewRecord(){
+  const fullName = document.getElementById("fullName").value.trim() || "—";
+  const jobTitle = document.getElementById("jobTitle").value.trim() || "—";
+  const category = document.getElementById("category").value.trim() || "—";
+  const phone = document.getElementById("phone").value.trim() || "—";
+  showToast(`معاينة: ${fullName} | ${jobTitle} | ${category} | ${phone}`, "warn");
+}
+
+fileInput.addEventListener('change', function () {
+  const file = this.files && this.files[0];
+  if (!file) return;
+
+  if (file.size > 900 * 1024) {
+    showToast("الصورة كبيرة جدًا. اختر صورة أقل من 900KB مؤقتًا.", "warn");
+    this.value = "";
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = function (e) {
+    currentImageData = e.target.result;
+    previewBox.innerHTML = `<img src="${e.target.result}" alt="صورة المدرب">`;
+  };
+  reader.readAsDataURL(file);
+});
+
+document.getElementById("saveCoachBtn").addEventListener("click", saveCoach);
+document.getElementById("saveCoachTopBtn").addEventListener("click", saveCoach);
+document.getElementById("previewRecordBtn").addEventListener("click", previewRecord);
+document.getElementById("resetFormBtn").addEventListener("click", () => {
+  currentImageData = "";
+  form.reset();
+  setTimeout(() => { previewBox.innerHTML = "<span>👔</span>"; }, 0);
+});
+form.addEventListener("submit", e => { e.preventDefault(); saveCoach(); });
+
+document.addEventListener("DOMContentLoaded", async () => {
+  await updateStats();
+  await renderRecentCoaches();
+});
+</script>
+</body></html>
