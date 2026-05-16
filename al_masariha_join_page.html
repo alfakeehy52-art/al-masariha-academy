@@ -58,7 +58,7 @@
 
       <div class="request-switch" id="requestSwitch">
         <button class="switch-btn active" type="button" data-type="player">لاعب</button>
-        <button class="switch-btn" type="button" data-type="guardian">ولي أمر</button>
+        <button class="switch-btn" type="button" data-type="academy_member">عضو أكاديمي</button>
         <button class="switch-btn" type="button" data-type="supporter">داعم</button>
         <button class="switch-btn" type="button" data-type="volunteer">متطوع</button>
         <button class="switch-btn" type="button" data-type="coach">مدرب</button>
@@ -68,16 +68,24 @@
         <section class="section type-panel active" data-panel="player">
           <h3 class="section-title">بيانات طلب اللاعب</h3>
           <div class="grid">
-            <div class="field"><label for="playerAge">العمر</label><input id="playerAge" name="playerAge" type="number" placeholder="العمر" min="1" /></div>
-            <div class="field"><label for="birthDate">تاريخ الميلاد</label><input id="birthDate" name="birthDate" type="date" /></div>
+            <div class="field"><label for="playerBirthHijri">تاريخ الميلاد الهجري</label><input id="playerBirthHijri" name="playerBirthHijri" type="text" placeholder="مثال: 15/08/1448" /></div>
+            <div class="field"><label for="playerAge">العمر الهجري</label><input id="playerAge" name="playerAge" type="number" placeholder="العمر" min="1" readonly /></div>
+            <div class="field full" id="minorGuardianBox" style="display:none">
+              <div class="grid">
+                <div class="field"><label for="relationship">صلة القرابة</label><select id="relationship" name="relationship"><option value="">اختر</option><option>أب</option><option>أم</option><option>أخ</option><option>أخت</option><option>ولي أمر آخر</option></select></div>
+                <div class="field"><label for="guardianName">اسم ولي الأمر</label><input id="guardianName" name="guardianName" type="text" placeholder="الاسم الكامل لولي الأمر" /></div>
+                <div class="field"><label for="guardianPhone">جوال ولي الأمر</label><input id="guardianPhone" name="guardianPhone" type="tel" placeholder="05xxxxxxxx" /></div>
+                <div class="field"><label for="guardianNationalId">هوية ولي الأمر</label><input id="guardianNationalId" name="guardianNationalId" type="text" placeholder="رقم الهوية" /></div>
+              </div>
+            </div>
             <div class="field"><label for="ageCategory">الفئة المطلوبة</label><select id="ageCategory" name="ageCategory"><option value="">اختر الفئة</option><option>براعم</option><option>ناشئين</option><option>شباب</option><option>فريق أول</option></select></div>
             <div class="field"><label for="position">المركز المفضل</label><select id="position" name="position"><option value="">اختر المركز</option><option>حارس مرمى</option><option>مدافع</option><option>وسط</option><option>جناح</option><option>مهاجم</option></select></div>
             <div class="field full"><label for="playerNotes">نبذة أو ملاحظات</label><textarea id="playerNotes" name="playerNotes" placeholder="اكتب أي معلومات مهمة عن اللاعب"></textarea></div>
           </div>
         </section>
 
-        <section class="section type-panel" data-panel="guardian">
-          <h3 class="section-title">بيانات طلب ولي الأمر</h3>
+        <section class="section type-panel" data-panel="academy_member">
+          <h3 class="section-title">بيانات طلب العضو الأكاديمي</h3>
           <div class="grid">
             <div class="field full">
               <label>الغرض من التسجيل</label>
@@ -88,7 +96,7 @@
               </div>
               <input type="hidden" id="guardianGoal" name="guardianGoal" />
             </div>
-            <div class="field guardian-common" style="display:none"><label for="relationship">صلة القرابة</label><select id="relationship" name="relationship"><option value="">اختر</option><option>أب</option><option>أم</option><option>أخ</option><option>أخت</option><option>ولي أمر آخر</option></select></div>
+            <div class="field guardian-common" style="display:none"><label for="academyRelationship">صلة القرابة</label><select id="academyRelationship" name="academyRelationship"><option value="">اختر</option><option>أب</option><option>أم</option><option>أخ</option><option>أخت</option><option>ولي أمر آخر</option></select></div>
             <div class="field guardian-player-related" style="display:none"><label for="childrenCount">عدد الأبناء المرتبطين</label><input id="childrenCount" name="childrenCount" type="number" min="1" placeholder="مثال: 1" /></div>
             <div class="field full guardian-existing-player" style="display:none">
               <label for="existingPlayerSearch">بحث عن اللاعب الموجود</label>
@@ -168,16 +176,19 @@
   <div id="site-footer"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="shared-layout.js"></script>
+  <script src="supabase-config.js"></script>
   <script>
-    const SUPABASE_URL='https://uwmyqlydenrzkzrymhvl.supabase.co';
-    const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3bXlxbHlkZW5yemt6cnltaHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NDQ2NjAsImV4cCI6MjA5MzAyMDY2MH0.TCPgHAHhILaD5tFsZiFIgLvH7yuxkrtJ29F5J5oHQrw';
-    const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+    const { url: SUPABASE_URL, anonKey: SUPABASE_ANON_KEY } = window.SUPABASE_CONFIG || {};
+    if(!SUPABASE_URL || !SUPABASE_ANON_KEY){ throw new Error('Missing SUPABASE_CONFIG. Load supabase-config.js before this script.'); }
+    const supabaseClient=window.supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY);
     let activeType='player';let selectedGuardianGoal='';let selectedPlayers=[];let searchTimer=null;
     const $=id=>document.getElementById(id);
     function showToast(message,type='success'){const wrap=$('toastWrap');const t=document.createElement('div');t.className='toast '+type;t.textContent=message;wrap.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transform='translateY(8px)';t.style.transition='.2s ease';setTimeout(()=>t.remove(),220)},3200)}
     function generateReferenceCode(){const n=new Date();return `REQ-${n.getFullYear()}${String(n.getMonth()+1).padStart(2,'0')}${String(n.getDate()).padStart(2,'0')}-${Math.floor(Math.random()*9000)+1000}`}
     function escapeHtml(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
-    function activateType(type){activeType=type;document.querySelectorAll('.switch-btn').forEach(b=>b.classList.toggle('active',b.dataset.type===type));document.querySelectorAll('.type-panel').forEach(p=>p.classList.toggle('active',p.dataset.panel===type));if(type!=='guardian') clearGuardianTransient();}
+    function hijriYearFromText(v){const m=String(v||'').match(/(14\d{2})/);return m?Number(m[1]):null}
+    function updateMinorGuardianVisibility(){const age=Number($('playerAge')?.value||0);const isMinor=activeType==='player' && age>0 && age<18;const box=$('minorGuardianBox');if(box) box.style.display=isMinor?'grid':'none';if(!isMinor){['relationship','guardianName','guardianPhone','guardianNationalId'].forEach(id=>{if($(id)) $(id).value='';});}}
+    function activateType(type){activeType=type;document.querySelectorAll('.switch-btn').forEach(b=>b.classList.toggle('active',b.dataset.type===type));document.querySelectorAll('.type-panel').forEach(p=>p.classList.toggle('active',p.dataset.panel===type));if(type!=='academy_member') clearGuardianTransient();updateMinorGuardianVisibility();}
     function clearGuardianTransient(){selectedGuardianGoal='';$('guardianGoal').value='';document.querySelectorAll('.goal-btn').forEach(b=>b.classList.remove('active'));updateGuardianGoalView();}
     function setGuardianGoal(goal){selectedGuardianGoal=goal;$('guardianGoal').value=goal;document.querySelectorAll('.goal-btn').forEach(b=>b.classList.toggle('active',b.dataset.goal===goal));updateGuardianGoalView();}
     function updateGuardianGoalView(){const goal=$('guardianGoal')?.value||'';document.querySelectorAll('.guardian-common').forEach(el=>el.style.display=goal?'grid':'none');document.querySelectorAll('.guardian-player-related').forEach(el=>el.style.display=(goal==='register_new_player'||goal==='link_existing_player')?'grid':'none');document.querySelectorAll('.guardian-new-player').forEach(el=>el.style.display=goal==='register_new_player'?'grid':'none');document.querySelectorAll('.guardian-existing-player').forEach(el=>el.style.display=goal==='link_existing_player'?'grid':'none');if(goal!=='link_existing_player'){selectedPlayers=[];renderSelectedPlayers();$('existingPlayerSearch').value='';renderSuggestions([]);}}
@@ -185,12 +196,12 @@
     function addSelectedPlayer(player){const count=Number($('childrenCount').value||0);if(count && selectedPlayers.length>=count){showToast('وصلت للعدد المسجل من الأبناء. عدّل العدد إذا كان لديك أبناء أكثر.','warn');return;}if(selectedPlayers.some(p=>String(p.id)===String(player.id))){showToast('هذا اللاعب تم اختياره مسبقًا.','warn');return;}selectedPlayers.push(player);renderSelectedPlayers();$('existingPlayerSearch').value='';renderSuggestions([])}
     function renderSelectedPlayers(){const wrap=$('selectedPlayers');const ids=$('existingPlayerIds');const names=$('existingPlayerNames');ids.value=selectedPlayers.map(p=>p.id).join(',');names.value=selectedPlayers.map(p=>p.full_name||'').filter(Boolean).join('، ');wrap.innerHTML=selectedPlayers.map(p=>`<span class="selected-chip">${escapeHtml(p.full_name||'لاعب')}<button type="button" data-id="${escapeHtml(p.id)}">×</button></span>`).join('');wrap.classList.toggle('show',selectedPlayers.length>0);wrap.querySelectorAll('button').forEach(b=>b.addEventListener('click',()=>{selectedPlayers=selectedPlayers.filter(p=>String(p.id)!==String(b.dataset.id));renderSelectedPlayers()}));}
     async function searchPlayers(q){const term=String(q||'').trim().replace(/[%,]/g,'');if(term.length<1){renderSuggestions([]);return;}const {data,error}=await supabaseClient.from('players').select('id,full_name,code,phone,category,position,team').or(`full_name.ilike.%${term}%,code.ilike.%${term}%,phone.ilike.%${term}%`).limit(8);if(error){console.error(error);showToast('تعذر البحث عن اللاعبين حاليًا.','error');return;}renderSuggestions(Array.isArray(data)?data:[])}
-    function validate(formData){if(!formData.fullName?.trim()){showToast('الاسم الكامل مطلوب.','warn');$('fullName').focus();return false}if(!formData.nationalId?.trim()){showToast('رقم الهوية / الإقامة مطلوب.','warn');$('nationalId').focus();return false}if(!formData.phone?.trim()){showToast('رقم الجوال مطلوب.','warn');$('phone').focus();return false}if(activeType==='guardian'){const goal=formData.guardianGoal;if(!goal){showToast('اختر الغرض من التسجيل أولًا.','warn');return false}if(!formData.relationship){showToast('اختر صلة القرابة.','warn');return false}if(goal==='register_new_player'){if(!formData.childName?.trim()){showToast('اكتب اسم اللاعب الجديد.','warn');return false}if(!formData.guardianPlayerAge){showToast('اكتب عمر اللاعب الجديد.','warn');return false}if(!formData.guardianPlayerCategory){showToast('اختر فئة اللاعب الجديد.','warn');return false}if(!formData.guardianPlayerPosition){showToast('اختر مركز اللاعب الجديد.','warn');return false}}if(goal==='link_existing_player'){const count=Number(formData.childrenCount||0);if(!count){showToast('اكتب عدد الأبناء المرتبطين.','warn');return false}if(selectedPlayers.length===0){showToast('ابحث واختر اللاعب أو اللاعبين المراد ربطهم.','warn');return false}if(selectedPlayers.length!==count){showToast('عدد اللاعبين المختارين لا يطابق عدد الأبناء المسجل.','warn');return false}}}return true}
+    function validate(formData){if(!formData.fullName?.trim()){showToast('الاسم الكامل مطلوب.','warn');$('fullName').focus();return false}if(!formData.nationalId?.trim()){showToast('رقم الهوية / الإقامة مطلوب.','warn');$('nationalId').focus();return false}if(!formData.phone?.trim()){showToast('رقم الجوال مطلوب.','warn');$('phone').focus();return false}if(activeType==='player'){const age=Number(formData.playerAge||0);if(age>0&&age<18){if(!formData.relationship){showToast('اختر صلة القرابة لولي الأمر.','warn');return false}if(!formData.guardianName?.trim()){showToast('اسم ولي الأمر مطلوب للاعب القاصر.','warn');return false}if(!formData.guardianPhone?.trim()){showToast('جوال ولي الأمر مطلوب للاعب القاصر.','warn');return false}}}if(activeType==='academy_member'){const goal=formData.guardianGoal;if(!goal){showToast('اختر الغرض من التسجيل أولًا.','warn');return false}if(!formData.academyRelationship){showToast('اختر صلة القرابة.','warn');return false}if(goal==='register_new_player'){if(!formData.childName?.trim()){showToast('اكتب اسم اللاعب الجديد.','warn');return false}if(!formData.guardianPlayerAge){showToast('اكتب عمر اللاعب الجديد.','warn');return false}if(!formData.guardianPlayerCategory){showToast('اختر فئة اللاعب الجديد.','warn');return false}if(!formData.guardianPlayerPosition){showToast('اختر مركز اللاعب الجديد.','warn');return false}}if(goal==='link_existing_player'){const count=Number(formData.childrenCount||0);if(!count){showToast('اكتب عدد الأبناء المرتبطين.','warn');return false}if(selectedPlayers.length===0){showToast('ابحث واختر اللاعب أو اللاعبين المراد ربطهم.','warn');return false}if(selectedPlayers.length!==count){showToast('عدد اللاعبين المختارين لا يطابق عدد الأبناء المسجل.','warn');return false}}}return true}
     const JOIN_REQUEST_ALLOWED_COLUMNS = new Set([
-      'id','request_type','full_name','national_id','phone','email','city','player_age','birth_date','age_category','position','player_notes',
+      'id','request_type','full_name','national_id','phone','email','city','player_age','birth_date','birth_hijri','age_category','position','player_notes',
       'child_name','relationship','children_count','guardian_goal','guardian_notes','support_type','support_level','entity_name',
       'support_method','support_notes','volunteer_field','availability','volunteer_notes','created_at','status','admin_notes',
-      'reviewed_at','updated_at','reference_code','notes','guardian_relation','child_age','child_category','child_position',
+      'reviewed_at','updated_at','reference_code','notes','guardian_relation','guardian_name','guardian_phone','guardian_national_id','child_age','child_category','child_position',
       'linked_player_id','linked_player_ids','coach_specialty','coach_experience','supporter_type'
     ]);
 
@@ -217,7 +228,7 @@
 
       if(activeType === 'player' && cleanText(data.playerNotes)) lines.push(cleanText(data.playerNotes));
 
-      if(activeType === 'guardian'){
+      if(activeType === 'academy_member'){
         if(cleanText(data.guardianNotes)) lines.push(cleanText(data.guardianNotes));
         if(selectedNames) lines.push(`اللاعبون المختارون للربط: ${selectedNames}`);
         if(selectedIds.length) lines.push(`معرّفات اللاعبين: ${selectedIds.join('، ')}`);
@@ -245,7 +256,7 @@
 
       const base = {
         reference_code,
-        request_type: activeType,
+        request_type: activeType==='academy_member' ? 'academy_member' : activeType,
         status: 'new',
         full_name: cleanText(data.fullName),
         national_id: cleanText(data.nationalId),
@@ -258,18 +269,23 @@
       if(activeType === 'player'){
         Object.assign(base, {
           player_age: cleanNumber(data.playerAge),
-          birth_date: cleanText(data.birthDate),
+          birth_hijri: cleanText(data.playerBirthHijri),
+          birth_date: null,
           age_category: cleanText(data.ageCategory),
           position: cleanText(data.position),
-          player_notes: cleanText(data.playerNotes)
+          player_notes: cleanText(data.playerNotes),
+          relationship: Number(data.playerAge||0)<18 ? cleanText(data.relationship) : null,
+          guardian_name: Number(data.playerAge||0)<18 ? cleanText(data.guardianName) : null,
+          guardian_phone: Number(data.playerAge||0)<18 ? cleanText(data.guardianPhone) : null,
+          guardian_national_id: Number(data.playerAge||0)<18 ? cleanText(data.guardianNationalId) : null
         });
       }
 
-      if(activeType === 'guardian'){
+      if(activeType === 'academy_member'){
         Object.assign(base, {
           child_name: cleanText(data.childName) || selectedNames || null,
-          relationship: cleanText(data.relationship),
-          guardian_relation: cleanText(data.relationship),
+          relationship: cleanText(data.academyRelationship),
+          guardian_relation: cleanText(data.academyRelationship),
           children_count: cleanNumber(data.childrenCount),
           guardian_goal: cleanText(data.guardianGoal),
           guardian_notes: notes,
@@ -342,6 +358,8 @@
       });
       $('existingPlayerSearch')?.addEventListener('input',e=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>searchPlayers(e.target.value),220)});
       document.addEventListener('click',e=>{if(!e.target.closest('.guardian-existing-player'))renderSuggestions([])});
+      $('playerBirthHijri')?.addEventListener('input',()=>{const y=hijriYearFromText($('playerBirthHijri').value);if(y){const age=1450-y;$('playerAge').value=age>0?String(age):'';}else{$('playerAge').value='';}updateMinorGuardianVisibility();});
+      $('playerAge')?.addEventListener('input',updateMinorGuardianVisibility);
       $('joinForm').addEventListener('submit',async e=>{
         e.preventDefault();
         const formEl = e.currentTarget;
