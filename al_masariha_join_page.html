@@ -186,7 +186,55 @@
     function showToast(message,type='success'){const wrap=$('toastWrap');const t=document.createElement('div');t.className='toast '+type;t.textContent=message;wrap.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transform='translateY(8px)';t.style.transition='.2s ease';setTimeout(()=>t.remove(),220)},3200)}
     function generateReferenceCode(){const n=new Date();return `REQ-${n.getFullYear()}${String(n.getMonth()+1).padStart(2,'0')}${String(n.getDate()).padStart(2,'0')}-${Math.floor(Math.random()*9000)+1000}`}
     function escapeHtml(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
-    function hijriYearFromText(v){const m=String(v||'').match(/(14\d{2})/);return m?Number(m[1]):null}
+    function normalizeDigits(value){
+      return String(value ?? '').replace(/[٠-٩]/g, d => String(d.charCodeAt(0)-1632)).replace(/[۰-۹]/g, d => String(d.charCodeAt(0)-1776));
+    }
+    function getCurrentHijriDate(){
+      try{
+        const parts = new Intl.DateTimeFormat('ar-SA-u-ca-islamic-umalqura',{year:'numeric',month:'numeric',day:'numeric'}).formatToParts(new Date());
+        const y = Number(normalizeDigits((parts.find(p=>p.type==='year')||{}).value || 0));
+        const m = Number(normalizeDigits((parts.find(p=>p.type==='month')||{}).value || 0));
+        const d = Number(normalizeDigits((parts.find(p=>p.type==='day')||{}).value || 0));
+        if(Number.isFinite(y) && Number.isFinite(m) && Number.isFinite(d) && y>1300 && m>=1 && m<=12 && d>=1 && d<=30){
+          return { year:y, month:m, day:d };
+        }
+      }catch(e){}
+      return { year:1450, month:1, day:1 };
+    }
+    function parseHijriDate(v){
+      const value=normalizeDigits(String(v||'').trim());
+      if(!value) return null;
+      const parts=value.split(/[\/\-]/).map(x=>x.trim()).filter(Boolean);
+      if(parts.length!==3) return null;
+      const nums=parts.map(n=>Number(normalizeDigits(n)));
+      if(nums.some(n=>!Number.isFinite(n))) return null;
+
+      let year=null, month=null, day=null;
+      if(nums[0]>=1300 && nums[0]<=1700){
+        year=nums[0]; month=nums[1]; day=nums[2];
+      }else if(nums[2]>=1300 && nums[2]<=1700){
+        day=nums[0]; month=nums[1]; year=nums[2];
+      }
+
+      if(!year || !month || !day) return null;
+      if(month<1 || month>12 || day<1 || day>30) return null;
+      return { year, month, day };
+    }
+    function calcHijriAge(birth){
+      if(!birth) return null;
+      const now=getCurrentHijriDate();
+      if(!now || !Number.isFinite(now.year) || !Number.isFinite(now.month) || !Number.isFinite(now.day)) return null;
+      let age = now.year - birth.year;
+      if(now.month < birth.month || (now.month === birth.month && now.day < birth.day)) age--;
+      return age >= 0 ? age : null;
+    }
+    function autoSelectCategoryByAge(age){
+      const select=$('ageCategory');
+      if(!select) return;
+      const val = age<12 ? 'براعم' : (age<=15 ? 'ناشئين' : (age<=18 ? 'شباب' : 'فريق أول'));
+      const opt=[...select.options].find(o=>o.value===val || o.textContent.trim()===val);
+      if(opt) select.value=opt.value;
+    }
     function updateMinorGuardianVisibility(){const age=Number($('playerAge')?.value||0);const isMinor=activeType==='player' && age>0 && age<18;const box=$('minorGuardianBox');if(box) box.style.display=isMinor?'grid':'none';if(!isMinor){['relationship','guardianName','guardianPhone','guardianNationalId'].forEach(id=>{if($(id)) $(id).value='';});}}
     function activateType(type){activeType=type;document.querySelectorAll('.switch-btn').forEach(b=>b.classList.toggle('active',b.dataset.type===type));document.querySelectorAll('.type-panel').forEach(p=>p.classList.toggle('active',p.dataset.panel===type));if(type!=='academy_member') clearGuardianTransient();updateMinorGuardianVisibility();}
     function clearGuardianTransient(){selectedGuardianGoal='';$('guardianGoal').value='';document.querySelectorAll('.goal-btn').forEach(b=>b.classList.remove('active'));updateGuardianGoalView();}
@@ -358,7 +406,18 @@
       });
       $('existingPlayerSearch')?.addEventListener('input',e=>{clearTimeout(searchTimer);searchTimer=setTimeout(()=>searchPlayers(e.target.value),220)});
       document.addEventListener('click',e=>{if(!e.target.closest('.guardian-existing-player'))renderSuggestions([])});
-      $('playerBirthHijri')?.addEventListener('input',()=>{const y=hijriYearFromText($('playerBirthHijri').value);if(y){const age=1450-y;$('playerAge').value=age>0?String(age):'';}else{$('playerAge').value='';}updateMinorGuardianVisibility();});
+      const handleBirthHijriInput=()=>{
+        const birth=parseHijriDate($('playerBirthHijri').value);
+        const age=calcHijriAge(birth);
+        if(age!==null){
+          $('playerAge').value=String(age);
+          autoSelectCategoryByAge(age);
+        }else{
+          $('playerAge').value='';
+        }
+        updateMinorGuardianVisibility();
+      };
+      ['input','change','keyup','blur'].forEach(evt=>$('playerBirthHijri')?.addEventListener(evt,handleBirthHijriInput));
       $('playerAge')?.addEventListener('input',updateMinorGuardianVisibility);
       $('joinForm').addEventListener('submit',async e=>{
         e.preventDefault();
