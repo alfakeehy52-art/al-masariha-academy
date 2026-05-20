@@ -332,17 +332,16 @@
       showToast("تعذر الاتصال بقاعدة البيانات.", "error");
       return;
     }
-    const { data, error } = await sb
-      .from("players")
-      .select("id,full_name,code,phone,category,position,team")
-      .or(`full_name.ilike.%${term}%,code.ilike.%${term}%,phone.ilike.%${term}%`)
-      .limit(8);
-    if (error) {
+    try {
+      const data =
+        typeof searchPlayersPublic === "function"
+          ? await searchPlayersPublic(term)
+          : [];
+      renderSuggestions(data);
+    } catch (error) {
       console.error(error);
       showToast("تعذر البحث عن اللاعبين.", "error");
-      return;
     }
-    renderSuggestions(Array.isArray(data) ? data : []);
   }
 
   function validate(formData) {

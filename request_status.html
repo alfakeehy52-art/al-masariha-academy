@@ -67,6 +67,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="js/supabase-client.js"></script>
+  <script src="js/supabase-public-lookup.js"></script>
   <script>
     const sb = createSupabaseClient();
     const $=id=>document.getElementById(id);
@@ -150,7 +151,10 @@
     async function searchRequest(){
       const ref=$('refInput').value.trim(); const phone=$('phoneInput').value.trim();
       if(!ref||!phone){toast('أدخل رقم المرجع ورقم الجوال.','warn');return}
-      const {data,error}=await sb.from('join_requests').select('*').eq('reference_code',ref).eq('phone',phone).maybeSingle();
+      let data=null; let error=null;
+      try{
+        data=await lookupJoinRequestByRefPhone(ref,phone);
+      }catch(err){error=err;}
       if(error){console.error(error);toast('تعذر البحث عن الطلب.','error');return}
       if(!data){$('resultBox').classList.remove('show');toast('لم يتم العثور على طلب مطابق.','warn');return}
       renderRequest(data);
@@ -159,7 +163,8 @@
       const phone=$('lookupPhone').value.trim(); const email=$('lookupEmail').value.trim(); const box=$('lookupResults');
       if(!phone||!email){toast('أدخل رقم الجوال والبريد الإلكتروني.','warn');return}
       box.innerHTML='<div class="request-item"><p>جاري البحث...</p></div>';
-      const {data,error}=await sb.from('join_requests').select('*').eq('phone',phone).eq('email',email).order('created_at',{ascending:false}).limit(20);
+      let data=[]; let error=null;
+      try{data=await lookupJoinRequestsByContact(phone,email);}catch(err){error=err;}
       if(error){console.error(error);box.innerHTML='<div class="request-item"><p>تعذر استرجاع الطلبات.</p></div>';return}
       if(!data||!data.length){box.innerHTML='<div class="request-item"><p>لا توجد طلبات مطابقة لهذا الجوال والبريد.</p></div>';return}
       box.innerHTML=data.map(r=>`<div class="request-item"><div><h3>${esc(typeLabel(r.request_type))} - ${esc(statusLabel(r.status))}</h3><p>${esc(r.full_name||'-')} • ${esc(dateFmt(r.created_at))}</p><p>رقم المرجع: <b>${esc(r.reference_code||'-')}</b></p></div><button class="btn gold" type="button" data-ref="${esc(r.reference_code||'')}" data-phone="${esc(r.phone||'')}">اختيار</button></div>`).join('');
