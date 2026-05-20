@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>لوحة الكادر | أكاديمية المسارحة</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root{--gold:#d5b15a;--gold2:#f0d58f;--text:#f3f4ef;--muted:#b6c1b8;--line:rgba(255,255,255,.08);--shadow:0 22px 55px rgba(0,0,0,.24)}
+    *{box-sizing:border-box}
+    body{margin:0;font-family:'Cairo',system-ui,sans-serif;color:var(--text);background:radial-gradient(circle at top,rgba(213,177,90,.10),transparent 25%),linear-gradient(180deg,#030a07,#06130d 35%,#041009);min-height:100vh}
+    .wrap{max-width:1100px;margin:auto;padding:28px 20px 48px}
+    .top{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:24px}
+    .top h1{margin:0;font-size:36px;font-weight:900;color:var(--gold2)}
+    .top p{margin:6px 0 0;color:var(--muted)}
+    .btn{padding:12px 18px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:#fff;font:inherit;font-weight:900;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}
+    .btn.gold{background:linear-gradient(180deg,#e4c36f,#d5b15a);color:#08110b;border:none}
+    .hero{padding:26px;border:1px solid rgba(213,177,90,.18);border-radius:28px;background:linear-gradient(135deg,rgba(213,177,90,.10),rgba(255,255,255,.03));box-shadow:var(--shadow);margin-bottom:22px}
+    .hero h2{margin:0 0 8px;font-size:28px}
+    .tag{display:inline-flex;padding:8px 14px;border-radius:999px;font-weight:900;font-size:12px;border:1px solid var(--line);margin-left:8px}
+    .tag.ok{color:#caffdd;background:rgba(21,145,95,.14);border-color:rgba(21,145,95,.28)}
+    .tag.warn{color:#ffe79c;background:rgba(213,177,90,.13)}
+    .grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .card{border:1px solid var(--line);border-radius:22px;padding:18px;background:rgba(255,255,255,.035)}
+    .card strong{display:block;color:var(--muted);font-size:13px;margin-bottom:6px}
+    .card span{font-weight:900;font-size:18px}
+    .notes{margin-top:18px;padding:16px;border-radius:18px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--muted);line-height:1.9;white-space:pre-wrap}
+    @media(max-width:760px){.grid{grid-template-columns:1fr}.top h1{font-size:28px}}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/academy-roles.js"></script>
+  <script src="js/staff-auth.js"></script>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <h1>لوحة الكادر</h1>
+        <p id="welcomeLine">مرحباً بك في أكاديمية المسارحة</p>
+      </div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn" href="index.html">الموقع</a>
+        <button type="button" class="btn gold" id="logoutBtn">تسجيل الخروج</button>
+      </div>
+    </div>
+
+    <section class="hero">
+      <h2 id="staffName">—</h2>
+      <div id="statusTags"></div>
+      <p id="roleLine" style="margin:14px 0 0;color:var(--muted);line-height:1.8"></p>
+    </section>
+
+    <section class="grid" id="detailGrid"></section>
+    <div class="notes" id="staffNotes" style="display:none"></div>
+  </div>
+
+  <script>
+    function renderStaffDashboard() {
+    const AR = window.ACADEMY_ROLES || {};
+    const profile = window.STAFF_PROFILE || {};
+    const user = window.STAFF_USER || {};
+
+    function labelStatus(st) {
+      const map = { active: "نشط", inactive: "معطل", suspended: "موقوف" };
+      return map[String(st || "")] || st || "—";
+    }
+    function labelSystemRole(r) {
+      const map = { staff: "كادر", manager: "مدير", admin: "مدير نظام" };
+      return map[String(r || "")] || r || "—";
+    }
+
+    document.getElementById("staffName").textContent = profile.full_name || user.email || "كادر";
+    document.getElementById("welcomeLine").textContent =
+      "مرحباً " + (profile.full_name || "") + " — حسابك مربوط بسجل academy_staff";
+
+    const domainLabel = AR.getDomainLabel
+      ? AR.getDomainLabel(profile.staff_category)
+      : profile.staff_category || "—";
+    const roleLabel = AR.getRoleLabel ? AR.getRoleLabel(profile.staff_type) : profile.staff_type || "—";
+
+    document.getElementById("roleLine").textContent =
+      "المجال: " + domainLabel + " · الدور: " + roleLabel;
+
+    const tags = document.getElementById("statusTags");
+    const st = String(profile.status || "active");
+    tags.innerHTML =
+      `<span class="tag ${st === "active" ? "ok" : "warn"}">${labelStatus(st)}</span>` +
+      `<span class="tag">${labelSystemRole(profile.role)}</span>` +
+      (profile.auth_user_id ? `<span class="tag ok">حساب مفعّل</span>` : `<span class="tag warn">بانتظار الربط</span>`);
+
+    const items = [
+      ["الجوال", profile.phone],
+      ["البريد", profile.email || user.email],
+      ["رقم الهوية", profile.national_id],
+      ["المؤهل", profile.qualification],
+      ["سنوات الخبرة", profile.experience_years != null ? profile.experience_years + " سنة" : "—"],
+      ["تاريخ التسجيل", profile.created_at ? new Date(profile.created_at).toLocaleDateString("ar-SA") : "—"],
+      ["آخر تحديث", profile.updated_at ? new Date(profile.updated_at).toLocaleDateString("ar-SA") : "—"],
+      ["رقم طلب الانضمام", profile.join_request_id || "—"]
+    ];
+
+    document.getElementById("detailGrid").innerHTML = items
+      .map(
+        ([k, v]) =>
+          `<div class="card"><strong>${k}</strong><span>${String(v || "—").replace(/</g, "&lt;")}</span></div>`
+      )
+      .join("");
+
+    if (profile.notes) {
+      const n = document.getElementById("staffNotes");
+      n.style.display = "block";
+      n.textContent = profile.notes;
+    }
+
+    document.getElementById("logoutBtn").addEventListener("click", () => staffLogout(true));
+    }
+
+    document.getElementById("welcomeLine").textContent = "جاري تحميل بياناتك...";
+    requireStaff().then(function (ok) {
+      if (!ok) return;
+      renderStaffDashboard();
+    });
+  </script>
+</body>
+</html>

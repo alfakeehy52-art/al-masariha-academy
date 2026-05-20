@@ -15,35 +15,58 @@ p{margin:0 0 18px;color:#9fb0d1;line-height:1.8;font-size:14px}
 label{display:block;margin:0 0 8px;font-weight:800}
 input{width:100%;box-sizing:border-box;padding:14px 16px;margin:0 0 14px;background:rgba(7,12,22,.72);color:#ecf2ff;border:1px solid rgba(255,255,255,.10);border-radius:14px;font-family:inherit;font-size:14px}
 button{width:100%;padding:14px 16px;border:none;border-radius:14px;cursor:pointer;background:linear-gradient(135deg,#d4af37,#f5d46b);color:#1a1a1a;font-family:inherit;font-weight:900;font-size:16px}
+button:disabled{opacity:.65;cursor:not-allowed}
 .err{display:none;margin-top:12px;padding:10px 12px;border-radius:12px;background:rgba(255,107,107,.12);border:1px solid rgba(255,107,107,.25);color:#ffd9d9;font-weight:800}
 .err.show{display:block}
-.hint{margin-top:12px;color:#9fb0d1;font-size:13px;text-align:center}
+.hint{margin-top:12px;color:#9fb0d1;font-size:13px;line-height:1.8;text-align:center}
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/admin-auth.js"></script>
+<script>redirectIfAlreadyLoggedIn("admin_dashboard.html");</script>
 </head>
 <body>
 <div class="box">
   <h2>دخول الإدارة</h2>
-  <p>سجل الدخول للانتقال إلى لوحة الإدارة.</p>
-  <label for="u">اسم المستخدم</label>
-  <input type="text" id="u" placeholder="اسم المستخدم">
-  <label for="p">كلمة المرور</label>
-  <input type="password" id="p" placeholder="كلمة المرور">
-  <button onclick="login()">دخول</button>
-  <div id="err" class="err">بيانات غير صحيحة.</div>
-  <div class="hint">البيانات المؤقتة: admin / 1234</div>
+  <p>سجّل الدخول بحساب المسؤول المعتمد في Supabase.</p>
+  <label for="email">البريد الإلكتروني</label>
+  <input type="email" id="email" placeholder="admin@example.com" autocomplete="username">
+  <label for="password">كلمة المرور</label>
+  <input type="password" id="password" placeholder="كلمة المرور" autocomplete="current-password">
+  <button type="button" id="loginBtn" onclick="login()">دخول</button>
+  <div id="err" class="err">تعذر تسجيل الدخول. تحقق من البريد وكلمة المرور.</div>
+  <div class="hint">أنشئ مستخدم Admin من لوحة Supabase → Authentication، وعيّن له <code>role: admin</code> في User Metadata أو أضف بريده إلى <code>adminEmails</code> في <code>supabase-config.js</code>.</div>
 </div>
 <script>
+const errEl = document.getElementById("err");
+const loginBtn = document.getElementById("loginBtn");
 
-function login(){
-  if (document.getElementById("u").value.trim() === "admin" && document.getElementById("p").value.trim() === "1234") {
-    localStorage.setItem("adminLoggedIn","true");
+function showError(msg) {
+  errEl.textContent = msg || "تعذر تسجيل الدخول. تحقق من البريد وكلمة المرور.";
+  errEl.classList.add("show");
+}
+
+async function login() {
+  errEl.classList.remove("show");
+  loginBtn.disabled = true;
+  loginBtn.textContent = "جاري الدخول...";
+  try {
+    await adminLogin(
+      document.getElementById("email").value,
+      document.getElementById("password").value
+    );
     location.href = "admin_dashboard.html";
-  } else {
-    document.getElementById("err").classList.add("show");
+  } catch (e) {
+    showError(e && e.message ? e.message : null);
+  } finally {
+    loginBtn.disabled = false;
+    loginBtn.textContent = "دخول";
   }
 }
-document.getElementById("p").addEventListener("keydown", function(e){
-  if(e.key === "Enter") login();
+
+document.getElementById("password").addEventListener("keydown", function (e) {
+  if (e.key === "Enter") login();
 });
 </script>
 </body>

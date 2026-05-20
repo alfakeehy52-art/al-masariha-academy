@@ -25,7 +25,7 @@
     .toast-wrap{position:fixed;left:20px;bottom:20px;display:flex;flex-direction:column;gap:10px;z-index:10001}.toast{min-width:280px;max-width:420px;padding:14px 16px;border-radius:16px;border:1px solid rgba(255,255,255,.10);background:linear-gradient(180deg, rgba(18,27,47,.98), rgba(11,18,33,.98));color:#fff;box-shadow:0 20px 45px rgba(0,0,0,.35);font-size:14px;line-height:1.8;font-weight:800;animation:toastIn .22s ease}.toast.success{border-color:rgba(39,174,96,.32);color:#ccffdf}.toast.warn{border-color:rgba(212,175,55,.32);color:#ffe79c}.toast.error{border-color:rgba(224,91,91,.32);color:#ffd7d7}@keyframes toastIn{from{transform:translateY(10px);opacity:0}to{transform:translateY(0);opacity:1}}
     @media (max-width:1100px){.layout{grid-template-columns:1fr}.sidebar{position:relative;height:auto;border-left:none;border-bottom:1px solid var(--line)}.stats{grid-template-columns:repeat(2,1fr)}.content-grid{grid-template-columns:1fr}} @media (max-width:700px){.main{padding:16px}.stats{grid-template-columns:1fr}.form-grid{grid-template-columns:1fr}.title-box h2{font-size:24px}}
   </style>
-  <script>if (localStorage.getItem("adminLoggedIn") !== "true") { window.location.href = "admin_login.html"; } function adminLogout(){ localStorage.removeItem("adminLoggedIn"); window.location.href = "admin_login.html"; }</script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="js/supabase-client.js"></script><script src="js/admin-auth.js"></script><script>requireAdmin();</script>
 </head>
 <body>
 <div class="layout"><aside class="sidebar">
@@ -58,11 +58,11 @@
 </div></section></main></div>
 <div class="toast-wrap" id="toastWrap"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="js/supabase-client.js"></script>
 <script src="admin_sidebar.js"></script>
 <script>
-const SUPABASE_URL = "https://uwmyqlydenrzkzrymhvl.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3bXlxbHlkZW5yemt6cnltaHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NDQ2NjAsImV4cCI6MjA5MzAyMDY2MH0.TCPgHAHhILaD5tFsZiFIgLvH7yuxkrtJ29F5J5oHQrw";
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = createSupabaseClient();
 let currentImageData = "";
 const fileInput = document.getElementById('coachImage');
 const previewBox = document.getElementById('previewBox');

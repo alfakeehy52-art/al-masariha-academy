@@ -150,7 +150,7 @@ document.addEventListener("DOMContentLoaded", () => {
     <div class="site-brand-shell">
       <div class="site-brand">
         <div class="site-brand-logo">
-          <img src="academy-logo.png" alt="شعار الأكاديمية">
+          <img src="academy-logo.svg" alt="شعار الأكاديمية" width="62" height="62">
         </div>
         <div class="site-brand-text">
           <strong>أكاديمية المسارحة</strong>
@@ -181,14 +181,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
       <div class="site-actions site-actions-mobile">
         <a class="site-btn site-btn-gold" href="al_masariha_join_page.html">انضم إلينا</a>
-        <a class="site-btn site-btn-dark" href="admin/admin_login.html">دخول الإدارة</a>
+        <a class="site-btn site-btn-dark" href="admin_login.html">دخول الإدارة</a>
       </div>
     </nav>
 
     <div class="site-actions-shell">
       <div class="site-actions">
         <a class="site-btn site-btn-gold" href="al_masariha_join_page.html">انضم إلينا</a>
-        <a class="site-btn site-btn-dark" href="admin/admin_login.html">دخول الإدارة</a>
+        <a class="site-btn site-btn-dark" href="admin_login.html">دخول الإدارة</a>
       </div>
     </div>
 

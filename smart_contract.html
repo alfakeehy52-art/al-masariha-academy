@@ -35,10 +35,10 @@
     <section class="paper-wrap"><article class="paper" id="paper"><div class="paper-header"><div class="logo-box"><img src="academy-logo.png" alt="شعار الأكاديمية" onerror="this.style.display='none'; this.parentElement.textContent='شعار الأكاديمية';"></div><div><div class="academy-title">أكاديمية المسارحة لكرة القدم</div><div class="academy-sub">نموذج رسمي صادر آليًا من نظام الأكاديمية</div></div><div class="ref-box"><div><b>رقم المرجع:</b> <span id="docRef">-</span></div><div><b>تاريخ الإصدار:</b> <span id="mDateTop">-</span></div></div></div><h2 class="doc-title" id="docTitle">-</h2><div class="meta" id="metaBox"></div><div id="contentBox"></div><div id="signatureBox"></div><div class="verify-strip"><div class="qr-box"><img id="qrImage" alt="QR Code للتحقق"></div><div class="verify-text"><strong>رمز تحقق إلكتروني</strong><br>للتحقق من صحة هذا النموذج يرجى مسح رمز QR أو البحث برقم المرجع في نظام الأكاديمية.<br><span class="verify-code" id="verifyCode">ACD-----</span><div class="page-count">صفحة 1 من 1</div></div></div></article></section>
   </main><div class="toast" id="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="js/supabase-client.js"></script>
 <script>
-const SUPABASE_URL="https://uwmyqlydenrzkzrymhvl.supabase.co";const SUPABASE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3bXlxbHlkZW5yemt6cnltaHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NDQ2NjAsImV4cCI6MjA5MzAyMDY2MH0.TCPgHAHhILaD5tFsZiFIgLvH7yuxkrtJ29F5J5oHQrw";
-// إصلاح المفتاح في حال نسخ قديم
-const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+const sb = createSupabaseClient();
 const $=id=>document.getElementById(id);const TYPE={player:'لاعب',guardian:'ولي أمر',coach:'مدرب',supporter:'داعم',volunteer:'متطوع'};
 function toast(msg){$('toast').textContent=msg;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),3500)}function today(){return new Date().toLocaleDateString('ar-SA',{year:'numeric',month:'2-digit',day:'2-digit'})}function display(v){return v===null||v===undefined||v===''?'-':v}function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}function makeVerifyCode(ref){const clean=String(ref||'REQ-0000').replace(/[^A-Za-z0-9]/g,'').toUpperCase();const tail=clean.slice(-8)||'00000000';return `ACD-${tail.slice(0,4)}-${tail.slice(4,8)}`}
 function playerAge(r){return display(r.player_age||r.age||r.child_age)}function playerCategory(r){return display(r.age_category||r.category||r.guardian_player_category)}function playerPosition(r){return display(r.position||r.player_position||r.guardian_player_position)}

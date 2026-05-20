@@ -320,15 +320,10 @@
 
 
 
-  <script>
-    if (localStorage.getItem("adminLoggedIn") !== "true") {
-      window.location.href = "admin_login.html";
-    }
-    function adminLogout(){
-      localStorage.removeItem("adminLoggedIn");
-      window.location.href = "admin_login.html";
-    }
-  </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="js/supabase-client.js"></script><script src="js/admin-auth.js"></script><script>requireAdmin();</script>
 </head>
 <body>
   <div class="layout">
@@ -460,11 +455,11 @@
   <div class="toast-wrap" id="toastWrap"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
   <script src="admin_sidebar.js"></script>
   <script>
-    const SUPABASE_URL = "https://uwmyqlydenrzkzrymhvl.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3bXlxbHlkZW5yemt6cnltaHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NDQ2NjAsImV4cCI6MjA5MzAyMDY2MH0.TCPgHAHhILaD5tFsZiFIgLvH7yuxkrtJ29F5J5oHQrw";
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabaseClient = createSupabaseClient();
     let allPlayers = [];
     function showToast(message, type = "success"){ const wrap=document.getElementById("toastWrap"); if(!wrap) return; const toast=document.createElement("div"); toast.className="toast "+type; toast.textContent=message; wrap.appendChild(toast); setTimeout(()=>{toast.style.opacity="0";toast.style.transform="translateY(8px)";toast.style.transition=".2s ease";setTimeout(()=>toast.remove(),220);},2800); }
     function askConfirm(message){ return new Promise(resolve=>{ const overlay=document.getElementById("confirmOverlay"), msg=document.getElementById("confirmMessage"), yes=document.getElementById("confirmYesBtn"), no=document.getElementById("confirmNoBtn"); if(!overlay||!yes||!no){resolve(false);return;} msg.textContent=message||"هل تريد تأكيد العملية؟"; overlay.classList.add("show"); document.body.style.overflow="hidden"; const cleanup=(value)=>{ overlay.classList.remove("show"); document.body.style.overflow=""; yes.removeEventListener("click",onYes); no.removeEventListener("click",onNo); overlay.removeEventListener("click",onOverlay); document.removeEventListener("keydown",onEsc); resolve(value); }; const onYes=()=>cleanup(true), onNo=()=>cleanup(false), onOverlay=(e)=>{if(e.target===overlay) cleanup(false);}, onEsc=(e)=>{if(e.key==="Escape") cleanup(false);}; yes.addEventListener("click",onYes); no.addEventListener("click",onNo); overlay.addEventListener("click",onOverlay); document.addEventListener("keydown",onEsc); }); }

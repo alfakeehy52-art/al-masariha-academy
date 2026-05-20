@@ -1,16 +1,15 @@
-const SUPABASE_URL = "https://uwmyqlydenrzkzrymhvl.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3bXlxbHlkZW5yemt6cnltaHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NDQ2NjAsImV4cCI6MjA5MzAyMDY2MH0.TCPgHAHhILaD5tFsZiFIgLvH7yuxkrtJ29F5J5oHQrw";
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = createSupabaseClient();
 
-const TYPE_LABELS = { player:'لاعب', guardian:'ولي أمر', coach:'مدرب', supporter:'داعم', volunteer:'متطوع', academy_member:'عضوية الأكاديمية' };
+const TYPE_LABELS = { player:'لاعب', guardian:'ولي أمر', staff:'كادر', coach:'مدرب', supporter:'داعم', volunteer:'متطوع', academy_member:'عضو أكاديمي' };
 const STATUS_LABELS = { new:'جديد', review:'جاهز للمراجعة', reviewing:'جاهز للمراجعة', approved:'مقبول', rejected:'مرفوض', pending:'بانتظار استكمال', needs_completion:'بانتظار استكمال' };
 const TYPE_CONFIG = {
   player:{title:'طلبات اللاعبين',desc:'مراجعة طلبات انضمام اللاعبين وتحويل المقبول مباشرة إلى قائمة اللاعبين.',icon:'👤',href:'players_requests.html',cols:['الفئة','المركز','العمر'],fields:r=>[r.age_category||'-',r.position||'-',r.player_age||'-']},
   guardian:{title:'طلبات أولياء الأمور',desc:'تسجيل ولي أمر، إنشاء لاعب جديد، أو ربط ولي الأمر بلاعب موجود.',icon:'👨‍👦',href:'guardians_requests.html',cols:['الغرض','صلة القرابة','الأبناء'],fields:r=>[goalLabel(r.guardian_goal),r.relationship||'-',r.children_count||r.child_name||r.existing_player_names||'-']},
-  coach:{title:'طلبات المدربين',desc:'مراجعة طلبات الطاقم الفني وتحويل المقبول إلى قائمة المدربين.',icon:'🧑‍🏫',href:'coaches_requests.html',cols:['المسمى','التخصص','الخبرة'],fields:r=>[r.coach_job_title||'-',r.coach_specialty||'-',r.coach_experience_years?`${r.coach_experience_years} سنوات`:'-']},
+  staff:{title:'طلبات الكوادر',desc:'رياضي، طبي، إداري، تشغيلي، إعلامي وتقني — مراجعة واعتماد الكوادر.',icon:'👥',href:'staff_requests.html',cols:['المجال','الدور','الخبرة'],fields:r=>staffRequestFields(r)},
+  coach:{title:'طلبات المدربين (قديم)',desc:'طلبات مدربين قبل توحيد تبويب الكادر.',icon:'🧑‍🏫',href:'coaches_requests.html',cols:['المسمى','التخصص','الخبرة'],fields:r=>[r.coach_job_title||r.coach_specialty||'-',r.coach_specialty||'-',r.coach_experience||r.coach_experience_years?`${r.coach_experience||r.coach_experience_years} سنوات`:'-']},
   supporter:{title:'طلبات الداعمين',desc:'متابعة الجهات والأفراد الراغبين بالدعم والرعاية والشراكات.',icon:'💰',href:'supporters_requests.html',cols:['نوع الداعم','المستوى','طريقة الدعم'],fields:r=>[r.support_type||'-',r.support_level||'-',r.support_method||r.entity_name||'-']},
   volunteer:{title:'طلبات المتطوعين',desc:'إدارة طلبات التطوع حسب المجال والوقت المتاح.',icon:'🤝',href:'volunteers_requests.html',cols:['مجال التطوع','الوقت المتاح','ملاحظات'],fields:r=>[r.volunteer_field||'-',r.availability||'-',shortText(r.volunteer_notes||'-',28)]},
-  academy_member:{title:'عضوية الأكاديمية',desc:'إدارة أعضاء الأكاديمية الخفيفة: الموافقات، الاهتمامات، والتواصل التسويقي المستقبلي.',icon:'⭐',href:'academy_members_dashboard.html',cols:['البريد','المدينة','الاهتمامات'],fields:r=>[r.email||'-',r.city||'-',Array.isArray(r.interests)?r.interests.join('، '):'-']}
+  academy_member:{title:'عضوية الأكاديمية',desc:'متابعة الأخبار والفعاليات والعروض — دون عضوية رياضية أو دعم.',icon:'⭐',href:'academy_members_dashboard.html',cols:['البريد','المدينة','الاهتمامات'],fields:r=>[r.email||'-',r.city||'-',shortText(parseInterestsLine(r.notes||r.guardian_notes)||'-',40)]}
 };
 let requests = [];
 let academyMembers = [];
@@ -41,6 +40,30 @@ function shortText(v,n=70){const s=String(v||'');return s.length>n?s.slice(0,n)+
 function getTypeLabel(type){return TYPE_LABELS[type]||type||'-'}
 function getStatusLabel(status){return STATUS_LABELS[status]||status||'جديد'}
 function goalLabel(v){return {register_new_player:'تسجيل لاعب جديد',link_existing_player:'ربط بلاعب موجود',guardian_member_only:'ولي أمر / متابع فقط'}[v] || v || '-'}
+function parseInterestsLine(notes){
+  const m=String(notes||'').match(/الاهتمامات:\s*([^\n]+)/);
+  return m?m[1].trim():'';
+}
+function parseInterestsArray(notes){
+  const line=parseInterestsLine(notes);
+  if(!line) return [];
+  return line.split(/[،,]/).map(s=>s.trim()).filter(Boolean);
+}
+function staffMeta(r){
+  const AR=window.ACADEMY_ROLES;
+  if(AR&&AR.parseStaffFromRequest) return AR.parseStaffFromRequest(r);
+  return {domain:r.volunteer_field||'',roleId:'',roleLabel:r.coach_specialty||'-'};
+}
+function staffRequestFields(r){
+  const m=staffMeta(r);
+  const domain=AR_DOMAIN_LABEL(m.domain);
+  return [domain,m.roleLabel||'-',r.coach_experience?`${r.coach_experience} سنوات`:'-'];
+}
+function AR_DOMAIN_LABEL(id){
+  const AR=window.ACADEMY_ROLES;
+  if(AR&&AR.getDomainLabel) return AR.getDomainLabel(id);
+  return id||'-';
+}
 function statusClass(status){const l=getStatusLabel(status);if(l==='جديد')return 'status-new';if(l==='جاهز للمراجعة')return 'status-review';if(l==='مقبول')return 'status-approved';if(l==='مرفوض')return 'status-rejected';return 'status-pending'}
 function formatDate(value){if(!value)return '-';const d=new Date(value);if(Number.isNaN(d.getTime()))return String(value);return d.toLocaleDateString('ar-SA',{year:'numeric',month:'2-digit',day:'2-digit'})}
 function formatTime(value){if(!value)return '';const d=new Date(value);if(Number.isNaN(d.getTime()))return '';return d.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'})}
@@ -147,7 +170,7 @@ function renderTable(type){
   const rows=filtered().map(r=>{const vals=cfg?cfg.fields(r):[getTypeLabel(r.request_type),getRequestSummary(r),shortText(notes(r),28)];return `<tr><td><span class="tag tag-ref">${escapeHtml(refCode(r))}</span></td><td><b class="request-title">${escapeHtml(r.full_name||'طلب بدون اسم')}</b><span class="subtext">${escapeHtml(r.phone||'-')} • ${escapeHtml(r.city||'-')}</span></td>${vals.map(v=>`<td>${escapeHtml(v)}</td>`).join('')}<td><span class="tag ${statusClass(r.status||'new')}">${escapeHtml(getStatusLabel(r.status||'new'))}</span></td><td><div>${escapeHtml(formatDate(r.created_at))}</div><span class="subtext">${escapeHtml(formatTime(r.created_at))}</span></td><td><div class="row-actions"><button class="mini-btn review" onclick="openRequest('${r.id}')">عرض</button>${getStatusLabel(r.status)==='مقبول'?'':`<button class="mini-btn accept" onclick="updateStatus('${r.id}','approved')">قبول</button>`}${getStatusLabel(r.status)==='مرفوض'?'':`<button class="mini-btn reject" onclick="updateStatus('${r.id}','rejected')">رفض</button>`}<button class="mini-btn more" onclick="updateStatus('${r.id}','pending')">استكمال</button></div></td></tr>`}).join('');
   const colspan=cfg?cfg.cols.length+5:8; tbody.innerHTML=rows||`<tr><td colspan="${colspan}" class="empty-cell">لا توجد طلبات مطابقة حاليًا.</td></tr>`;
 }
-function getRequestSummary(r){if(r.request_type==='player')return r.position||r.age_category||'-'; if(r.request_type==='guardian')return goalLabel(r.guardian_goal); if(r.request_type==='coach')return r.coach_specialty||r.coach_job_title||'-'; if(r.request_type==='supporter')return r.support_method||r.support_level||'-'; if(r.request_type==='volunteer')return r.volunteer_field||r.availability||'-'; return '-'}
+function getRequestSummary(r){if(r.request_type==='player')return r.position||r.age_category||'-'; if(r.request_type==='guardian')return goalLabel(r.guardian_goal); if(r.request_type==='staff'){const m=staffMeta(r);return m.roleLabel||'-'} if(r.request_type==='academy_member')return r.guardian_goal?goalLabel(r.guardian_goal):(parseInterestsLine(r.notes||r.guardian_notes)||'-'); if(r.request_type==='coach')return r.coach_specialty||r.coach_job_title||'-'; if(r.request_type==='supporter')return r.support_method||r.support_level||'-'; if(r.request_type==='volunteer')return r.volunteer_field||r.availability||'-'; return '-'}
 function findReq(id){return requests.find(r=>String(r.id)===String(id))}
 
 function getFileStatusLabel(status){return FILE_STATUS_LABELS[String(status||'pending')]||status||'قيد المراجعة'}
@@ -271,7 +294,30 @@ function closeFilePreview(){ $('filePreviewModal')?.classList.remove('show'); if
 async function openRequest(id){const r=findReq(id);if(!r)return;currentRequestId=id;$('d_name').textContent=r.full_name||'-';$('d_type').textContent=getTypeLabel(r.request_type);$('d_status').textContent=getStatusLabel(r.status||'new');$('d_ref').textContent=refCode(r);$('d_phone').textContent=r.phone||'-';$('d_email').textContent=r.email||'-';$('d_city').textContent=r.city||'-';$('d_date').textContent=`${formatDate(r.created_at)} ${formatTime(r.created_at)}`;$('d_notes').textContent=notes(r);$('d_extra').innerHTML=buildExtraDetails(r);$('requestModal').classList.add('show');document.body.style.overflow='hidden';await loadCompletionForRequest(id)}
 function closeRequest(){currentRequestId=null;currentCompletion=null;$('requestModal')?.classList.remove('show');$('filePreviewModal')?.classList.remove('show');document.body.style.overflow=''}
 function buildExtraDetails(r){const pairs=[]; const add=(k,v)=>{if(v!==undefined&&v!==null&&String(v).trim()!=='')pairs.push([k,v])};
-  if(r.request_type==='player'){add('العمر',r.player_age);add('تاريخ الميلاد',r.birth_date);add('الفئة',r.age_category);add('المركز',r.position);}
+  if(r.request_type==='player'){
+    add('العمر الهجري',r.player_age!=null?`${r.player_age} سنة`:'');
+    add('تاريخ الميلاد الهجري',r.birth_hijri||r.birth_date);
+    const minor=Number(r.player_age)>0&&Number(r.player_age)<18;
+    if(minor){
+      add('صلة ولي الأمر',r.relationship||r.guardian_relation);
+      add('اسم ولي الأمر',r.guardian_name);
+      add('جوال ولي الأمر',r.guardian_phone);
+      add('هوية ولي الأمر',r.guardian_national_id);
+    }else if(Number(r.player_age)>=18){add('الحالة','بالغ — مسؤول عن نفسه');}
+    add('الفئة',r.age_category);add('المركز',r.position);
+  }
+  if(r.request_type==='academy_member'){
+    if(r.guardian_goal){add('الغرض',goalLabel(r.guardian_goal));add('صلة القرابة',r.relationship||r.guardian_relation);add('اسم اللاعب',r.child_name);add('عدد الأبناء',r.children_count);}
+    else{add('الاهتمامات',parseInterestsLine(r.notes||r.guardian_notes));}
+  }
+  if(r.request_type==='staff'){
+    const m=staffMeta(r);
+    add('المجال',AR_DOMAIN_LABEL(m.domain));
+    add('الدور',m.roleLabel);
+    add('سنوات الخبرة',r.coach_experience);
+    add('الوقت المتاح',r.availability);
+    add('المؤهل',r.coach_certification);
+  }
   if(r.request_type==='guardian'){add('الغرض',goalLabel(r.guardian_goal));add('صلة القرابة',r.relationship);add('اسم اللاعب الجديد',r.child_name);add('أسماء اللاعبين للربط',r.existing_player_names);add('عدد الأبناء',r.children_count);}
   if(r.request_type==='coach'){add('المسمى الفني',r.coach_job_title);add('التخصص',r.coach_specialty);add('الفئة',r.coach_category);add('سنوات الخبرة',r.coach_experience_years);add('الشهادة',r.coach_certification);}
   if(r.request_type==='supporter'){add('نوع الداعم',r.support_type);add('مستوى الدعم',r.support_level);add('اسم الجهة',r.entity_name);add('طريقة الدعم',r.support_method);}
@@ -478,26 +524,167 @@ async function createPlayerAndLinkGuardian(r){
 }
 async function createSupporter(r){const payload={source_request_id:r.id,reference_code:refCode(r),full_name:r.full_name||null,phone:r.phone||null,email:r.email||null,city:r.city||null,support_type:r.support_type||null,support_level:r.support_level||null,entity_name:r.entity_name||null,support_method:r.support_method||null,status:'active',notes:r.support_notes||null}; const {data:ex,error:e1}=await supabaseClient.from('supporters').select('id').eq('source_request_id',r.id).maybeSingle(); if(e1)throw e1;if(ex)return ex; const {data,error}=await supabaseClient.from('supporters').insert([payload]).select('id').single(); if(error)throw error; return data;}
 async function createVolunteer(r){const payload={source_request_id:r.id,reference_code:refCode(r),full_name:r.full_name||null,phone:r.phone||null,email:r.email||null,city:r.city||null,volunteer_field:r.volunteer_field||null,availability:r.availability||null,status:'active',notes:r.volunteer_notes||null}; const {data:ex,error:e1}=await supabaseClient.from('volunteers').select('id').eq('source_request_id',r.id).maybeSingle(); if(e1)throw e1;if(ex)return ex; const {data,error}=await supabaseClient.from('volunteers').insert([payload]).select('id').single(); if(error)throw error; return data;}
+function resolveStaffCategory(domainRaw){
+  const AR=window.ACADEMY_ROLES;
+  const raw=String(domainRaw||'').trim();
+  if(!raw) return 'general';
+  if(AR?.getDomain?.(raw)) return raw;
+  const byLabel=AR?.DOMAINS?.find((d)=>d.label===raw||d.id===raw);
+  return byLabel?.id||raw;
+}
+function resolveStaffType(roleIdRaw, roleLabelRaw){
+  const AR=window.ACADEMY_ROLES;
+  const id=String(roleIdRaw||'').trim();
+  if(id&&AR?.getRole?.(id)) return id;
+  const label=String(roleLabelRaw||'').trim();
+  if(!label) return 'staff';
+  const byLabel=AR?.ROLES?.find((r)=>r.label===label||r.id===label);
+  return byLabel?.id||id||'staff';
+}
+function buildAcademyStaffNotes(r, categoryLabel, roleLabel){
+  return [
+    r.notes,
+    r.volunteer_notes,
+    categoryLabel?`مجال الكادر: ${categoryLabel}`:null,
+    roleLabel?`الدور: ${roleLabel}`:null,
+    r.availability?`الوقت المتاح: ${r.availability}`:null,
+    refCode(r)?`مرجع الطلب: ${refCode(r)}`:null
+  ].filter(Boolean).join('\n')||null;
+}
+async function createAcademyStaff(r){
+  const m=staffMeta(r);
+  const AR=window.ACADEMY_ROLES;
+  const staffCategory=resolveStaffCategory(m.domain||r.volunteer_field);
+  const staffType=resolveStaffType(m.roleId, m.roleLabel||r.coach_specialty);
+  const categoryLabel=AR?.getDomainLabel?AR.getDomainLabel(staffCategory):staffCategory;
+  const roleLabel=AR?.getRoleLabel?AR.getRoleLabel(staffType):(m.roleLabel||r.coach_specialty||staffType);
+  const fullName=String(r.full_name||'').trim();
+  const phone=String(r.phone||'').trim();
+  if(!fullName) throw new Error('اسم الكادر مطلوب لإنشاء سجل academy_staff');
+  if(!phone) throw new Error('جوال الكادر مطلوب لإنشاء سجل academy_staff');
+  const payload={
+    join_request_id:r.id,
+    full_name:fullName,
+    phone,
+    email:r.email||null,
+    national_id:r.national_id||null,
+    staff_type:staffType,
+    staff_category:staffCategory,
+    qualification:r.coach_specialty||roleLabel||null,
+    experience_years:r.coach_experience?Number(r.coach_experience):0,
+    notes:buildAcademyStaffNotes(r, categoryLabel, roleLabel),
+    status:'active',
+    role:'staff'
+  };
+  const {data:ex,error:e1}=await supabaseClient.from('academy_staff').select('id,full_name').eq('join_request_id',r.id).maybeSingle();
+  if(e1) throw e1;
+  if(ex) return {table:'academy_staff',...ex};
+  const {data,error}=await supabaseClient.from('academy_staff').insert([payload]).select('id,full_name,staff_type,staff_category,email,auth_user_id,status').single();
+  if(error){
+    if(String(error.code)==='23505'){
+      const {data:byPhone}=await supabaseClient.from('academy_staff').select('id,full_name,email,auth_user_id').eq('phone',phone).maybeSingle();
+      if(byPhone) return {table:'academy_staff',...byPhone,duplicate:true};
+    }
+    throw error;
+  }
+  const linked=await tryLinkStaffAuthUserId(data);
+  return {table:'academy_staff',...data,...linked};
+}
+async function tryLinkStaffAuthUserId(staffRow){
+  const email=String(staffRow?.email||'').trim().toLowerCase();
+  if(!email||staffRow?.auth_user_id) return {authLinked:!!staffRow?.auth_user_id};
+  return {authLinked:false,activationEmail:email,activationUrl:buildStaffActivationUrl(email)};
+}
+function buildStaffActivationUrl(email){
+  const base=String(window.location.origin||'').replace(/\/$/,'');
+  const path=base?`${base}/staff_login.html`:'staff_login.html';
+  const q=email?`?email=${encodeURIComponent(email)}`:'';
+  return `${path}${q}`;
+}
+function staffApprovalToastExtra(staffResult){
+  if(!staffResult||staffResult.authLinked) return '';
+  const email=staffResult.activationEmail;
+  if(!email) return ' تنبيه: أضف بريداً إلكترونياً للكادر لتفعيل حساب الدخول.';
+  return ` فعّل الحساب من: ${buildStaffActivationUrl(email)} (نفس البريد: ${email})`;
+}
+async function approveStaffRequestLegacy(r){
+  const m=staffMeta(r);
+  const roleId=m.roleId;
+  const AR=window.ACADEMY_ROLES;
+  const route=AR&&AR.getApproveRoute?AR.getApproveRoute(roleId):'volunteer';
+  const synthetic={
+    ...r,
+    coach_job_title:m.roleLabel,
+    coach_specialty:r.coach_specialty||m.roleLabel,
+    coach_category:null,
+    coach_certification:null,
+    coach_bio:r.volunteer_notes||null,
+    coach_notes:r.notes||null,
+    coach_experience_years:r.coach_experience,
+    volunteer_field:m.roleLabel||m.domain
+  };
+  if(route==='coach') return await createCoach(synthetic);
+  return await createVolunteer({...r,volunteer_field:m.roleLabel||AR_DOMAIN_LABEL(m.domain),volunteer_notes:r.volunteer_notes||r.notes});
+}
+async function approveStaffRequest(r){
+  try{
+    return await createAcademyStaff(r);
+  }catch(err){
+    const code=String(err?.code||'');
+    const msg=String(err?.message||'').toLowerCase();
+    const missingTable=code==='42P01'||msg.includes('academy_staff')&&(msg.includes('does not exist')||msg.includes('schema cache'));
+    if(!missingTable) throw err;
+    console.warn('academy_staff غير متوفر — fallback إلى coaches/volunteers', err);
+    return await approveStaffRequestLegacy(r);
+  }
+}
+async function approveGuardianRequest(r){
+  const guardian=await createGuardian(r);
+  const mode=guardianMode(r);
+  if(mode==='new_player'){
+    const player=await createPlayerFromGuardianChild(r,guardian);
+    await linkGuardian(player,guardian,r);
+    return {guardian,player,mode};
+  }
+  if(mode==='existing_player'){
+    const players=await findPlayersForGuardian(r);
+    for(const player of players){await linkGuardian(player,guardian,r)}
+    if(!players.length) showToast('تم إنشاء ولي الأمر، لكن لم يتم العثور على لاعب مطابق للربط.','warn');
+    return {guardian,linked:players.length,mode};
+  }
+  return {guardian,mode};
+}
+async function createAcademyMemberFromRequest(r){
+  const interests=parseInterestsArray(r.notes||r.guardian_notes||'');
+  const payload={
+    source_request_id:r.id,
+    full_name:r.full_name||null,
+    phone:r.phone||null,
+    email:r.email||null,
+    city:r.city||null,
+    national_id:r.national_id||null,
+    interests:interests.length?interests:null,
+    status:'approved',
+    notes:r.notes||null,
+    approved_at:new Date().toISOString()
+  };
+  const {data:ex,error:e1}=await supabaseClient.from('academy_members').select('id').eq('source_request_id',r.id).maybeSingle();
+  if(e1)throw e1;
+  if(ex)return ex;
+  const {data,error}=await supabaseClient.from('academy_members').insert([payload]).select('id').single();
+  if(error)throw error;
+  return data;
+}
 async function approveSideEffect(r){
   if(r.request_type==='player') return await createPlayerAndLinkGuardian(r);
+  if(r.request_type==='staff') return await approveStaffRequest(r);
   if(r.request_type==='coach') return await createCoach(r);
   if(r.request_type==='supporter') return await createSupporter(r);
   if(r.request_type==='volunteer') return await createVolunteer(r);
-  if(r.request_type==='guardian'){
-    const guardian=await createGuardian(r);
-    const mode=guardianMode(r);
-    if(mode==='new_player'){
-      const player=await createPlayerFromGuardianChild(r,guardian);
-      await linkGuardian(player,guardian,r);
-      return {guardian,player,mode};
-    }
-    if(mode==='existing_player'){
-      const players=await findPlayersForGuardian(r);
-      for(const player of players){await linkGuardian(player,guardian,r)}
-      if(!players.length) showToast('تم إنشاء ولي الأمر، لكن لم يتم العثور على لاعب مطابق للربط.','warn');
-      return {guardian,linked:players.length,mode};
-    }
-    return {guardian,mode};
+  if(r.request_type==='guardian') return await approveGuardianRequest(r);
+  if(r.request_type==='academy_member'){
+    if(r.guardian_goal) return await approveGuardianRequest(r);
+    return await createAcademyMemberFromRequest(r);
   }
 }
 async function updateStatus(id,status){
@@ -517,14 +704,17 @@ async function updateStatus(id,status){
       if(missing.length){showToast('لا يمكن اعتماد الطلب قبل قبول كل المرفقات الإجبارية المطلوبة.','error'); if($('attachmentsReviewSummary')) $('attachmentsReviewSummary').innerHTML += `<div class="review-lock">المتبقي: ${escapeHtml(missing.join('، '))}</div>`; return;}
       await setFinalReview('approved','تم اعتماد جميع المرفقات الإجبارية المطلوبة.');
     }
-    if(status==='approved') await approveSideEffect(r);
+    let sideResult=null;
+    if(status==='approved') sideResult=await approveSideEffect(r);
     const upd={status,reviewed_at:new Date().toISOString(),updated_at:new Date().toISOString()};
     const {error}=await supabaseClient.from('join_requests').update(upd).eq('id',id);
     if(error)throw error;
     Object.assign(r,upd);
     renderTable(window.REQUEST_TYPE||null);
     closeRequest();
-    showToast(status==='approved'?'تم قبول الطلب وتنفيذ الإجراء المناسب.':`تم تحديث الحالة إلى ${getStatusLabel(status)}` , status==='rejected'?'error':'success');
+    let okMsg=status==='approved'?'تم قبول الطلب وتنفيذ الإجراء المناسب.':`تم تحديث الحالة إلى ${getStatusLabel(status)}`;
+    if(status==='approved'&&r.request_type==='staff') okMsg+=staffApprovalToastExtra(sideResult);
+    showToast(okMsg, status==='rejected'?'error':'success');
   }catch(e){
     console.error(e);
     showToast('تعذر تنفيذ العملية. تأكد من الجداول والأعمدة وسياسات RLS.','error')

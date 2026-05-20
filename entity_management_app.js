@@ -1,10 +1,4 @@
-const SUPABASE_URL = "https://uwmyqlydenrzkzrymhvl.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3bXlxbHlkZW5yemt6cnltaHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NDQ2NjAsImV4cCI6MjA5MzAyMDY2MH0.TCPgHAHhILaD5tFsZiFIgLvH7yuxkrtJ29F5J5oHQrw";
-
-// تصحيح احتياطي: المفتاح أعلاه إن تغيّر أثناء النسخ، نستخدم المفتاح الصحيح مباشرة.
-const SUPABASE_KEY_SAFE = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3bXlxbHlkZW5yemt6cnltaHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NDQ2NjAsImV4cCI6MjA5MzAyMDY2MH0.TCPgHAHhILaD5tFsZiFIgLvH7yuxkrtJ29F5J5oHQrw";
-const REAL_SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3bXlxbHlkZW5yemt6cnltaHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NDQ2NjAsImV4cCI6MjA5MzAyMDY2MH0.TCPgHAHhILaD5tFsZiFIgLvH7yuxkrtJ29F5J5oHQrw";
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = createSupabaseClient();
 
 const ENTITY_CONFIGS = {
   guardians: {
@@ -73,6 +67,55 @@ const ENTITY_CONFIGS = {
       reference_code: "رقم المرجع", source_request_id: "رقم الطلب المصدر", created_at: "تاريخ الإنشاء", updated_at: "آخر تحديث"
     },
     textarea: ["notes"]
+  },
+  academy_staff: {
+    table: "academy_staff",
+    title: "إدارة الكوادر",
+    icon: "💼",
+    desc: "جدول موحّد لكل الكوادر بعد اعتماد الطلب — مجال، دور، حالة، وصلاحية النظام.",
+    columns: [
+      ["full_name", "الاسم"],
+      ["phone", "الجوال"],
+      ["staff_category", "المجال"],
+      ["staff_type", "الدور"],
+      ["qualification", "المؤهل"],
+      ["experience_years", "الخبرة"],
+      ["status", "الحالة"],
+      ["role", "صلاحية النظام"]
+    ],
+    editable: [
+      "full_name",
+      "phone",
+      "email",
+      "national_id",
+      "qualification",
+      "experience_years",
+      "status",
+      "role",
+      "notes"
+    ],
+    labels: {
+      full_name: "الاسم الكامل",
+      phone: "رقم الجوال",
+      email: "البريد الإلكتروني",
+      national_id: "رقم الهوية",
+      nationality: "الجنسية",
+      birth_date: "تاريخ الميلاد",
+      staff_category: "المجال (معرّف)",
+      staff_type: "الدور (معرّف)",
+      qualification: "المؤهل / التخصص",
+      experience_years: "سنوات الخبرة",
+      status: "الحالة",
+      role: "صلاحية النظام",
+      notes: "ملاحظات",
+      join_request_id: "رقم طلب الانضمام",
+      auth_user_id: "معرّف حساب الدخول",
+      created_at: "تاريخ الإنشاء",
+      updated_at: "آخر تحديث"
+    },
+    textarea: ["notes"],
+    statusOptions: ["active", "inactive", "suspended"],
+    deactivateStatus: "suspended"
   }
 };
 
@@ -103,9 +146,9 @@ function normalizeStatus(value) {
     "مقبول": "active",
     inactive: "inactive",
     disabled: "inactive",
-    suspended: "inactive",
+    suspended: "suspended",
     "معطل": "inactive",
-    "موقوف": "inactive",
+    "موقوف": "suspended",
     deleted: "deleted",
     archived: "deleted",
     "محذوف": "deleted",
@@ -118,6 +161,7 @@ function statusLabel(value) {
   const st = normalizeStatus(value);
   if (st === "active") return "نشط";
   if (st === "inactive") return "معطل";
+  if (st === "suspended") return "موقوف";
   if (st === "deleted") return "محذوف/مؤرشف";
   return st;
 }
@@ -125,6 +169,7 @@ function statusLabel(value) {
 function statusClass(value) {
   const st = normalizeStatus(value);
   if (st === "active") return "status-approved";
+  if (st === "suspended") return "status-rejected";
   if (st === "deleted") return "status-rejected";
   return "status-pending";
 }
@@ -156,7 +201,32 @@ function showToast(message, type = "success") {
   }, 2800);
 }
 
+function staffCategoryLabel(id) {
+  const AR = window.ACADEMY_ROLES;
+  return AR?.getDomainLabel ? AR.getDomainLabel(id) : id || "-";
+}
+
+function staffTypeLabel(id) {
+  const AR = window.ACADEMY_ROLES;
+  return AR?.getRoleLabel ? AR.getRoleLabel(id) : id || "-";
+}
+
+function systemRoleLabel(value) {
+  const map = { staff: "كادر", manager: "مدير", admin: "مدير نظام" };
+  return map[String(value || "").trim()] || value || "-";
+}
+
+function displayCell(row, key) {
+  if (key === "status") return statusLabel(row[key]);
+  if (key === "staff_category") return staffCategoryLabel(row[key]);
+  if (key === "staff_type") return staffTypeLabel(row[key]);
+  if (key === "role") return systemRoleLabel(row[key]);
+  if (key === "experience_years") return row[key] != null ? `${row[key]} سنة` : "-";
+  return short(row[key]);
+}
+
 function searchableText(row) {
+  const AR = window.ACADEMY_ROLES;
   return [
     row.full_name,
     row.phone,
@@ -170,17 +240,26 @@ function searchableText(row) {
     row.support_method,
     row.volunteer_field,
     row.availability,
-    row.notes
+    row.notes,
+    row.staff_category,
+    row.staff_type,
+    staffCategoryLabel(row.staff_category),
+    staffTypeLabel(row.staff_type),
+    row.qualification,
+    row.national_id,
+    row.join_request_id
   ].filter(Boolean).join(" ").toLowerCase();
 }
 
 function filtered() {
   const query = ($("searchInput")?.value || "").trim().toLowerCase();
   const status = $("statusFilter")?.value || "all";
+  const category = $("categoryFilter")?.value || "all";
   return rows.filter((row) => {
     const matchesSearch = !query || searchableText(row).includes(query);
     const matchesStatus = status === "all" || normalizeStatus(row.status) === status;
-    return matchesSearch && matchesStatus;
+    const matchesCategory = category === "all" || String(row.staff_category || "") === category;
+    return matchesSearch && matchesStatus && matchesCategory;
   });
 }
 
@@ -218,6 +297,7 @@ function renderStats() {
   if ($("statAll")) $("statAll").textContent = rows.length;
   if ($("statActive")) $("statActive").textContent = rows.filter((r) => normalizeStatus(r.status) === "active").length;
   if ($("statInactive")) $("statInactive").textContent = rows.filter((r) => normalizeStatus(r.status) === "inactive").length;
+  if ($("statSuspended")) $("statSuspended").textContent = rows.filter((r) => normalizeStatus(r.status) === "suspended").length;
   if ($("statDeleted")) $("statDeleted").textContent = rows.filter((r) => normalizeStatus(r.status) === "deleted").length;
 }
 
@@ -248,7 +328,7 @@ function render() {
       if (key === "status") {
         return `<td><span class="tag ${statusClass(row[key])}">${esc(statusLabel(row[key]))}</span></td>`;
       }
-      return `<td>${esc(short(row[key]))}</td>`;
+      return `<td>${esc(displayCell(row, key))}</td>`;
     }).join("");
 
     return `
@@ -293,7 +373,11 @@ function viewEntity(id) {
     .filter(([, value]) => value !== null && value !== undefined && String(value) !== "")
     .map(([key, value]) => {
       const label = cfg.labels[key] || key;
-      const display = key === "status" ? statusLabel(value) : (key.includes("_at") ? fmtDate(value) : short(value, 120));
+      let display = key.includes("_at") ? fmtDate(value) : short(value, 120);
+      if (key === "status") display = statusLabel(value);
+      else if (key === "staff_category") display = staffCategoryLabel(value);
+      else if (key === "staff_type") display = staffTypeLabel(value);
+      else if (key === "role") display = systemRoleLabel(value);
       return `<div class="detail-item"><strong>${esc(label)}</strong><span>${esc(display)}</span></div>`;
     }).join("");
 
@@ -317,13 +401,26 @@ function editEntity(id) {
     const value = row[key] ?? "";
     if (key === "status") {
       const st = normalizeStatus(value);
+      const opts = cfg.statusOptions || ["active", "inactive", "deleted"];
+      const optLabels = { active: "نشط", inactive: "معطل", suspended: "موقوف", deleted: "محذوف/مؤرشف" };
       return `
         <label>
           <span>${esc(label)}</span>
           <select name="${esc(key)}">
-            <option value="active" ${st === "active" ? "selected" : ""}>نشط</option>
-            <option value="inactive" ${st === "inactive" ? "selected" : ""}>معطل</option>
-            <option value="deleted" ${st === "deleted" ? "selected" : ""}>محذوف/مؤرشف</option>
+            ${opts.map((v) => `<option value="${v}" ${st === v ? "selected" : ""}>${optLabels[v] || v}</option>`).join("")}
+          </select>
+        </label>
+      `;
+    }
+    if (key === "role") {
+      const rv = String(value || "staff");
+      return `
+        <label>
+          <span>${esc(label)}</span>
+          <select name="${esc(key)}">
+            <option value="staff" ${rv === "staff" ? "selected" : ""}>كادر</option>
+            <option value="manager" ${rv === "manager" ? "selected" : ""}>مدير</option>
+            <option value="admin" ${rv === "admin" ? "selected" : ""}>مدير نظام</option>
           </select>
         </label>
       `;
@@ -372,11 +469,17 @@ async function saveEntity() {
 }
 
 async function deactivateEntity(id) {
-  const ok = await confirmBox("تعطيل السجل", "سيتم تغيير حالة السجل إلى معطل بدل حذفه نهائيًا. هل تريد المتابعة؟", "تعطيل");
+  const cfg = config();
+  const targetStatus = cfg.deactivateStatus || "inactive";
+  const targetLabel = statusLabel(targetStatus);
+  const ok = await confirmBox(
+    "تغيير حالة السجل",
+    `سيتم تغيير حالة السجل إلى «${targetLabel}». هل تريد المتابعة؟`,
+    "تأكيد"
+  );
   if (!ok) return;
 
-  const cfg = config();
-  const payload = { status: "inactive", updated_at: new Date().toISOString() };
+  const payload = { status: targetStatus, updated_at: new Date().toISOString() };
   const { error } = await supabaseClient
     .from(cfg.table)
     .update(payload)
@@ -437,7 +540,9 @@ function exportCsv() {
   }
 
   const headers = cfg.columns.map(([, label]) => label).concat(["تاريخ الإنشاء"]);
-  const lines = data.map((row) => cfg.columns.map(([key]) => key === "status" ? statusLabel(row[key]) : (row[key] ?? "")).concat([fmtDate(row.created_at)]));
+  const lines = data.map((row) =>
+    cfg.columns.map(([key]) => (key === "status" ? statusLabel(row[key]) : displayCell(row, key))).concat([fmtDate(row.created_at)])
+  );
   const csv = [headers, ...lines].map((line) => line.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(",")).join("\n");
   const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
   const link = document.createElement("a");
@@ -452,6 +557,7 @@ function exportCsv() {
 document.addEventListener("DOMContentLoaded", () => {
   $("searchInput")?.addEventListener("input", render);
   $("statusFilter")?.addEventListener("change", render);
+  $("categoryFilter")?.addEventListener("change", render);
   $("exportBtn")?.addEventListener("click", exportCsv);
   $("closeEntityModal")?.addEventListener("click", closeModal);
   $("entityModal")?.addEventListener("click", (event) => {

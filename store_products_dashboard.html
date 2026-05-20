@@ -416,6 +416,7 @@
       .topbar{align-items:flex-start}
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="js/supabase-client.js"></script><script src="js/admin-auth.js"></script><script>requireAdmin();</script>
 </head>
 <body>
   <div class="layout">
@@ -751,11 +752,6 @@
       previewPlayer: document.getElementById('previewPlayer')
     };
 
-    function adminLogout(){
-      try{ sessionStorage.removeItem('adminLoggedIn'); }catch(e){}
-      window.location.href='admin_login.html';
-    }
-    window.adminLogout = adminLogout;
 
     function escapeHtml(value){
       return String(value ?? '')

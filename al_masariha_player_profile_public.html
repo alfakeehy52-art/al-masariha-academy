@@ -148,10 +148,10 @@
 
   <div id="site-footer"></div>
   <script src="shared-layout.js"></script>
-  
+  <script src="supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
 <script>
-const SUPABASE_URL = "https://uwmyqlydenrzkzrymhvl.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3bXlxbHlkZW5yemt6cnltaHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NDQ2NjAsImV4cCI6MjA5MzAyMDY2MH0.TCPgHAHhILaD5tFsZiFIgLvH7yuxkrtJ29F5J5oHQrw";
+const { url: SUPABASE_URL, anonKey: SUPABASE_KEY } = getSupabaseConfig();
 
 const params = new URLSearchParams(window.location.search);
 const playerId = params.get('id');

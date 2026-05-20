@@ -405,15 +405,10 @@
       .title-box h2{font-size:26px}
     }
   </style>
-  <script>
-    if (localStorage.getItem("adminLoggedIn") !== "true") {
-      window.location.href = "admin_login.html";
-    }
-    function adminLogout(){
-      localStorage.removeItem("adminLoggedIn");
-      window.location.href = "admin_login.html";
-    }
-  </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="js/supabase-client.js"></script><script src="js/admin-auth.js"></script><script>requireAdmin();</script>
 </head>
 <body>
   <div class="layout">
@@ -583,11 +578,11 @@
   <div class="toast-wrap" id="toastWrap"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
   <script src="admin_sidebar.js"></script>
   <script>
-    const SUPABASE_URL = "https://uwmyqlydenrzkzrymhvl.supabase.co";
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3bXlxbHlkZW5yemt6cnltaHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NDQ2NjAsImV4cCI6MjA5MzAyMDY2MH0.TCPgHAHhILaD5tFsZiFIgLvH7yuxkrtJ29F5J5oHQrw";
-    const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+    const supabaseClient = createSupabaseClient();
 
     let currentImageData = "";
     let coachesCache = [];

@@ -48,8 +48,8 @@ footer{display:none}.empty-box{padding:26px 20px;border:1px dashed rgba(213,177,
         <h2>أكاديمية<br><span class="gold">المسارحة</span><br>لكرة القدم</h2>
         <p>واجهة احترافية لعرض المواهب والنتائج والكادر الفني في صورة موحدة وقابلة للتحديث مباشرة من لوحة الإدارة.</p>
         <div class="hero-cta">
-          <a class="hero-primary" href="al_masariha_players_page.html">استكشف اللاعبين ←</a>
-          <a class="hero-secondary" href="al_masariha_store_page.html">تصفح المتجر</a>
+          <a class="hero-primary" href="al_masariha_join_page.html">انضم إلينا ←</a>
+          <a class="hero-secondary" href="al_masariha_players_page.html">استكشف اللاعبين</a>
         </div>
       </div>
     </div>
@@ -81,10 +81,10 @@ footer{display:none}.empty-box{padding:26px 20px;border:1px dashed rgba(213,177,
 </div>
 <div id="site-footer"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="js/supabase-client.js"></script>
 <script>
-const SUPABASE_URL = "https://uwmyqlydenrzkzrymhlv.supabase.co";
-const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3bXlxbHlkZW5yemt6cnltaHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NDQ2NjAsImV4cCI6MjA5MzAyMDY2MH0.TCPgHAHhILaD5tFsZiFIgLvH7yuxkrtJ29F5J5oHQrw";
-const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = createSupabaseClient();
 
 const COACHES_STORAGE_KEY = 'academyCoaches';
 const DEFAULT_COACHES = [

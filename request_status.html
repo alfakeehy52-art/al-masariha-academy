@@ -65,10 +65,10 @@
 
   <div class="toast-wrap" id="toastWrap"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
   <script>
-    const SUPABASE_URL='https://uwmyqlydenrzkzrymhvl.supabase.co';
-    const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV3bXlxbHlkZW5yemt6cnltaHZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0NDQ2NjAsImV4cCI6MjA5MzAyMDY2MH0.TCPgHAHhILaD5tFsZiFIgLvH7yuxkrtJ29F5J5oHQrw';
-    const sb=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
+    const sb = createSupabaseClient();
     const $=id=>document.getElementById(id);
     const TYPE={player:'لاعب',guardian:'ولي أمر',coach:'مدرب',supporter:'داعم',volunteer:'متطوع'};
     const STATUS={new:'جديد',review:'تحت المراجعة',reviewing:'تحت المراجعة',approved:'مقبول',rejected:'مرفوض',pending:'بانتظار استكمال',needs_completion:'بانتظار استكمال'};

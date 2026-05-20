@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>دخول الكادر | أكاديمية المسارحة</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <style>
+    :root{--gold:#d5b15a;--gold2:#f0d58f;--text:#f3f4ef;--muted:#b6c1b8;--line:rgba(255,255,255,.1)}
+    *{box-sizing:border-box}
+    body{margin:0;min-height:100vh;font-family:'Cairo',system-ui,sans-serif;color:var(--text);display:flex;align-items:center;justify-content:center;padding:24px;background:radial-gradient(circle at top,rgba(213,177,90,.12),transparent 28%),linear-gradient(180deg,#030a07,#06130d 40%,#041009)}
+    .box{width:min(460px,100%);border:1px solid var(--line);border-radius:28px;padding:28px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));box-shadow:0 24px 60px rgba(0,0,0,.35)}
+    h1{margin:0 0 6px;color:var(--gold2);font-size:30px;font-weight:900}
+    .lead{margin:0 0 20px;color:var(--muted);line-height:1.85;font-size:14px}
+    .tabs{display:flex;gap:8px;margin-bottom:18px}
+    .tab{flex:1;padding:12px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--muted);font-weight:900;cursor:pointer}
+    .tab.active{background:rgba(213,177,90,.14);border-color:rgba(213,177,90,.35);color:var(--gold2)}
+    .panel{display:none}
+    .panel.active{display:block}
+    label{display:block;margin:0 0 8px;font-weight:800;font-size:14px}
+    input{width:100%;padding:14px 16px;margin:0 0 14px;border-radius:14px;border:1px solid var(--line);background:rgba(7,12,22,.65);color:var(--text);font:inherit}
+    button{width:100%;padding:14px;border:none;border-radius:14px;font:inherit;font-weight:900;font-size:16px;cursor:pointer;background:linear-gradient(135deg,#e4c36f,#d5b15a);color:#08110b}
+    button:disabled{opacity:.65;cursor:not-allowed}
+    .ghost{margin-top:10px;background:rgba(255,255,255,.05);color:#fff;border:1px solid var(--line)}
+    .err{display:none;margin:12px 0 0;padding:12px;border-radius:12px;background:rgba(197,82,82,.12);border:1px solid rgba(197,82,82,.28);color:#ffd7d7;font-weight:800;font-size:13px;line-height:1.7}
+    .err.show{display:block}
+    .ok{display:none;margin:12px 0 0;padding:12px;border-radius:12px;background:rgba(21,145,95,.12);border:1px solid rgba(21,145,95,.28);color:#caffdd;font-weight:800;font-size:13px;line-height:1.7}
+    .ok.show{display:block}
+    .hint{margin-top:16px;color:var(--muted);font-size:13px;line-height:1.8}
+    .hint a{color:var(--gold2)}
+    .back{display:inline-block;margin-top:18px;color:var(--muted);text-decoration:none;font-weight:800;font-size:13px}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/staff-auth.js"></script>
+  <script>redirectIfStaffLoggedIn("staff_dashboard.html");</script>
+</head>
+<body>
+  <div class="box">
+    <h1>بوابة الكادر</h1>
+    <p class="lead">للكوادر المعتمدين بعد قبول طلب الانضمام. استخدم نفس البريد المسجّل في الطلب.</p>
+
+    <div class="tabs">
+      <button type="button" class="tab active" data-tab="login">دخول</button>
+      <button type="button" class="tab" data-tab="activate">تفعيل حساب</button>
+      <button type="button" class="tab" data-tab="magic">رابط بريد</button>
+    </div>
+
+    <div id="err" class="err"></div>
+    <div id="ok" class="ok"></div>
+
+    <div class="panel active" id="panel-login">
+      <label for="loginEmail">البريد الإلكتروني</label>
+      <input type="email" id="loginEmail" autocomplete="username" placeholder="example@email.com" />
+      <label for="loginPassword">كلمة المرور</label>
+      <input type="password" id="loginPassword" autocomplete="current-password" placeholder="كلمة المرور" />
+      <button type="button" id="loginBtn">دخول</button>
+    </div>
+
+    <div class="panel" id="panel-activate">
+      <label for="actEmail">البريد (كما في الطلب المعتمد)</label>
+      <input type="email" id="actEmail" autocomplete="username" />
+      <label for="actName">الاسم (اختياري)</label>
+      <input type="text" id="actName" autocomplete="name" />
+      <label for="actPassword">كلمة مرور جديدة</label>
+      <input type="password" id="actPassword" autocomplete="new-password" placeholder="8 أحرف على الأقل" />
+      <button type="button" id="activateBtn">إنشاء حساب وربط السجل</button>
+    </div>
+
+    <div class="panel" id="panel-magic">
+      <label for="magicEmail">البريد الإلكتروني</label>
+      <input type="email" id="magicEmail" autocomplete="username" />
+      <button type="button" id="magicBtn">إرسال رابط الدخول للبريد</button>
+      <button type="button" class="ghost" id="magicHintBtn" disabled style="display:none"></button>
+    </div>
+
+    <p class="hint">
+      بعد اعتماد طلبك من الإدارة، يُنشأ سجل في <strong>academy_staff</strong>.
+      فعّل الحساب مرة واحدة ثم استخدم «دخول».
+      <br /><a href="request_status.html">متابعة حالة الطلب</a>
+      · <a href="index.html">الرئيسية</a>
+    </p>
+    <a class="back" href="al_masariha_join_page.html">← العودة لصفحة الانضمام</a>
+  </div>
+
+  <script>
+    const errEl = document.getElementById("err");
+    const okEl = document.getElementById("ok");
+    const params = new URLSearchParams(location.search);
+
+    function showErr(msg) {
+      okEl.classList.remove("show");
+      errEl.textContent = msg || "حدث خطأ.";
+      errEl.classList.add("show");
+    }
+    function showOk(msg) {
+      errEl.classList.remove("show");
+      okEl.textContent = msg;
+      okEl.classList.add("show");
+    }
+    function clearMsgs() {
+      errEl.classList.remove("show");
+      okEl.classList.remove("show");
+    }
+
+    const ERR_TEXT = {
+      no_profile: "لا يوجد سجل كادر مرتبط بحسابك. استخدم نفس بريد الطلب المعتمد.",
+      inactive: "سجل الكادر غير نشط. تواصل مع الإدارة."
+    };
+    if (params.get("err") && ERR_TEXT[params.get("err")]) showErr(ERR_TEXT[params.get("err")]);
+    if (params.get("email")) {
+      ["loginEmail", "actEmail", "magicEmail"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) el.value = params.get("email");
+      });
+    }
+
+    document.querySelectorAll(".tab").forEach((tab) => {
+      tab.addEventListener("click", () => {
+        document.querySelectorAll(".tab").forEach((t) => t.classList.remove("active"));
+        document.querySelectorAll(".panel").forEach((p) => p.classList.remove("active"));
+        tab.classList.add("active");
+        document.getElementById("panel-" + tab.dataset.tab).classList.add("active");
+        clearMsgs();
+      });
+    });
+
+    async function withBtn(btn, fn) {
+      clearMsgs();
+      btn.disabled = true;
+      const old = btn.textContent;
+      try {
+        await fn();
+      } catch (e) {
+        showErr(e && e.message ? e.message : null);
+      } finally {
+        btn.disabled = false;
+        btn.textContent = old;
+      }
+    }
+
+    document.getElementById("loginBtn").addEventListener("click", () =>
+      withBtn(document.getElementById("loginBtn"), async () => {
+        document.getElementById("loginBtn").textContent = "جاري الدخول...";
+        await staffLogin(
+          document.getElementById("loginEmail").value,
+          document.getElementById("loginPassword").value
+        );
+        location.href = "staff_dashboard.html";
+      })
+    );
+
+    document.getElementById("activateBtn").addEventListener("click", () =>
+      withBtn(document.getElementById("activateBtn"), async () => {
+        document.getElementById("activateBtn").textContent = "جاري التفعيل...";
+        const result = await staffActivate(
+          document.getElementById("actEmail").value,
+          document.getElementById("actPassword").value,
+          document.getElementById("actName").value
+        );
+        if (result.needsEmailConfirm) {
+          showOk("تم إنشاء الحساب. افتح بريدك لتأكيد الرسالة ثم سجّل الدخول.");
+          return;
+        }
+        location.href = "staff_dashboard.html";
+      })
+    );
+
+    document.getElementById("magicBtn").addEventListener("click", () =>
+      withBtn(document.getElementById("magicBtn"), async () => {
+        document.getElementById("magicBtn").textContent = "جاري الإرسال...";
+        await staffSendMagicLink(document.getElementById("magicEmail").value);
+        showOk("تم إرسال رابط الدخول إلى بريدك. افتح الرسالة من Supabase.");
+      })
+    );
+
+    document.getElementById("loginPassword").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") document.getElementById("loginBtn").click();
+    });
+  </script>
+</body>
+</html>

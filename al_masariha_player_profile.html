@@ -518,16 +518,6 @@
       }
     }
   </style>
-<script>
-if (localStorage.getItem("adminLoggedIn") !== "true") {
-  window.location.href = "admin_login.html";
-}
-function adminLogout(){
-  localStorage.removeItem("adminLoggedIn");
-  window.location.href = "admin_login.html";
-}
-</script>
-
 <style id="admin-nav-fix">
 .menu .logout-link{
   background:linear-gradient(90deg, rgba(199,59,59,.18), rgba(255,255,255,.05)) !important;
@@ -638,7 +628,5 @@ function adminLogout(){
 
   <div id="site-footer"></div>
   <script src="shared-layout.js"></script>
-
-  <script src="admin_sidebar.js"></script>
 </body>
 </html>

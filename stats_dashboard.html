@@ -72,15 +72,10 @@
     @media (max-width:1100px){.layout{grid-template-columns:1fr}.sidebar{position:relative;height:auto;border-left:none;border-bottom:1px solid var(--line)}}
     @media (max-width:700px){.main{padding:16px}.stats{grid-template-columns:1fr}.title-box h2{font-size:24px}}
   </style>
-  <script>
-    if (localStorage.getItem("adminLoggedIn") !== "true") {
-      window.location.href = "admin_login.html";
-    }
-    function adminLogout(){
-      localStorage.removeItem("adminLoggedIn");
-      window.location.href = "admin_login.html";
-    }
-  </script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="js/supabase-client.js"></script><script src="js/admin-auth.js"></script><script>requireAdmin();</script>
 </head>
 <body>
 <div class="layout">
@@ -179,18 +174,10 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="admin_sidebar.js"></script>
 <script src="supabase-config.js"></script>
+<script src="js/supabase-client.js"></script>
 
 <script>
-  const { url: SUPABASE_URL, anonKey: SUPABASE_ANON_KEY } = window.SUPABASE_CONFIG || {};
-
-  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-    throw new Error("Missing SUPABASE_CONFIG. Load supabase-config.js before this script.");
-  }
-
-  const supabaseClient = window.supabase.createClient(
-    SUPABASE_URL,
-    SUPABASE_ANON_KEY
-  );
+  const supabaseClient = createSupabaseClient();
 
   let players = [];
   let joinRequests = [];

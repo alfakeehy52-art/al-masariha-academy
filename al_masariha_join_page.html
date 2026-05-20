@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>انضم إلينا | أكاديمية المسارحة لكرة القدم</title>
+  <link rel="stylesheet" href="shared-layout.css" />
+  <link rel="stylesheet" href="join-page-styles.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    html, body { margin: 0; padding: 0; font-family: 'Cairo', sans-serif; background: radial-gradient(circle at top, rgba(201, 162, 39, 0.08), transparent 28%), linear-gradient(180deg, #030a07, #071510); color: #f2f6f0; min-height: 100vh; }
+    .field-readonly input, .field-readonly select { opacity: 0.92; cursor: not-allowed; }
+    .minor-guardian-title { grid-column: 1 / -1; margin: 0 0 4px; font-size: 16px; color: #f0d78a; font-weight: 900; }
+    .minor-guardian-hint { grid-column: 1 / -1; margin: 0 0 10px; color: #a8b5ac; font-size: 12px; line-height: 1.8; }
+    .player-suggestion small { display: block; color: #a8b5ac; font-size: 12px; margin-top: 3px; }
+    .selected-chip button { border: none; background: rgba(255,255,255,.12); color: #fff; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; }
+    @keyframes toastIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+    .toast { animation: toastIn .22s ease; }
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="join-page">
+    <section class="join-hero">
+      <div class="join-hero-inner">
+        <span class="join-eyebrow">Join Us · بوابة الانضمام الرسمية</span>
+        <h1>انضم إلى أكاديمية المسارحة</h1>
+        <p class="join-hero-lead">قدّم طلبك أو طلب وظيفة/كادر. تراجع الإدارة الطلب، وعند الاعتماد يُفعَّل حسابك كـ Staff رسمي مع صلاحيات مناسبة لدورك — بنية موحّدة واحدة بدل جداول متفرقة.</p>
+        <div class="journey" aria-label="رحلة الانضمام">
+          <div class="journey-step is-highlight"><span class="num">١</span><strong>طلب / انضمام</strong><span>تعبئة النموذج وإرسال المرجع</span></div>
+          <div class="journey-step"><span class="num">٢</span><strong>مراجعة إدارية</strong><span>فحص البيانات والمؤهلات</span></div>
+          <div class="journey-step"><span class="num">٣</span><strong>اعتماد Staff</strong><span>تسجيل في academy_staff</span></div>
+          <div class="journey-step"><span class="num">٤</span><strong>حساب وصلاحيات</strong><span>دخول ولوحة تحكم</span></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="path-section" id="pathSection">
+      <div class="path-section-head">
+        <h2>اختر مسارك</h2>
+        <p>كل مسار له حقول مخصّصة. الكوادر عبر ٥ مجالات و٢٣ دوراً.</p>
+      </div>
+      <p class="path-group-label">الأعضاء والرياضة</p>
+      <div class="path-grid">
+        <button type="button" class="path-card active" data-type="player"><span class="path-icon">⚽</span><span class="path-title">لاعب</span><span class="path-desc">تسجيل لاعب مع عمر هجري وفئة تلقائية</span></button>
+        <button type="button" class="path-card" data-type="guardian"><span class="path-icon">👨‍👦</span><span class="path-title">ولي أمر</span><span class="path-desc">ربط أو تسجيل ابن — ليس عضوية رياضية</span></button>
+        <button type="button" class="path-card" data-type="academy_member"><span class="path-icon">📰</span><span class="path-title">عضو أكاديمي</span><span class="path-desc">أخبار وفعاليات وعروض</span></button>
+      </div>
+      <p class="path-group-label">الكوادر والمجتمع</p>
+      <div class="path-grid">
+        <button type="button" class="path-card featured" data-type="staff"><span class="path-icon">💼</span><span class="path-title">طلب وظيفة / كادر</span><span class="path-desc">رياضي · طبي · إداري · تشغيلي · إعلامي</span><span class="path-tag">موصى به للكوادر</span></button>
+        <button type="button" class="path-card" data-type="supporter"><span class="path-icon">🤝</span><span class="path-title">داعم / راعٍ</span><span class="path-desc">شراكة ودعم مالي أو لوجستي</span></button>
+      </div>
+    </section>
+
+    <section class="form-shell visible" id="formShell">
+      <div class="form-shell-head">
+        <div>
+          <h2 id="formStepTitle">تسجيل لاعب</h2>
+          <p>أكمل البيانات المطلوبة — الطلب يخضع للمراجعة قبل التفعيل.</p>
+        </div>
+        <div class="active-path-badge">المسار: <em id="activePathLabel">لاعب</em></div>
+      </div>
+      <form id="joinForm" class="join-form" novalidate>
+        <section class="section type-panel active" data-panel="player">
+          <h3 class="section-title">بيانات طلب اللاعب</h3>
+          <div class="policy-note">يُحسب العمر بالتقويم الهجري (معتمد في السعودية). إذا كان اللاعب أقل من 18 سنة هجرياً تُطلب بيانات ولي الأمر للموافقة والربط — دون عضوية رياضية منفصلة لولي الأمر. إذا كان 18 سنة فأكثر يكمل اللاعب طلبه بنفسه.</div>
+          <div class="grid">
+            <div class="field full"><label for="playerBirthHijri">تاريخ الميلاد الهجري للاعب <span style="color:#f5d46b">*</span></label><input id="playerBirthHijri" name="playerBirthHijri" type="text" placeholder="يوم/شهر/سنة — مثال: 15/08/1448 أو 1448/08/15" /></div>
+            <div class="field"><label for="playerAge">العمر الهجري (يُحسب تلقائياً)</label><input id="playerAge" name="playerAge" type="text" inputmode="numeric" placeholder="—" readonly autocomplete="off" /><p class="hijri-today-hint" id="hijriTodayHint"></p></div>
+            <div class="field full age-banner minor" id="playerAgeBannerMinor" style="display:none">لاعب قاصر: أدخل بيانات ولي الأمر أدناه. يُسجَّل ولي الأمر ويُربط بابنك عند الاعتماد — وليس كعضو رياضي مستقل.</div>
+            <div class="field full age-banner adult" id="playerAgeBannerAdult" style="display:none">لاعب بالغ (18 هجرياً فأكثر): يكمل الطلب باسمه وبياناته دون ولي أمر في النموذج.</div>
+            <div class="field full" id="minorGuardianBox" style="display:none">
+              <div class="grid">
+                <p class="minor-guardian-title">بيانات ولي الأمر (إلزامي للقاصر)</p>
+                <p class="minor-guardian-hint">ولي الأمر جهة اتصال وموافقة قانونية فقط.</p>
+                <div class="field"><label for="relationship">صلة القرابة</label><select id="relationship" name="relationship"><option value="">اختر</option><option>أب</option><option>أم</option><option>أخ</option><option>أخت</option><option>ولي أمر آخر</option></select></div>
+                <div class="field"><label for="guardianName">اسم ولي الأمر</label><input id="guardianName" name="guardianName" type="text" placeholder="الاسم الكامل لولي الأمر" /></div>
+                <div class="field"><label for="guardianPhone">جوال ولي الأمر</label><input id="guardianPhone" name="guardianPhone" type="tel" placeholder="05xxxxxxxx" /></div>
+                <div class="field"><label for="guardianNationalId">هوية ولي الأمر</label><input id="guardianNationalId" name="guardianNationalId" type="text" placeholder="رقم الهوية" /></div>
+              </div>
+            </div>
+            <div class="field field-readonly"><label for="ageCategory">الفئة (تُحدد تلقائياً حسب العمر)</label><select id="ageCategory" disabled><option value="">—</option><option>براعم</option><option>ناشئين</option><option>شباب</option><option>فريق أول</option></select><input type="hidden" id="ageCategoryHidden" name="ageCategory" /><p class="field-hint">تُقترح حسب العمر الهجري. الإدارة والمدرب يمكنهم تعديل الفئة لاحقاً.</p></div>
+            <div class="field"><label for="position">المركز المفضل</label><select id="position" name="position"><option value="">اختر المركز</option><option>حارس مرمى</option><option>مدافع</option><option>وسط</option><option>جناح</option><option>مهاجم</option></select></div>
+            <div class="field full"><label for="playerNotes">نبذة أو ملاحظات</label><textarea id="playerNotes" name="playerNotes" placeholder="اكتب أي معلومات مهمة عن اللاعب"></textarea></div>
+          </div>
+        </section>
+
+        <section class="section type-panel" data-panel="guardian">
+          <h3 class="section-title">طلب ولي أمر</h3>
+          <div class="policy-note">لربط ابن مسجّل أو تسجيل لاعب عبر ولي الأمر. لتسجيل ابن قاصر لأول مرة يُفضّل تبويب «لاعب» مع تاريخ الميلاد الهجري.</div>
+          <div class="grid">
+            <div class="field full">
+              <label>الغرض من التسجيل</label>
+              <div class="guardian-goals" id="guardianGoals">
+                <button type="button" class="goal-btn" data-goal="register_new_player">تسجيل لاعب جديد</button>
+                <button type="button" class="goal-btn" data-goal="link_existing_player">ربط بلاعب مسجل مسبقًا</button>
+                <button type="button" class="goal-btn" data-goal="guardian_member_only">ولي أمر / متابع فقط</button>
+              </div>
+              <input type="hidden" id="guardianGoal" name="guardianGoal" />
+            </div>
+            <div class="field guardian-common" style="display:none"><label for="academyRelationship">صلة القرابة</label><select id="academyRelationship" name="academyRelationship"><option value="">اختر</option><option>أب</option><option>أم</option><option>أخ</option><option>أخت</option><option>ولي أمر آخر</option></select></div>
+            <div class="field guardian-player-related" style="display:none"><label for="childrenCount">عدد الأبناء المرتبطين</label><input id="childrenCount" name="childrenCount" type="number" min="1" placeholder="مثال: 1" /></div>
+            <div class="field full guardian-existing-player" style="display:none">
+              <label for="existingPlayerSearch">بحث عن اللاعب الموجود</label>
+              <input id="existingPlayerSearch" name="existingPlayerSearch" type="text" autocomplete="off" placeholder="اكتب أول حرف أو أكثر من اسم اللاعب أو رقم اللاعب أو رقم الجوال" />
+              <div class="field-hint">تظهر النتائج أثناء الكتابة. اختر كل لاعب تريد ربطه بولي الأمر.</div>
+              <div id="playerSuggestions" class="player-suggestions"></div>
+              <div id="selectedPlayers" class="selected-players"></div>
+              <input type="hidden" id="existingPlayerIds" name="existingPlayerIds" />
+              <input type="hidden" id="existingPlayerNames" name="existingPlayerNames" />
+            </div>
+            <div class="field guardian-new-player" style="display:none"><label for="childName">اسم اللاعب الجديد</label><input id="childName" name="childName" type="text" placeholder="اسم اللاعب" /></div>
+            <div class="field guardian-new-player" style="display:none"><label for="guardianPlayerAge">عمر اللاعب الجديد</label><input id="guardianPlayerAge" name="guardianPlayerAge" type="number" min="1" placeholder="العمر" /></div>
+            <div class="field guardian-new-player" style="display:none"><label for="guardianPlayerCategory">فئة اللاعب الجديد</label><select id="guardianPlayerCategory" name="guardianPlayerCategory"><option value="">اختر الفئة</option><option>براعم</option><option>ناشئين</option><option>شباب</option><option>فريق أول</option></select></div>
+            <div class="field guardian-new-player" style="display:none"><label for="guardianPlayerPosition">مركز اللاعب الجديد</label><select id="guardianPlayerPosition" name="guardianPlayerPosition"><option value="">اختر المركز</option><option>حارس مرمى</option><option>مدافع</option><option>وسط</option><option>جناح</option><option>مهاجم</option></select></div>
+            <div class="field full guardian-common" style="display:none"><label for="guardianNotes">ملاحظات إضافية</label><textarea id="guardianNotes" name="guardianNotes" placeholder="اكتب أي توضيحات إضافية إن وجدت"></textarea></div>
+          </div>
+        </section>
+
+        <section class="section type-panel" data-panel="academy_member">
+          <h3 class="section-title">عضوية الأكاديمية</h3>
+          <div class="policy-note">لمن يرغب بمتابعة أخبار الأكاديمية والفعاليات والعروض دون أن يكون لاعباً أو داعماً أو ولي أمر. تُراجع العضوية من الإدارة ثم تُفعَّل.</div>
+          <div class="grid">
+            <div class="field full">
+              <label>اهتماماتك <span style="color:#f5d46b">*</span></label>
+              <div class="member-interests">
+                <label class="interest-chip"><input type="checkbox" name="memberInterests" value="news" /> أخبار الأكاديمية</label>
+                <label class="interest-chip"><input type="checkbox" name="memberInterests" value="events" /> حضور الفعاليات</label>
+                <label class="interest-chip"><input type="checkbox" name="memberInterests" value="store" /> عروض المتجر</label>
+                <label class="interest-chip"><input type="checkbox" name="memberInterests" value="future_player" /> تسجيل لاعب مستقبلاً</label>
+                <label class="interest-chip"><input type="checkbox" name="memberInterests" value="volunteer" /> التطوع</label>
+                <label class="interest-chip"><input type="checkbox" name="memberInterests" value="support" /> الرعاية والدعم</label>
+              </div>
+            </div>
+            <div class="field full"><label for="memberNotes">ملاحظات (اختياري)</label><textarea id="memberNotes" name="memberNotes" placeholder="ما الذي يهمك في الأكاديمية؟"></textarea></div>
+          </div>
+        </section>
+
+        <section class="section type-panel" data-panel="supporter">
+          <h3 class="section-title">بيانات طلب الداعم</h3>
+          <div class="grid">
+            <div class="field"><label for="supportType">نوع الداعم</label><select id="supportType" name="supportType"><option value="">اختر النوع</option><option>فرد</option><option>مؤسسة</option><option>راعٍ محتمل</option></select></div>
+            <div class="field"><label for="supportLevel">المستوى المطلوب</label><select id="supportLevel" name="supportLevel"><option value="">اختر المستوى</option><option>داعم أساسي</option><option>داعم فضي</option><option>داعم ذهبي</option><option>راعٍ رسمي</option></select></div>
+            <div class="field"><label for="entityName">اسم الجهة / النشاط</label><input id="entityName" name="entityName" type="text" placeholder="إن وجد" /></div>
+            <div class="field"><label for="supportMethod">نوع الدعم</label><select id="supportMethod" name="supportMethod"><option value="">اختر نوع الدعم</option><option>مالي</option><option>لوجستي</option><option>رعاية إعلامية</option><option>شراكة</option></select></div>
+            <div class="field full"><label for="supportNotes">تفاصيل الدعم أو المقترح</label><textarea id="supportNotes" name="supportNotes" placeholder="اكتب تفاصيل مختصرة"></textarea></div>
+          </div>
+        </section>
+        <section class="section type-panel" data-panel="staff">
+          <h3 class="section-title">طلب وظيفة / انضمام ككادر</h3>
+          <div class="policy-note">بعد الاعتماد يُسجَّل الكادر في جدول موحّد <strong>academy_staff</strong>: <strong>staff_type</strong> (الدور) و<strong>staff_category</strong> (المجال) — أسهل للإدارة والصلاحيات والعقود والتطبيق لاحقاً.</div>
+          <div class="staff-arch-note">
+            <div class="arch-card"><strong>لماذا جدول موحّد؟</strong>إدارة واحدة، صلاحيات حسب النوع، عقود موحّدة، لوحة تحكم واحدة.</div>
+            <div class="arch-card"><strong>بعد الموافقة</strong>Staff رسمي → حساب دخول → صلاحيات حسب الدور (مرحلة لاحقة).</div>
+          </div>
+          <div class="staff-picker">
+            <p class="picker-title">١ — المجال</p>
+            <div class="domain-tiles" id="staffDomainTiles"></div>
+            <input type="hidden" id="staffDomain" name="staffDomain" />
+            <p class="picker-title">٢ — الدور الوظيفي</p>
+            <p class="field-hint" id="staffRoleHint">اختر المجال أولاً لعرض الأدوار (٢٣ دوراً في ٥ مجالات).</p>
+            <div class="role-chips" id="staffRoleChips"></div>
+            <input type="hidden" id="staffRole" name="staffRole" />
+          </div>
+          <div class="grid">
+            <div class="field staff-sports-only" style="display:none"><label for="staffSpecialty">التخصص</label><select id="staffSpecialty" name="staffSpecialty"><option value="">اختر التخصص</option></select></div>
+            <div class="field staff-sports-only" style="display:none"><label for="staffCategory">الفئة المشرف عليها</label><select id="staffCategory" name="staffCategory"><option value="">اختر الفئة</option></select></div>
+            <div class="field"><label for="staffExperienceYears">سنوات الخبرة</label><input id="staffExperienceYears" name="staffExperienceYears" type="number" min="0" placeholder="مثال: 3" /></div>
+            <div class="field"><label for="staffCertification">الشهادة / المؤهل</label><input id="staffCertification" name="staffCertification" type="text" placeholder="شهادة أو مؤهل مهني" /></div>
+            <div class="field"><label for="staffAvailability">الوقت المتاح</label><select id="staffAvailability" name="staffAvailability"><option value="">اختر</option><option>صباحًا</option><option>مساءً</option><option>دوام كامل</option><option>حسب المناسبة</option></select></div>
+            <div class="field full"><label for="staffBio">نبذة مختصرة</label><textarea id="staffBio" name="staffBio" placeholder="خبراتك ومهاراتك"></textarea></div>
+            <div class="field full"><label for="staffNotes">ملاحظات إضافية</label><textarea id="staffNotes" name="staffNotes" placeholder="تفاصيل تساعد الإدارة في المراجعة"></textarea></div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h3 class="section-title">بيانات التواصل الأساسية</h3>
+          <div class="grid">
+            <div class="field"><label for="fullName">الاسم الكامل</label><input id="fullName" name="fullName" type="text" placeholder="اكتب الاسم الكامل" required /></div>
+            <div class="field"><label for="nationalId">رقم الهوية / الإقامة</label><input id="nationalId" name="nationalId" type="text" inputmode="numeric" maxlength="20" placeholder="أدخل رقم الهوية أو الإقامة" required /></div>
+            <div class="field"><label for="phone">رقم الجوال</label><input id="phone" name="phone" type="tel" placeholder="05xxxxxxxx" required /></div>
+            <div class="field"><label for="email">البريد الإلكتروني <span id="emailRequiredMark" style="display:none;color:#f5d46b">*</span></label><input id="email" name="email" type="email" placeholder="example@email.com" /></div>
+            <div class="field full"><label for="city">المدينة</label><input id="city" name="city" type="text" placeholder="اكتب المدينة" /></div>
+          </div>
+        </section>
+
+        <section class="section">
+          <h3 class="section-title">الإقرار</h3>
+          <div class="policy-box"><div class="policy-row">أقر بأن البيانات المدخلة صحيحة وأن الطلب يخضع للمراجعة والاعتماد من إدارة الأكاديمية.</div></div>
+          <div class="field full" style="margin-top:16px"><label class="field-inline"><input type="checkbox" id="confirmPolicy" required /><span>أوافق على إرسال الطلب للمراجعة.</span></label></div>
+          <div class="action-row"><button type="submit" class="submit-btn">إرسال الطلب</button><a href="request_status.html" class="ghost-btn">متابعة طلب سابق</a><a href="index.html" class="ghost-btn">العودة للرئيسية</a></div>
+          <div id="statusFollowBox" class="policy-box" style="display:none;margin-top:16px;border-color:rgba(46,204,113,.34);background:rgba(46,204,113,.08)">
+            <div class="policy-row">تم حفظ طلبك. احتفظ برقم المرجع، ويمكنك متابعة حالة الطلب من زر المتابعة.</div>
+            <a id="statusFollowLink" href="request_status.html" class="submit-btn" style="width:fit-content;min-width:190px">متابعة حالة الطلب</a>
+          </div>
+        </section>
+      </form>
+    </section>
+  </main>
+  <div class="toast-wrap" id="toastWrap"></div>
+  <div id="site-footer"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="shared-layout.js"></script>
+  <script src="supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/academy-policy.js"></script>
+  <script src="js/academy-roles.js"></script>
+  <script src="js/join-page-app.js"></script>
+</body>
+</html>
