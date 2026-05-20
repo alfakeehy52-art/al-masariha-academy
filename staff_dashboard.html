@@ -27,7 +27,23 @@
     .card strong{display:block;color:var(--muted);font-size:13px;margin-bottom:6px}
     .card span{font-weight:900;font-size:18px}
     .notes{margin-top:18px;padding:16px;border-radius:18px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:var(--muted);line-height:1.9;white-space:pre-wrap}
-    @media(max-width:760px){.grid{grid-template-columns:1fr}.top h1{font-size:28px}}
+    .staff-content{display:none}
+    .staff-content.is-ready{display:block}
+    .load-panel{padding:28px 22px;border:1px solid var(--line);border-radius:28px;background:rgba(255,255,255,.03);margin-bottom:22px}
+    .load-panel[hidden]{display:none!important}
+    .load-row{display:flex;align-items:center;gap:14px;margin-bottom:20px;color:var(--muted);font-weight:800}
+    .spinner{width:22px;height:22px;border:3px solid rgba(213,177,90,.25);border-top-color:var(--gold);border-radius:50%;animation:spin .8s linear infinite;flex-shrink:0}
+    @keyframes spin{to{transform:rotate(360deg)}}
+    .sk-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+    .sk-card{height:78px;border-radius:22px;border:1px solid var(--line);background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.08),rgba(255,255,255,.04));background-size:200% 100%;animation:shimmer 1.2s ease-in-out infinite}
+    .sk-line{height:28px;width:min(280px,70%);border-radius:12px;margin-bottom:12px;background:linear-gradient(90deg,rgba(255,255,255,.04),rgba(255,255,255,.08),rgba(255,255,255,.04));background-size:200% 100%;animation:shimmer 1.2s ease-in-out infinite}
+    .sk-tags{display:flex;gap:8px;flex-wrap:wrap}
+    .sk-tag{height:32px;width:88px;border-radius:999px;background:rgba(255,255,255,.06);animation:shimmer 1.2s ease-in-out infinite}
+    @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+    .err-panel{text-align:center;padding:36px 20px}
+    .err-panel p{margin:0 0 18px;color:#ffd7d7;font-weight:800;line-height:1.8}
+    .err-actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+    @media(max-width:760px){.grid{grid-template-columns:1fr}.top h1{font-size:28px}.sk-grid{grid-template-columns:1fr}}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
@@ -40,7 +56,7 @@
     <div class="top">
       <div>
         <h1>لوحة الكادر</h1>
-        <p id="welcomeLine">مرحباً بك في أكاديمية المسارحة</p>
+        <p id="welcomeLine">جاري تحميل بياناتك...</p>
       </div>
       <div style="display:flex;gap:10px;flex-wrap:wrap">
         <a class="btn" href="index.html">الموقع</a>
@@ -48,82 +64,164 @@
       </div>
     </div>
 
-    <section class="hero">
-      <h2 id="staffName">—</h2>
-      <div id="statusTags"></div>
-      <p id="roleLine" style="margin:14px 0 0;color:var(--muted);line-height:1.8"></p>
-    </section>
+    <div id="staffLoading" class="load-panel" aria-live="polite">
+      <div class="load-row"><span class="spinner" aria-hidden="true"></span><span>جاري تحميل بياناتك من الأكاديمية...</span></div>
+      <div class="hero" style="margin-bottom:18px">
+        <div class="sk-line"></div>
+        <div class="sk-tags"><span class="sk-tag"></span><span class="sk-tag"></span></div>
+      </div>
+      <div class="sk-grid">
+        <div class="sk-card"></div><div class="sk-card"></div>
+        <div class="sk-card"></div><div class="sk-card"></div>
+      </div>
+    </div>
 
-    <section class="grid" id="detailGrid"></section>
-    <div class="notes" id="staffNotes" style="display:none"></div>
+    <div id="staffError" class="load-panel err-panel" hidden>
+      <p id="staffErrorMsg">تعذر تحميل بيانات الكادر. تحقق من الاتصال وحاول مرة أخرى.</p>
+      <div class="err-actions">
+        <button type="button" class="btn gold" id="retryBtn">إعادة المحاولة</button>
+        <a class="btn" href="staff_login.html">العودة لتسجيل الدخول</a>
+      </div>
+    </div>
+
+    <div id="staffContent" class="staff-content">
+      <section class="hero">
+        <h2 id="staffName"></h2>
+        <div id="statusTags"></div>
+        <p id="roleLine" style="margin:14px 0 0;color:var(--muted);line-height:1.8"></p>
+      </section>
+      <section class="grid" id="detailGrid"></section>
+      <div class="notes" id="staffNotes" style="display:none"></div>
+    </div>
   </div>
 
   <script>
-    function renderStaffDashboard() {
-    const AR = window.ACADEMY_ROLES || {};
-    const profile = window.STAFF_PROFILE || {};
-    const user = window.STAFF_USER || {};
+    (function () {
+      const $loading = document.getElementById("staffLoading");
+      const $error = document.getElementById("staffError");
+      const $content = document.getElementById("staffContent");
+      const $welcome = document.getElementById("welcomeLine");
+      const $errorMsg = document.getElementById("staffErrorMsg");
 
-    function labelStatus(st) {
-      const map = { active: "نشط", inactive: "معطل", suspended: "موقوف" };
-      return map[String(st || "")] || st || "—";
-    }
-    function labelSystemRole(r) {
-      const map = { staff: "كادر", manager: "مدير", admin: "مدير نظام" };
-      return map[String(r || "")] || r || "—";
-    }
+      function showLoading() {
+        $loading.hidden = false;
+        $error.hidden = true;
+        $content.classList.remove("is-ready");
+        $welcome.textContent = "جاري تحميل بياناتك...";
+      }
 
-    document.getElementById("staffName").textContent = profile.full_name || user.email || "كادر";
-    document.getElementById("welcomeLine").textContent =
-      "مرحباً " + (profile.full_name || "") + " — حسابك مربوط بسجل academy_staff";
+      function showError(message) {
+        $loading.hidden = true;
+        $error.hidden = false;
+        $content.classList.remove("is-ready");
+        $errorMsg.textContent = message || "تعذر تحميل بيانات الكادر.";
+        $welcome.textContent = "تعذر تحميل البيانات";
+      }
 
-    const domainLabel = AR.getDomainLabel
-      ? AR.getDomainLabel(profile.staff_category)
-      : profile.staff_category || "—";
-    const roleLabel = AR.getRoleLabel ? AR.getRoleLabel(profile.staff_type) : profile.staff_type || "—";
+      function showContent() {
+        $loading.hidden = true;
+        $error.hidden = true;
+        $content.classList.add("is-ready");
+      }
 
-    document.getElementById("roleLine").textContent =
-      "المجال: " + domainLabel + " · الدور: " + roleLabel;
+      function formatDate(value) {
+        if (!value) return "—";
+        try {
+          return new Date(value).toLocaleDateString("ar-SA-u-ca-gregory");
+        } catch (e) {
+          return "—";
+        }
+      }
 
-    const tags = document.getElementById("statusTags");
-    const st = String(profile.status || "active");
-    tags.innerHTML =
-      `<span class="tag ${st === "active" ? "ok" : "warn"}">${labelStatus(st)}</span>` +
-      `<span class="tag">${labelSystemRole(profile.role)}</span>` +
-      (profile.auth_user_id ? `<span class="tag ok">حساب مفعّل</span>` : `<span class="tag warn">بانتظار الربط</span>`);
+      function renderStaffDashboard() {
+        const AR = window.ACADEMY_ROLES || {};
+        const profile = window.STAFF_PROFILE || {};
+        const user = window.STAFF_USER || {};
 
-    const items = [
-      ["الجوال", profile.phone],
-      ["البريد", profile.email || user.email],
-      ["رقم الهوية", profile.national_id],
-      ["المؤهل", profile.qualification],
-      ["سنوات الخبرة", profile.experience_years != null ? profile.experience_years + " سنة" : "—"],
-      ["تاريخ التسجيل", profile.created_at ? new Date(profile.created_at).toLocaleDateString("ar-SA") : "—"],
-      ["آخر تحديث", profile.updated_at ? new Date(profile.updated_at).toLocaleDateString("ar-SA") : "—"],
-      ["رقم طلب الانضمام", profile.join_request_id || "—"]
-    ];
+        function labelStatus(st) {
+          const map = { active: "نشط", inactive: "معطل", suspended: "موقوف" };
+          return map[String(st || "")] || st || "—";
+        }
+        function labelSystemRole(r) {
+          const map = { staff: "كادر", manager: "مدير", admin: "مدير نظام" };
+          return map[String(r || "")] || r || "—";
+        }
 
-    document.getElementById("detailGrid").innerHTML = items
-      .map(
-        ([k, v]) =>
-          `<div class="card"><strong>${k}</strong><span>${String(v || "—").replace(/</g, "&lt;")}</span></div>`
-      )
-      .join("");
+        const displayName = profile.full_name || user.email || "كادر";
+        document.getElementById("staffName").textContent = displayName;
+        $welcome.textContent =
+          "مرحباً " + (profile.full_name || displayName) + " — حسابك مربوط بسجل academy_staff";
 
-    if (profile.notes) {
-      const n = document.getElementById("staffNotes");
-      n.style.display = "block";
-      n.textContent = profile.notes;
-    }
+        const domainLabel = AR.getDomainLabel
+          ? AR.getDomainLabel(profile.staff_category)
+          : profile.staff_category || "—";
+        const roleLabel = AR.getRoleLabel ? AR.getRoleLabel(profile.staff_type) : profile.staff_type || "—";
 
-    document.getElementById("logoutBtn").addEventListener("click", () => staffLogout(true));
-    }
+        document.getElementById("roleLine").textContent =
+          "المجال: " + domainLabel + " · الدور: " + roleLabel;
 
-    document.getElementById("welcomeLine").textContent = "جاري تحميل بياناتك...";
-    requireStaff().then(function (ok) {
-      if (!ok) return;
-      renderStaffDashboard();
-    });
+        const tags = document.getElementById("statusTags");
+        const st = String(profile.status || "active");
+        tags.innerHTML =
+          `<span class="tag ${st === "active" ? "ok" : "warn"}">${labelStatus(st)}</span>` +
+          `<span class="tag">${labelSystemRole(profile.role)}</span>` +
+          (profile.auth_user_id
+            ? `<span class="tag ok">حساب مفعّل</span>`
+            : `<span class="tag warn">بانتظار الربط</span>`);
+
+        const items = [
+          ["الجوال", profile.phone],
+          ["البريد", profile.email || user.email],
+          ["رقم الهوية", profile.national_id],
+          ["المؤهل", profile.qualification],
+          ["سنوات الخبرة", profile.experience_years != null ? profile.experience_years + " سنة" : "—"],
+          ["تاريخ التسجيل", formatDate(profile.created_at)],
+          ["آخر تحديث", formatDate(profile.updated_at)],
+          ["رقم طلب الانضمام", profile.join_request_id || "—"]
+        ];
+
+        document.getElementById("detailGrid").innerHTML = items
+          .map(
+            ([k, v]) =>
+              `<div class="card"><strong>${k}</strong><span>${String(v || "—").replace(/</g, "&lt;")}</span></div>`
+          )
+          .join("");
+
+        const notesEl = document.getElementById("staffNotes");
+        if (profile.notes) {
+          notesEl.style.display = "block";
+          notesEl.textContent = profile.notes;
+        } else {
+          notesEl.style.display = "none";
+          notesEl.textContent = "";
+        }
+
+        showContent();
+      }
+
+      function boot() {
+        showLoading();
+        return requireStaff()
+          .then(function (ok) {
+            if (!ok) return;
+            if (!window.STAFF_PROFILE) {
+              showError("لم يُعثر على سجل الكادر المرتبط بحسابك.");
+              return;
+            }
+            renderStaffDashboard();
+          })
+          .catch(function (err) {
+            console.error("Staff dashboard load failed:", err);
+            showError("تعذر تحميل بياناتك. تحقق من الاتصال وحاول مرة أخرى.");
+          });
+      }
+
+      document.getElementById("logoutBtn").addEventListener("click", function () {
+        staffLogout(true);
+      });
+      document.getElementById("retryBtn").addEventListener("click", boot);
+      boot();
+    })();
   </script>
 </body>
 </html>
