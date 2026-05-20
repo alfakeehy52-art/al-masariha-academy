@@ -18,10 +18,10 @@
     .hero{display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:24px;padding:26px;border:1px solid rgba(213,177,90,.14);border-radius:30px;background:linear-gradient(135deg,rgba(213,177,90,.10),rgba(255,255,255,.03)),linear-gradient(180deg,rgba(11,31,21,.98),rgba(5,17,11,.98));box-shadow:var(--shadow)}
     .hero h2{margin:0;font-size:42px;font-weight:900}.hero p{margin:10px 0 0;color:var(--muted);line-height:1.9}
     .hero-actions{display:flex;gap:10px;flex-wrap:wrap}
-    .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:22px}
+    .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:22px}
     .stat{border:1px solid var(--line);border-radius:22px;background:rgba(255,255,255,.035);padding:18px;box-shadow:var(--shadow)}
     .stat span{display:block;color:var(--muted);font-size:13px;font-weight:800}.stat strong{display:block;margin-top:8px;color:var(--gold2);font-size:34px;font-weight:900}
-    .toolbar{display:grid;grid-template-columns:1fr 200px 200px auto auto;gap:12px;margin-bottom:16px}
+    .toolbar{display:grid;grid-template-columns:1fr 170px 170px 190px auto auto;gap:12px;margin-bottom:16px}
     .panel{border:1px solid var(--line);border-radius:26px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));box-shadow:var(--shadow);overflow:hidden}
     .panel-head{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
     .panel-head h3{margin:0;font-size:24px}.subtext{display:block;color:var(--muted);font-size:12px;line-height:1.7;margin-top:4px}
@@ -55,7 +55,7 @@
     .toast-wrap{position:fixed;left:20px;bottom:20px;display:flex;flex-direction:column;gap:10px;z-index:10001}
     .toast{min-width:280px;padding:14px 16px;border-radius:16px;border:1px solid var(--line);background:linear-gradient(180deg,#102217,#07130d);font-weight:900}
     .toast.success{color:#ccffdf;border-color:rgba(21,145,95,.32)}.toast.error{color:#ffd7d7;border-color:rgba(197,82,82,.32)}.toast.warn{color:#ffe79c;border-color:rgba(213,177,90,.32)}
-    @media(max-width:1100px){.layout{grid-template-columns:1fr}.sidebar{position:relative;height:auto}.stats,.detail-grid,.edit-grid{grid-template-columns:1fr}.toolbar{grid-template-columns:1fr}.main{padding:18px}.hero h2{font-size:32px}}
+    @media(max-width:1100px){.layout{grid-template-columns:1fr}.sidebar{position:relative;height:auto}.stats{grid-template-columns:repeat(2,1fr)}.detail-grid,.edit-grid{grid-template-columns:1fr}.toolbar{grid-template-columns:1fr}.main{padding:18px}.hero h2{font-size:32px}}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
@@ -87,6 +87,7 @@
       <section class="stats">
         <div class="stat"><span>الإجمالي</span><strong id="statAll">0</strong></div>
         <div class="stat"><span>نشط</span><strong id="statActive">0</strong></div>
+        <div class="stat"><span>بانتظار تفعيل الحساب</span><strong id="statPendingAuth">0</strong></div>
         <div class="stat"><span>معطل</span><strong id="statInactive">0</strong></div>
         <div class="stat"><span>موقوف</span><strong id="statSuspended">0</strong></div>
       </section>
@@ -114,6 +115,11 @@
               <option value="admin">إداري</option>
               <option value="operations">تشغيلي</option>
               <option value="media_tech">إعلامي وتقني</option>
+            </select>
+            <select id="authFilter" title="فلترة حسب ربط حساب Supabase">
+              <option value="all">كل حالات الدخول</option>
+              <option value="linked">حساب مفعّل</option>
+              <option value="pending">بانتظار التفعيل</option>
             </select>
             <a class="btn" href="al_masariha_join_page.html" target="_blank" rel="noopener">صفحة الانضمام</a>
           </div>

@@ -315,12 +315,31 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!card || !emailEl || typeof getAdminSession !== "function") return;
     try {
       const session = await getAdminSession();
-      const email = session && session.user && session.user.email;
+      const user = session && session.user;
+      const email = user && user.email;
       if (email) {
-        emailEl.textContent = email;
+        const role = typeof getAdminRole === "function" ? getAdminRole(user) : "";
+        emailEl.textContent = role ? `${email} · ${role}` : email;
         card.hidden = false;
       }
+      applyAdminNavPolicy(user);
     } catch (e) {}
+  }
+
+  function applyAdminNavPolicy(user) {
+    const role = typeof getAdminRole === "function" ? getAdminRole(user) : "admin";
+    const menu = document.querySelector(".admin-pro-menu");
+    if (!menu) return;
+
+    menu.querySelectorAll("[data-nav-role]").forEach((el) => el.removeAttribute("hidden"));
+
+    if (role === "admin") return;
+
+    const hideGroups = role === "manager" ? ["commerce", "system"] : ["commerce", "system", "ops"];
+    hideGroups.forEach((groupId) => {
+      const group = menu.querySelector(`[data-group="${groupId}"]`);
+      if (group) group.setAttribute("hidden", "");
+    });
   }
 
   async function loadSidebarBadges() {

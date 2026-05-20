@@ -26,12 +26,19 @@
     };
   }
 
+  function getAdminRole(user) {
+    if (!user) return "";
+    return String(
+      (user.app_metadata && user.app_metadata.role) ||
+        (user.user_metadata && user.user_metadata.role) ||
+        ""
+    ).trim();
+  }
+
   function isAdminUser(user) {
     if (!user) return false;
     const { emails, requireRole } = getAdminConfig();
-    const role =
-      (user.app_metadata && user.app_metadata.role) ||
-      (user.user_metadata && user.user_metadata.role);
+    const role = getAdminRole(user);
 
     if (requireRole && role === "admin") return true;
     if (emails.length) {
@@ -121,6 +128,7 @@
 
   window.ADMIN_SESSION_KEY = LEGACY_SESSION_KEY;
   window.getAdminSession = getSession;
+  window.getAdminRole = getAdminRole;
   window.isAdminUser = isAdminUser;
   window.isAdminLoggedIn = isAdminLoggedIn;
   window.requireAdmin = requireAdmin;

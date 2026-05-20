@@ -76,10 +76,10 @@ const ENTITY_CONFIGS = {
     columns: [
       ["full_name", "الاسم"],
       ["phone", "الجوال"],
+      ["email", "البريد"],
       ["staff_category", "المجال"],
       ["staff_type", "الدور"],
-      ["qualification", "المؤهل"],
-      ["experience_years", "الخبرة"],
+      ["auth_user_id", "حساب الدخول"],
       ["status", "الحالة"],
       ["role", "صلاحية النظام"]
     ],
@@ -216,13 +216,28 @@ function systemRoleLabel(value) {
   return map[String(value || "").trim()] || value || "-";
 }
 
+function isAcademyStaffPage() {
+  return window.ENTITY_TYPE === "academy_staff";
+}
+
+function authLinkLabel(row) {
+  return row && row.auth_user_id ? "مفعّل" : "بانتظار التفعيل";
+}
+
 function displayCell(row, key) {
   if (key === "status") return statusLabel(row[key]);
   if (key === "staff_category") return staffCategoryLabel(row[key]);
   if (key === "staff_type") return staffTypeLabel(row[key]);
   if (key === "role") return systemRoleLabel(row[key]);
+  if (key === "auth_user_id") return authLinkLabel(row);
   if (key === "experience_years") return row[key] != null ? `${row[key]} سنة` : "-";
   return short(row[key]);
+}
+
+function staffPortalUrl(row) {
+  const base = new URL("staff_login.html", window.location.href);
+  if (row && row.email) base.searchParams.set("email", String(row.email).trim());
+  return base.href;
 }
 
 function searchableText(row) {
@@ -255,11 +270,15 @@ function filtered() {
   const query = ($("searchInput")?.value || "").trim().toLowerCase();
   const status = $("statusFilter")?.value || "all";
   const category = $("categoryFilter")?.value || "all";
+  const authLink = $("authFilter")?.value || "all";
   return rows.filter((row) => {
     const matchesSearch = !query || searchableText(row).includes(query);
     const matchesStatus = status === "all" || normalizeStatus(row.status) === status;
     const matchesCategory = category === "all" || String(row.staff_category || "") === category;
-    return matchesSearch && matchesStatus && matchesCategory;
+    let matchesAuth = true;
+    if (authLink === "linked") matchesAuth = !!row.auth_user_id;
+    if (authLink === "pending") matchesAuth = !row.auth_user_id;
+    return matchesSearch && matchesStatus && matchesCategory && matchesAuth;
   });
 }
 
@@ -299,6 +318,11 @@ function renderStats() {
   if ($("statInactive")) $("statInactive").textContent = rows.filter((r) => normalizeStatus(r.status) === "inactive").length;
   if ($("statSuspended")) $("statSuspended").textContent = rows.filter((r) => normalizeStatus(r.status) === "suspended").length;
   if ($("statDeleted")) $("statDeleted").textContent = rows.filter((r) => normalizeStatus(r.status) === "deleted").length;
+  if ($("statPendingAuth")) {
+    $("statPendingAuth").textContent = rows.filter(
+      (r) => !r.auth_user_id && normalizeStatus(r.status) === "active"
+    ).length;
+  }
 }
 
 function render() {
@@ -328,6 +352,10 @@ function render() {
       if (key === "status") {
         return `<td><span class="tag ${statusClass(row[key])}">${esc(statusLabel(row[key]))}</span></td>`;
       }
+      if (key === "auth_user_id") {
+        const linked = !!row.auth_user_id;
+        return `<td><span class="tag ${linked ? "status-approved" : "status-pending"}">${esc(authLinkLabel(row))}</span></td>`;
+      }
       return `<td>${esc(displayCell(row, key))}</td>`;
     }).join("");
 
@@ -335,16 +363,38 @@ function render() {
       <tr>
         ${cells}
         <td>${esc(fmtDate(row.created_at))}</td>
-        <td>
-          <div class="row-actions">
-            <button class="mini-btn review" type="button" onclick="viewEntity('${esc(row.id)}')">عرض</button>
-            <button class="mini-btn more" type="button" onclick="editEntity('${esc(row.id)}')">تعديل</button>
-            <button class="mini-btn reject" type="button" onclick="deactivateEntity('${esc(row.id)}')">تعطيل</button>
-          </div>
-        </td>
+        <td>${rowActionsHtml(row)}</td>
       </tr>
     `;
   }).join("");
+}
+
+function rowActionsHtml(row) {
+  const id = esc(row.id);
+  const base = `
+    <div class="row-actions">
+      <button class="mini-btn review" type="button" onclick="viewEntity('${id}')">عرض</button>
+      <button class="mini-btn more" type="button" onclick="editEntity('${id}')">تعديل</button>
+  `;
+  if (!isAcademyStaffPage()) {
+    return `${base}<button class="mini-btn reject" type="button" onclick="deactivateEntity('${id}')">تعطيل</button></div>`;
+  }
+
+  const st = normalizeStatus(row.status);
+  const statusBtn =
+    st === "active"
+      ? `<button class="mini-btn reject" type="button" onclick="deactivateEntity('${id}')">إيقاف</button>`
+      : `<button class="mini-btn review" type="button" onclick="setEntityStatus('${id}','active')">تفعيل</button>`;
+
+  const portalBtn = row.email
+    ? `<a class="mini-btn review" href="${esc(staffPortalUrl(row))}" target="_blank" rel="noopener">بوابة</a>`
+    : "";
+
+  const copyBtn = row.email
+    ? `<button class="mini-btn more" type="button" onclick="copyStaffPortalLink('${id}')">نسخ الرابط</button>`
+    : "";
+
+  return `${base}${portalBtn}${copyBtn}${statusBtn}</div>`;
 }
 
 function findRow(id) {
@@ -378,12 +428,24 @@ function viewEntity(id) {
       else if (key === "staff_category") display = staffCategoryLabel(value);
       else if (key === "staff_type") display = staffTypeLabel(value);
       else if (key === "role") display = systemRoleLabel(value);
+      else if (key === "auth_user_id") display = value ? "مفعّل ومرتبط" : "بانتظار تفعيل الحساب";
       return `<div class="detail-item"><strong>${esc(label)}</strong><span>${esc(display)}</span></div>`;
     }).join("");
 
-  $("modalBody").innerHTML = `<div class="detail-grid">${entries || '<div class="empty-cell">لا توجد بيانات تفصيلية.</div>'}</div>`;
+  const staffHint =
+    isAcademyStaffPage() && !row.auth_user_id && row.email
+      ? `<p class="subtext" style="margin:0 0 14px;color:#ffe79c">هذا الكادر لم يفعّل حسابه بعد. أرسل له رابط بوابة الكادر (نفس البريد المعتمد).</p>`
+      : "";
+
+  $("modalBody").innerHTML = `${staffHint}<div class="detail-grid">${entries || '<div class="empty-cell">لا توجد بيانات تفصيلية.</div>'}</div>`;
+  const staffActions =
+    isAcademyStaffPage() && row.email
+      ? `<button class="btn" type="button" onclick="copyStaffPortalLink('${esc(id)}')">نسخ رابط التفعيل</button>
+         <a class="btn" href="${esc(staffPortalUrl(row))}" target="_blank" rel="noopener">فتح بوابة الكادر</a>`
+      : "";
   $("modalActions").innerHTML = `
     <button class="btn gold" type="button" onclick="editEntity('${esc(id)}')">تعديل</button>
+    ${staffActions}
     <button class="btn" type="button" onclick="closeModal()">إغلاق</button>
   `;
   openModal();
@@ -468,6 +530,40 @@ async function saveEntity() {
   showToast("تم حفظ التعديل بنجاح.", "success");
 }
 
+async function setEntityStatus(id, targetStatus) {
+  const cfg = config();
+  const targetLabel = statusLabel(targetStatus);
+  const ok = await confirmBox("تغيير حالة السجل", `سيتم تغيير الحالة إلى «${targetLabel}». هل تريد المتابعة؟`, "تأكيد");
+  if (!ok) return;
+
+  const payload = { status: targetStatus, updated_at: new Date().toISOString() };
+  const { error } = await supabaseClient.from(cfg.table).update(payload).eq("id", id);
+  if (error) {
+    console.error(`Supabase ${cfg.table} status error:`, error);
+    showToast("تعذر تحديث الحالة.", "error");
+    return;
+  }
+  const row = findRow(id);
+  if (row) Object.assign(row, payload);
+  render();
+  showToast("تم تحديث الحالة.", "success");
+}
+
+async function copyStaffPortalLink(id) {
+  const row = findRow(id);
+  if (!row || !row.email) {
+    showToast("لا يوجد بريد لنسخ رابط التفعيل.", "warn");
+    return;
+  }
+  const url = staffPortalUrl(row);
+  try {
+    await navigator.clipboard.writeText(url);
+    showToast("تم نسخ رابط بوابة الكادر.", "success");
+  } catch (e) {
+    prompt("انسخ الرابط:", url);
+  }
+}
+
 async function deactivateEntity(id) {
   const cfg = config();
   const targetStatus = cfg.deactivateStatus || "inactive";
@@ -541,7 +637,13 @@ function exportCsv() {
 
   const headers = cfg.columns.map(([, label]) => label).concat(["تاريخ الإنشاء"]);
   const lines = data.map((row) =>
-    cfg.columns.map(([key]) => (key === "status" ? statusLabel(row[key]) : displayCell(row, key))).concat([fmtDate(row.created_at)])
+    cfg.columns
+      .map(([key]) => {
+        if (key === "status") return statusLabel(row[key]);
+        if (key === "auth_user_id") return authLinkLabel(row);
+        return displayCell(row, key);
+      })
+      .concat([fmtDate(row.created_at)])
   );
   const csv = [headers, ...lines].map((line) => line.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(",")).join("\n");
   const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
@@ -554,10 +656,14 @@ function exportCsv() {
   showToast("تم تصدير البيانات بنجاح.", "success");
 }
 
+window.setEntityStatus = setEntityStatus;
+window.copyStaffPortalLink = copyStaffPortalLink;
+
 document.addEventListener("DOMContentLoaded", () => {
   $("searchInput")?.addEventListener("input", render);
   $("statusFilter")?.addEventListener("change", render);
   $("categoryFilter")?.addEventListener("change", render);
+  $("authFilter")?.addEventListener("change", render);
   $("exportBtn")?.addEventListener("click", exportCsv);
   $("closeEntityModal")?.addEventListener("click", closeModal);
   $("entityModal")?.addEventListener("click", (event) => {
