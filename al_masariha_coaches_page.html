@@ -50,20 +50,53 @@ function uniq(list){return [...new Set(list.filter(Boolean))]}
 function buildPills(containerId, values, activeValue, onClick){const wrap=document.getElementById(containerId);wrap.innerHTML='';['الكل',...values].forEach(value=>{const pill=document.createElement('div');pill.className='pill'+(value===activeValue?' active':'');pill.textContent=value;pill.addEventListener('click',()=>onClick(value));wrap.appendChild(pill);})}
 function renderHeroStats(coaches){document.getElementById('heroCoachCount').textContent=coaches.length;document.getElementById('heroSpecialties').textContent=uniq(coaches.map(c=>c.specialty)).length;document.getElementById('heroCategories').textContent=uniq(coaches.map(c=>c.category)).length}
 function getFilteredCoaches(){const coaches=readCoaches();const search=document.getElementById('searchInput').value.trim().toLowerCase();let result=coaches.filter(c=>{const matchesSearch=!search||[c.fullName,c.jobTitle,c.specialty,c.code,c.phone].join(' ').toLowerCase().includes(search);const matchesCategory=currentCategory==='الكل'||String(c.category||'').trim()===currentCategory;const matchesSpecialty=currentSpecialty==='الكل'||String(c.specialty||'').trim()===currentSpecialty;return matchesSearch&&matchesCategory&&matchesSpecialty});if(currentSort==='experience'){result=result.sort((a,b)=>(Number(b.experienceYears)||0)-(Number(a.experienceYears)||0));}else{result=result.sort((a,b)=>String(a.fullName||'').localeCompare(String(b.fullName||''),'ar'));}return result}
-function render(){const all=readCoaches();renderHeroStats(all);buildPills('categoryPills',uniq(all.map(c=>c.category)),currentCategory,v=>{currentCategory=v;render()});buildPills('specialtyPills',uniq(all.map(c=>c.specialty)),currentSpecialty,v=>{currentSpecialty=v;render()});const coaches=getFilteredCoaches();document.getElementById('resultTitle').textContent=`عرض ${coaches.length} مدرب${coaches.length!==1?'ين':''}`;const grid=document.getElementById('coachesGrid');if(!coaches.length){grid.innerHTML=`<div class="empty-card" style="grid-column:1/-1"><h4>لا توجد نتائج مطابقة</h4><p>جرّب تغيير الفلاتر أو إضافة مدرب جديد من لوحة التحكم ليظهر هنا مباشرة.</p></div>`;return;}  grid.innerHTML=coaches.map(c=>`<article class="coach"><div class="photo">${c.image?`<img src="${escapeHtml(c.image)}" alt="${escapeHtml(c.fullName)}">`:`<div class="avatar-fallback">${escapeHtml(getInitials(c.fullName))}</div>`}<div class="badge">${escapeHtml(c.specialty||'مدرب')}</div><div class="code">${escapeHtml(c.code||'COA')}</div></div><div class="meta"><b>${escapeHtml(c.fullName)}</b><span class="job">${escapeHtml(c.jobTitle||'-')}</span><small>${escapeHtml(c.category||'-')} • ${escapeHtml(c.certification||'بدون شهادة مضافة')}</small><div class="coach-stats"><div><strong>${escapeHtml(String(c.experienceYears||0))}</strong><em>سنوات خبرة</em></div><div><strong>${escapeHtml(c.coachStatus||c.status||'نشط')}</strong><em>الحالة</em></div><div><strong>${escapeHtml(c.phone||'-')}</strong><em>الجوال</em></div></div><div class="coach-bio">${escapeHtml((c.bio||'لا توجد نبذة تعريفية حاليًا.')).slice(0,140)}</div><a class="view-btn" href="al_masariha_coach_profile.html?id=${encodeURIComponent(c.id)}">ملف المدرب</a></div></article>`).join('')}
-document.getElementById('searchInput').addEventListener('input',render);document.getElementById('sortExperienceBtn').addEventListener('click',()=>{currentSort='experience';render()});document.getElementById('sortNameBtn').addEventListener('click',()=>{currentSort='name';render()});document.getElementById('resetFiltersBtn').addEventListener('click',()=>{currentCategory='الكل';currentSpecialty='الكل';currentSort='experience';document.getElementById('searchInput').value='';render()});
-async function initCoachesPage(){
+function setSortActive(mode){
+  document.getElementById('sortExperienceBtn').classList.toggle('is-active',mode==='experience');
+  document.getElementById('sortNameBtn').classList.toggle('is-active',mode==='name');
+}
+function render(){
+  const all=readCoaches();
+  renderHeroStats(all);
+  buildPills('categoryPills',uniq(all.map(c=>c.category)),currentCategory,v=>{currentCategory=v;render()});
+  buildPills('specialtyPills',uniq(all.map(c=>c.specialty)),currentSpecialty,v=>{currentSpecialty=v;render()});
+  setSortActive(currentSort);
+  const coaches=getFilteredCoaches();
+  document.getElementById('resultTitle').textContent=`عرض ${coaches.length} مدرب${coaches.length!==1?'ين':''}`;
   const grid=document.getElementById('coachesGrid');
-  grid.innerHTML='<div class="empty-card" style="grid-column:1/-1"><h4>جاري التحميل...</h4><p>يتم جلب المدربين.</p></div>';
+  if(!coaches.length){
+    grid.innerHTML=`<div class="empty-card" style="grid-column:1/-1"><h4>لا توجد نتائج مطابقة</h4><p>جرّب تغيير البحث أو الفلاتر.</p></div>`;
+    return;
+  }
+  grid.innerHTML=coaches.map(c=>`<article class="coach"><div class="photo">${c.image?`<img src="${escapeHtml(c.image)}" alt="${escapeHtml(c.fullName)}">`:`<div class="avatar-fallback">${escapeHtml(getInitials(c.fullName))}</div>`}<div class="badge">${escapeHtml(c.specialty||'مدرب')}</div><div class="code">${escapeHtml(c.code||'COA')}</div></div><div class="meta"><b>${escapeHtml(c.fullName)}</b><span class="job">${escapeHtml(c.jobTitle||'-')}</span><small>${escapeHtml(c.category||'-')} • ${escapeHtml(c.certification||'بدون شهادة مضافة')}</small><div class="coach-stats"><div><strong>${escapeHtml(String(c.experienceYears||0))}</strong><em>سنوات خبرة</em></div><div><strong>${escapeHtml(c.coachStatus||c.status||'نشط')}</strong><em>الحالة</em></div><div><strong>${escapeHtml(c.phone||'-')}</strong><em>الجوال</em></div></div><div class="coach-bio">${escapeHtml((c.bio||'لا توجد نبذة تعريفية حاليًا.')).slice(0,140)}</div><a class="view-btn" href="al_masariha_coach_profile.html?id=${encodeURIComponent(c.id)}">ملف المدرب</a></div></article>`).join('');
+}
+function showCoachesLoading(){
+  const grid=document.getElementById('coachesGrid');
+  const n=window.matchMedia('(max-width:768px)').matches?2:window.matchMedia('(max-width:1200px)').matches?4:6;
+  grid.innerHTML='<div class="coaches-skeleton-grid" aria-hidden="true">'+Array.from({length:n},()=>'<div class="coaches-skeleton-card"></div>').join('')+'</div>';
+  document.getElementById('resultTitle').textContent='جاري التحميل...';
+}
+async function initCoachesPage(){
+  showCoachesLoading();
   try{
     allCoaches=await listCoachesPublic();
     render();
   }catch(e){
     console.error('Coaches public load error:',e);
-    grid.innerHTML='<div class="empty-card" style="grid-column:1/-1"><h4>تعذر تحميل المدربين</h4><p>حاول إعادة تحميل الصفحة لاحقاً.</p></div>';
+    document.getElementById('coachesGrid').innerHTML='<div class="empty-card" style="grid-column:1/-1"><h4>تعذر تحميل المدربين</h4><p>حاول إعادة تحميل الصفحة لاحقاً.</p></div>';
+    document.getElementById('resultTitle').textContent='تعذر التحميل';
   }
 }
-initCoachesPage();
+document.addEventListener('DOMContentLoaded',()=>{
+  document.getElementById('searchInput').addEventListener('input',render);
+  document.getElementById('sortExperienceBtn').addEventListener('click',()=>{currentSort='experience';render()});
+  document.getElementById('sortNameBtn').addEventListener('click',()=>{currentSort='name';render()});
+  document.getElementById('resetFiltersBtn').addEventListener('click',()=>{
+    currentCategory='الكل';currentSpecialty='الكل';currentSort='experience';
+    document.getElementById('searchInput').value='';
+    render();
+  });
+  initCoachesPage();
+});
 </script>
 <script src="js/site-seo.js"></script>
 <script src="shared-layout.js"></script>

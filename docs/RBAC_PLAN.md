@@ -1,7 +1,7 @@
 # خطة الصلاحيات والمسميات — أكاديمية المسارحة
 
 **آخر تحديث:** 2026-05-21  
-**الحالة:** مخطط — لم يُنفَّذ بالكامل بعد
+**الحالة:** R1 + R2-lite منفّذ — R3 مخطط
 
 ---
 
@@ -18,21 +18,24 @@
 
 يُعرض **المسمى** في الشريط الجانبي للإدارة، والبريد سطراً ثانياً صغيراً (لا يُستبدل المسمى بالبريد).
 
-التنفيذ الحالي: `js/admin-auth.js` → `getAdminRoleLabel` / `getAdminDisplayIdentity`.
+التنفيذ الحالي: `js/panel-access.js` + `js/admin-auth.js` (`isPanelUser`) + `admin_sidebar.js` (`resolvePanelIdentity` / `applyPanelNavPolicy`).
 
 ---
 
 ## مراحل التنفيذ المقترحة
 
-### المرحلة R1 — عرض وتصفية (قريب)
+### المرحلة R1 — عرض وتصفية ✅ (2026-05-21)
 - [x] عرض «المدير العام» للمسؤول الأعلى
-- [ ] قراءة `staff_type` / `job_title` من `academy_staff` عند دخول الكادر
-- [ ] إخفاء عناصر القائمة حسب `role` (بداية موجودة في `admin_sidebar.js`)
+- [x] قراءة `staff_type` / `job_title` من `academy_staff` — `js/panel-access.js` + `getStaffDisplayIdentity` في `staff-auth.js`
+- [x] إخفاء عناصر القائمة حسب `role` — `applyPanelNavPolicy` + `NAV_HIDDEN_GROUPS`
+- [x] دخول لوحة الإدارة لأدوار `manager` / `supervisor` / … إذا البريد في `adminEmails` — `isPanelUser`
 
-### المرحلة R2 — جداول وربط Auth
-- [ ] جدول `staff_permissions` أو أعمدة صلاحيات في `academy_staff`
-- [ ] ربط حساب Supabase Auth بسجل الكادر (`auth_user_id`)
-- [ ] صفحة «صلاحيات الموظف» في لوحة الإدارة
+### المرحلة R2 — جداول وربط Auth (جزئي ✅)
+- [x] عمود `role` في `academy_staff` — أدوار موسّعة عبر `docs/STAFF_PANEL_ROLES.sql`
+- [x] ربط حساب Supabase Auth بسجل الكادر (`auth_user_id`) — موجود مسبقاً
+- [x] صفحة **صلاحيات الدخول** — `admin_permissions_dashboard.html` (المدير العام فقط)
+- [ ] جدول `staff_permissions` منفصل (اختياري لاحقاً)
+- [ ] مزامنة تلقائية لـ `user_metadata.role` من Supabase Admin API
 
 ### المرحلة R3 — تدقيق
 - [ ] RLS لكل جدول حسب الدور (قراءة / كتابة / حذف)

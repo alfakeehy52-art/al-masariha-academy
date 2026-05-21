@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>صلاحيات الدخول | أكاديمية المسارحة</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="admin_theme.css" />
+  <style>
+    .perm-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:22px}
+    .perm-card{border:1px solid var(--admin-line);border-radius:22px;padding:20px;background:rgba(255,255,255,.03)}
+    .perm-card h3{margin:0 0 10px;font-size:22px;color:var(--admin-gold-soft)}
+    .perm-card p,.perm-card li{color:var(--admin-muted);line-height:1.85;font-size:14px}
+    .perm-card ul{margin:10px 0 0;padding:0 18px 0 0}
+    .perm-card li.warn{color:#ffe79c}
+    .perm-card code{font-size:12px;color:var(--admin-gold-soft)}
+    .toolbar{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px;align-items:center}
+    .toolbar input,.toolbar select{min-height:46px;min-width:200px;border-radius:14px;border:1px solid var(--admin-line);background:#0a1811;color:var(--admin-text);padding:10px 14px;font:inherit}
+    .perm-table-wrap{overflow:auto;border:1px solid var(--admin-line);border-radius:20px}
+    table{width:100%;border-collapse:collapse;min-width:920px}
+    th,td{padding:12px 14px;border-bottom:1px solid var(--admin-line);text-align:right;vertical-align:middle}
+    th{color:var(--admin-gold-soft);font-size:13px}
+    .perm-role-select{min-width:200px}
+    .tag{display:inline-flex;padding:6px 12px;border-radius:999px;font-weight:800;font-size:12px;border:1px solid var(--admin-line)}
+    .tag-ok{color:#caffdd;background:rgba(21,145,95,.14)}
+    .tag-warn{color:#ffe79c;background:rgba(213,177,90,.13)}
+    .tag-muted{color:var(--admin-muted);background:rgba(255,255,255,.04)}
+    .empty-cell{text-align:center!important;color:var(--admin-muted);padding:28px!important}
+    .status-bar{margin:12px 0;padding:12px 16px;border-radius:14px;font-weight:800;display:none}
+    .status-bar.ok{display:block;background:rgba(13,108,72,.2);border:1px solid rgba(13,108,72,.4);color:#d4ffe8}
+    .status-bar.err{display:block;background:rgba(183,66,66,.16);color:#ffd8d8}
+    .hero-stat{font-weight:900;color:var(--admin-gold-soft)}
+    @media(max-width:900px){.perm-grid{grid-template-columns:1fr}}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/academy-roles.js"></script>
+  <script src="js/panel-access.js"></script>
+  <script src="js/admin-auth.js"></script>
+  <script src="js/admin-permissions.js"></script>
+  <script>
+    requireAdmin().then(function (ok) {
+      if (!ok) return;
+      getAdminSession().then(function (s) {
+        if (!s || !s.user || !isAdminUser(s.user)) {
+          window.location.replace("admin_dashboard.html");
+          return;
+        }
+        if (typeof adminPermissionsBoot === "function") adminPermissionsBoot();
+      });
+    });
+  </script>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>صلاحيات الدخول</h1>
+        <p>من يدخل لوحة الإدارة وماذا يرى في القائمة — للمدير العام فقط.</p>
+      </div>
+      <div id="admin-sidebar"></div>
+    </aside>
+    <main class="main">
+      <section class="hero">
+        <div>
+          <h2>صلاحيات الدخول</h2>
+          <p>اضبط دور كل كادر له بريد إلكتروني. الصلاحية تُحفظ في سجل الكادر وتُطبَّق على القائمة الجانبية بعد تسجيل الدخول.</p>
+        </div>
+        <div class="hero-stat"><span id="permCount">0</span> كادر</div>
+      </section>
+
+      <div id="saveStatus" class="status-bar" role="status"></div>
+
+      <div class="perm-grid">
+        <div class="perm-card">
+          <h3>① البريد المسموح بدخول الإدارة</h3>
+          <p>يجب أن يكون بريد الموظف ضمن القائمة التالية (ملف <code>supabase-config.js</code>):</p>
+          <ul id="adminEmailsList"></ul>
+        </div>
+        <div class="perm-card">
+          <h3>② خطوة SQL (مرة واحدة)</h3>
+          <p>إذا فشل الحفظ بسبب قيمة الصلاحية، نفّذ في Supabase الملف:</p>
+          <p><code>docs/STAFF_PANEL_ROLES.sql</code></p>
+          <p>ثم أعد المحاولة. تفاصيل الخطة: <code>docs/RBAC_PLAN.md</code></p>
+        </div>
+      </div>
+
+      <section class="panel">
+        <div class="panel-head">
+          <h3>أدوار الكوادر</h3>
+          <a class="btn" href="admin_staff_dashboard.html">إدارة الكوادر</a>
+        </div>
+        <div class="panel-body">
+          <div class="toolbar">
+            <input type="search" id="permSearch" placeholder="بحث بالاسم أو البريد..." />
+            <select id="permFilter" aria-label="تصفية">
+              <option value="all">كل من لديه بريد</option>
+              <option value="panel">مسموحون بدخول الإدارة فقط</option>
+              <option value="no_panel">غير مضافين لقائمة الإدارة</option>
+            </select>
+          </div>
+          <div class="perm-table-wrap">
+            <table>
+              <thead>
+                <tr>
+                  <th>الاسم</th>
+                  <th>البريد</th>
+                  <th>الوظيفة</th>
+                  <th>صلاحية لوحة الإدارة</th>
+                  <th>دخول الإدارة</th>
+                  <th>حساب Auth</th>
+                </tr>
+              </thead>
+              <tbody id="permTableBody">
+                <tr><td colspan="6" class="empty-cell">جاري التحميل...</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  <script src="admin_sidebar.js"></script>
+</body>
+</html>

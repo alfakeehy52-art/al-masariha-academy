@@ -101,6 +101,14 @@ document.addEventListener("DOMContentLoaded", () => {
       title: "النظام",
       items: [
         { href: "admin_notifications.html", label: "الإشعارات", desc: "تنبيهات الإدارة", icon: "bell", match: ["admin_notifications.html"] },
+        {
+          href: "admin_permissions_dashboard.html",
+          label: "صلاحيات الدخول",
+          desc: "أدوار لوحة الإدارة",
+          icon: "settings",
+          match: ["admin_permissions_dashboard.html"],
+          navRole: "admin"
+        },
         { href: "academy_settings_dashboard.html", label: "الإعدادات", desc: "إعدادات الأكاديمية", icon: "settings", match: ["academy_settings_dashboard.html"] }
       ]
     }
@@ -131,8 +139,9 @@ document.addEventListener("DOMContentLoaded", () => {
   function renderLink(item, isChild) {
     const active = isChild ? isChildActive(item) : isItemActive(item) && !(item.children && item.children.length && !isChild);
     const desc = item.desc ? `<span class="nav-desc">${item.desc}</span>` : "";
+    const navRoleAttr = item.navRole ? ` data-nav-role="${item.navRole}"` : "";
     return `
-      <a href="${item.href}" class="nav-link${isChild ? " nav-sublink" : ""}${active ? " active" : ""}">
+      <a href="${item.href}" class="nav-link${isChild ? " nav-sublink" : ""}${active ? " active" : ""}"${navRoleAttr}>
         ${iconHtml(item.icon)}
         <span class="nav-copy">
           <span class="nav-label">${item.label}</span>
@@ -259,6 +268,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       if (!window.SUPABASE_CONFIG) await loadScriptOnce("supabase-config.js");
       if (!window.createSupabaseClient) await loadScriptOnce("js/supabase-client.js");
+      if (!window.PANEL_ROLES) await loadScriptOnce("js/panel-access.js");
       if (!window.loadAcademySettings) await loadScriptOnce("js/academy-settings.js");
       const s = await loadAcademySettings();
       applySidebarBrand(s);
@@ -387,17 +397,26 @@ document.addEventListener("DOMContentLoaded", () => {
     const emailEl = document.getElementById("adminUserEmail");
     if (!card || !nameEl || typeof getAdminSession !== "function") return;
     try {
+      if (!window.PANEL_ROLES) await loadScriptOnce("js/panel-access.js");
+      if (!window.ACADEMY_ROLES) await loadScriptOnce("js/academy-roles.js");
       const session = await getAdminSession();
       const user = session && session.user;
       if (!user) return;
-      const identity =
-        typeof getAdminDisplayIdentity === "function"
-          ? getAdminDisplayIdentity(user)
-          : { title: "مسؤول", email: user.email || "" };
+      let identity = { title: "مسؤول", email: user.email || "", subtitle: "" };
+      if (typeof resolvePanelIdentity === "function") {
+        identity = await resolvePanelIdentity(user);
+      } else if (typeof getAdminDisplayIdentity === "function") {
+        identity = getAdminDisplayIdentity(user);
+      }
       nameEl.textContent = identity.title || "مسؤول";
-      if (emailEl) emailEl.textContent = identity.email || "";
+      if (emailEl) {
+        emailEl.textContent = identity.subtitle
+          ? identity.subtitle + (identity.email ? " · " + identity.email : "")
+          : identity.email || "";
+      }
       card.hidden = false;
-      applyAdminNavPolicy(user);
+      if (typeof applyPanelNavPolicy === "function") await applyPanelNavPolicy(user);
+      else applyAdminNavPolicy(user);
     } catch (e) {}
   }
 

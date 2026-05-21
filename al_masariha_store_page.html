@@ -125,6 +125,7 @@ footer{display:none}
         <div class="products-grid" id="storeProductsGrid" aria-live="polite">
           <div class="empty-box">جاري تحميل المنتجات…</div>
         </div>
+        </div>
       </div>
     </div>
   </div>
@@ -186,6 +187,8 @@ function contactUrl(productName){
   return 'al_masariha_contact_page.html' + q;
 }
 let productsCache = [];
+let storeStatusFilter = 'all';
+let storeSearchQuery = '';
 function renderProductCard(p){
   const img = p.image
     ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}">`
@@ -255,26 +258,62 @@ function updateStoreStats(products){
   el('storeStatSoon', products.filter(p => p.status === 'coming_soon').length);
   el('storeStatCats', cats.size);
 }
+function getFilteredProducts(){
+  const q = storeSearchQuery.trim().toLowerCase();
+  return productsCache.filter(p => {
+    const statusOk = storeStatusFilter === 'all' || p.status === storeStatusFilter;
+    const text = [p.name, p.description, p.category, p.type].join(' ').toLowerCase();
+    const searchOk = !q || text.includes(q);
+    return statusOk && searchOk;
+  });
+}
+function showStoreLoading(){
+  const grid = document.getElementById('storeProductsGrid');
+  if(!grid) return;
+  const n = window.matchMedia('(max-width:780px)').matches ? 2 : 6;
+  grid.innerHTML = '<div class="store-skeleton-grid" aria-hidden="true">' +
+    Array.from({length:n}, () => '<div class="store-skeleton-card"></div>').join('') +
+    '</div>';
+}
+function renderStoreProducts(){
+  const grid = document.getElementById('storeProductsGrid');
+  if(!grid) return;
+  const products = getFilteredProducts();
+  if(!products.length){
+    grid.innerHTML = '<div class="empty-box">لا توجد منتجات مطابقة. جرّب تغيير البحث أو الفلتر.</div>';
+    return;
+  }
+  grid.innerHTML = products.map(renderProductCard).join('');
+  bindOrderButtons();
+}
 async function initStorePage(){
   const grid = document.getElementById('storeProductsGrid');
   if(!grid) return;
+  showStoreLoading();
   try{
-    const products = typeof listStoreProductsPublic === 'function' ? await listStoreProductsPublic() : [];
-    productsCache = products;
-    updateStoreStats(products);
-    if(!products.length){
-      grid.innerHTML = '<div class="empty-box">لا توجد منتجات معروضة حالياً. أضف منتجات من لوحة الإدارة بحالة «منشور» أو «قريبًا».</div>';
-      return;
-    }
-    grid.innerHTML = products.map(renderProductCard).join('');
-    bindOrderButtons();
+    productsCache = typeof listStoreProductsPublic === 'function' ? await listStoreProductsPublic() : [];
+    updateStoreStats(productsCache);
+    renderStoreProducts();
   }catch(err){
     console.error(err);
     grid.innerHTML = '<div class="empty-box">تعذر تحميل المنتجات. حاول لاحقاً.</div>';
   }
 }
-setupOrderModal();
-initStorePage();
+document.addEventListener('DOMContentLoaded', () => {
+  document.getElementById('storeSearchInput')?.addEventListener('input', e => {
+    storeSearchQuery = e.target.value;
+    renderStoreProducts();
+  });
+  document.querySelectorAll('[data-store-filter]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      storeStatusFilter = btn.getAttribute('data-store-filter') || 'all';
+      document.querySelectorAll('[data-store-filter]').forEach(b => b.classList.toggle('active', b === btn));
+      renderStoreProducts();
+    });
+  });
+  setupOrderModal();
+  initStorePage();
+});
 </script>
 <script src="js/site-seo.js"></script>
 <script src="shared-layout.js"></script>

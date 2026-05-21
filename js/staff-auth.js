@@ -283,6 +283,36 @@
     return false;
   }
 
+  function getStaffDisplayIdentity(profile, user) {
+    const p = profile || window.STAFF_PROFILE || {};
+    const u = user || window.STAFF_USER || {};
+    const AR = window.ACADEMY_ROLES || {};
+    let jobTitle = "";
+    if (typeof getStaffJobTitle === "function") {
+      jobTitle = getStaffJobTitle(p);
+    } else if (typeof AR.getRoleLabel === "function") {
+      jobTitle = AR.getRoleLabel(p.staff_type) || "";
+      if (jobTitle === p.staff_type) jobTitle = "";
+    }
+    if (!jobTitle && p.job_title) jobTitle = String(p.job_title).trim();
+    const domainLabel =
+      typeof AR.getDomainLabel === "function"
+        ? AR.getDomainLabel(p.staff_category) || ""
+        : String(p.staff_category || "").trim();
+    const name = p.full_name || u.email || "كادر";
+    const email = p.email || u.email || "";
+    const subtitle = [domainLabel, jobTitle].filter(Boolean).join(" · ");
+    return {
+      name,
+      title: jobTitle || "كادر",
+      domainLabel,
+      jobTitle: jobTitle || "كادر",
+      email,
+      subtitle,
+      welcome: "مرحباً " + name
+    };
+  }
+
   window.STAFF_LOGIN_PAGE = LOGIN_PAGE;
   window.STAFF_DASHBOARD_PAGE = DASHBOARD_PAGE;
   window.getStaffSession = getSession;
@@ -296,4 +326,5 @@
   window.staffLogout = staffLogout;
   window.redirectIfStaffLoggedIn = redirectIfStaffLoggedIn;
   window.formatStaffAuthError = formatAuthError;
+  window.getStaffDisplayIdentity = getStaffDisplayIdentity;
 })();

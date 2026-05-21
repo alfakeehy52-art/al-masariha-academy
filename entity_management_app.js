@@ -212,8 +212,9 @@ function staffTypeLabel(id) {
 }
 
 function systemRoleLabel(value) {
-  const map = { staff: "كادر", manager: "مدير", admin: "مدير نظام" };
-  return map[String(value || "").trim()] || value || "-";
+  const labels = window.PANEL_ROLE_LABELS || {};
+  const key = String(value || "").trim().toLowerCase();
+  return labels[key] || value || "-";
 }
 
 function isAcademyStaffPage() {
@@ -476,13 +477,23 @@ function editEntity(id) {
     }
     if (key === "role") {
       const rv = String(value || "staff");
+      const opts =
+        window.PANEL_ROLE_OPTIONS ||
+        [
+          { value: "staff", label: "موظف" },
+          { value: "manager", label: "مدير عمليات" },
+          { value: "admin", label: "المدير العام" }
+        ];
       return `
         <label>
           <span>${esc(label)}</span>
           <select name="${esc(key)}">
-            <option value="staff" ${rv === "staff" ? "selected" : ""}>كادر</option>
-            <option value="manager" ${rv === "manager" ? "selected" : ""}>مدير</option>
-            <option value="admin" ${rv === "admin" ? "selected" : ""}>مدير نظام</option>
+            ${opts
+              .map(
+                (o) =>
+                  `<option value="${esc(o.value)}" ${rv === o.value ? "selected" : ""}>${esc(o.label)}</option>`
+              )
+              .join("")}
           </select>
         </label>
       `;

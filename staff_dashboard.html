@@ -134,9 +134,19 @@
       }
 
       function renderStaffDashboard() {
-        const AR = window.ACADEMY_ROLES || {};
         const profile = window.STAFF_PROFILE || {};
         const user = window.STAFF_USER || {};
+        const id =
+          typeof getStaffDisplayIdentity === "function"
+            ? getStaffDisplayIdentity(profile, user)
+            : {
+                name: profile.full_name || user.email || "كادر",
+                welcome: "مرحباً",
+                subtitle: "",
+                title: "كادر",
+                domainLabel: "—",
+                jobTitle: "—"
+              };
 
         function labelStatus(st) {
           const map = { active: "نشط", inactive: "معطل", suspended: "موقوف" };
@@ -147,18 +157,11 @@
           return map[String(r || "")] || r || "—";
         }
 
-        const displayName = profile.full_name || user.email || "كادر";
-        document.getElementById("staffName").textContent = displayName;
-        $welcome.textContent =
-          "مرحباً " + (profile.full_name || displayName) + " — حسابك مربوط بسجل academy_staff";
-
-        const domainLabel = AR.getDomainLabel
-          ? AR.getDomainLabel(profile.staff_category)
-          : profile.staff_category || "—";
-        const roleLabel = AR.getRoleLabel ? AR.getRoleLabel(profile.staff_type) : profile.staff_type || "—";
+        document.getElementById("staffName").textContent = id.name;
+        $welcome.textContent = id.welcome + (id.subtitle ? " — " + id.subtitle : "");
 
         document.getElementById("roleLine").textContent =
-          "المجال: " + domainLabel + " · الدور: " + roleLabel;
+          "المجال: " + (id.domainLabel || "—") + " · الدور: " + (id.jobTitle || id.title || "—");
 
         const tags = document.getElementById("statusTags");
         const st = String(profile.status || "active");

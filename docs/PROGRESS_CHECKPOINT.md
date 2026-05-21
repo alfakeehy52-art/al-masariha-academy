@@ -17,8 +17,8 @@
 
 | | |
 |---|---|
-| **آخر إنجاز** | ضبط المتجر: `store.page.css` + بحث/فلتر + skeleton + تنظيف نصوص تقنية |
-| **التالي (اختر واحداً)** | ① أكمل **قائمة الإطلاق** واحفظ ② مرحلة 2 جارية (`site-inner.css` + `admin-pages.css`) ③ صلاحيات الموظفين — `docs/RBAC_PLAN.md` |
+| **آخر إنجاز** | **R2-lite:** `admin_permissions_dashboard.html` + ربط `academy_staff.role` بالقائمة الجانبية |
+| **التالي (اختر واحداً)** | ① نفّذ `docs/STAFF_PANEL_ROLES.sql` في Supabase ② قائمة الإطلاق ③ صفحات داخلية ④ R3 RLS حسب الدور |
 | **الإنتاج** | https://al-masariha-academy.pages.dev (ينشر من `main` تلقائياً) |
 | **دخول إدارة** | `admin_login.html` — بريد في `supabase-config.js` |
 

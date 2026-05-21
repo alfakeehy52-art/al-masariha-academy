@@ -76,6 +76,20 @@
     return !requireRole || role === "admin";
   }
 
+  const PANEL_ROLE_SET = new Set(["admin", "manager", "supervisor", "staff", "coach", "viewer"]);
+
+  function isPanelUser(user) {
+    if (!user) return false;
+    if (isAdminUser(user)) return true;
+    const role = getAdminRole(user);
+    const panelRoles = window.PANEL_ROLES || PANEL_ROLE_SET;
+    if (!panelRoles.has(role)) return false;
+    const { emails } = getAdminConfig();
+    const email = String(user.email || "").trim().toLowerCase();
+    if (!emails.length) return false;
+    return emails.indexOf(email) !== -1;
+  }
+
   async function getSession() {
     const client = getAuthClient();
     const { data, error } = await client.auth.getSession();
@@ -96,7 +110,7 @@
     clearLegacySession();
     try {
       const session = await getSession();
-      if (session && isAdminUser(session.user)) return true;
+      if (session && isPanelUser(session.user)) return true;
     } catch (e) {
       console.error("Admin auth check failed:", e);
     }
@@ -130,7 +144,7 @@
       wrapped.cause = error;
       throw wrapped;
     }
-    if (!isAdminUser(data.user)) {
+    if (!isPanelUser(data.user)) {
       await client.auth.signOut();
       throw new Error("هذا الحساب غير مصرح له بدخول لوحة الإدارة.");
     }
@@ -146,8 +160,17 @@
     window.location.href = LOGIN_PAGE;
   }
 
+  async function isPanelLoggedIn() {
+    try {
+      const session = await getSession();
+      return !!(session && isPanelUser(session.user));
+    } catch (e) {
+      return false;
+    }
+  }
+
   async function redirectIfAlreadyLoggedIn(targetPage) {
-    if (await isAdminLoggedIn()) {
+    if (await isPanelLoggedIn()) {
       window.location.replace(targetPage || "admin_dashboard.html");
       return true;
     }
@@ -161,6 +184,8 @@
   window.getAdminDisplayIdentity = getAdminDisplayIdentity;
   window.ADMIN_ROLE_LABELS = ADMIN_ROLE_LABELS;
   window.isAdminUser = isAdminUser;
+  window.isPanelUser = isPanelUser;
+  window.isPanelLoggedIn = isPanelLoggedIn;
   window.isAdminLoggedIn = isAdminLoggedIn;
   window.requireAdmin = requireAdmin;
   window.adminLogin = adminLogin;
