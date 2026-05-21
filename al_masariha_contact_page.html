@@ -7,8 +7,8 @@
   <link rel="stylesheet" href="shared-layout.css" />
   <style>
     :root{
-      --ct-gold:#d5b15a;
-      --ct-gold-soft:#f0d78d;
+      --ct-gold:var(--site-gold,#d5b15a);
+      --ct-gold-soft:var(--site-gold-soft,#f0d78d);
       --ct-text:#f4f4ef;
       --ct-muted:#b9c2bb;
       --ct-line:rgba(255,255,255,.08);
@@ -254,7 +254,7 @@
     }
   </style>
 </head>
-<body>
+<body class="contact-page inner-page">
   <div id="site-header"></div>
 
   <main class="contact-page">

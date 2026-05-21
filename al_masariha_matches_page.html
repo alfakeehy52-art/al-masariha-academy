@@ -16,7 +16,7 @@ body{margin:0!important;padding:0!important;font-family:'Cairo',system-ui,sans-s
 .match-card:hover{transform:translateY(-5px);border-color:rgba(213,177,90,.28)}
 .teams{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;gap:12px}
 .team{font-weight:900;flex:1}
-.score{font-size:28px;color:#d5b15a;white-space:nowrap}
+.score{font-size:28px;color:var(--site-gold,#d5b15a);white-space:nowrap}
 .match-info{color:#bbb;font-size:14px;margin-top:4px}
 .match-status{display:inline-block;margin-top:10px;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:800;border:1px solid rgba(255,255,255,.1)}
 .st-upcoming{color:#ffe79c;background:rgba(213,177,90,.12)}
@@ -25,9 +25,9 @@ body{margin:0!important;padding:0!important;font-family:'Cairo',system-ui,sans-s
 .empty-box{padding:32px;border:1px dashed rgba(213,177,90,.28);border-radius:18px;color:#b8c4bc;text-align:center;line-height:1.9;grid-column:1/-1}
 </style>
 </head>
-<body>
+<body class="matches-page inner-page">
 <div id="site-header"></div>
-<div class="matches-container">
+<div class="matches-container matches-hero">
   <h1 class="matches-title">المباريات <span class="live-pill">بيانات حية</span></h1>
   <p class="matches-lead">مباريات قادمة ومنتهية وجارية.</p>
   <div class="matches-grid" id="matchesGrid">

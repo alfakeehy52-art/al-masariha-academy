@@ -1,55 +1,208 @@
 /**
- * مرحلة 2 — توحيد الصفحات الداخلية العامة مع ألوان الإعدادات
+ * مرحلة 2 — توحيد الصفحات الداخلية العامة مع ألوان إعدادات الأكاديمية
  */
 :root {
   --fifa-gold: var(--site-gold, #d5b15a);
   --fifa-gold-2: var(--site-gold-soft, #f0d78d);
   --fifa-green: var(--site-green, #11784f);
   --gold: var(--site-gold, #d5b15a);
+  --gold-soft: var(--site-gold-soft, #f0d58f);
   --gold2: var(--site-gold-soft, #f0d58f);
   --green: var(--site-green, #11784f);
+  --inner-gold-12: color-mix(in srgb, var(--site-gold, #d5b15a) 12%, transparent);
+  --inner-gold-18: color-mix(in srgb, var(--site-gold, #d5b15a) 18%, transparent);
+  --inner-gold-28: color-mix(in srgb, var(--site-gold, #d5b15a) 28%, transparent);
+  --inner-green-btn: linear-gradient(180deg, color-mix(in srgb, var(--site-green, #12744c) 88%, #fff), var(--site-green, #0d6c48));
+}
+
+body.inner-page {
+  background:
+    radial-gradient(circle at top, var(--inner-gold-12), transparent 32%),
+    linear-gradient(180deg, #04100b 0%, #07150f 50%, #05110c 100%) !important;
 }
 
 .page-shell,
 .teams-shell,
-.store-shell {
-  padding-bottom: 48px;
+.store-shell,
+.coaches-page-shell,
+.players-page {
+  padding-bottom: 52px;
 }
 
-.section .container,
+/* ─── هيرو موحّد ─── */
 .players-hero,
-.coaches-hero,
-.store-hero,
+.coaches-page-shell .hero-shell,
+.store-shell .hero-shell,
 .join-hero,
-.contact-hero,
+.contact-hero-card,
+.teams-shell .hero-shell,
 .matches-hero {
-  border-color: rgba(215, 179, 95, 0.14);
+  border-color: var(--inner-gold-18) !important;
 }
 
+.players-hero,
+.coaches-page-shell .hero,
+.join-hero {
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.22);
+}
+
+.players-badge,
+.players-title,
+.coaches-page-shell .hero h2,
+.store-shell .hero h2,
+.join-hero h1 {
+  letter-spacing: -0.02em;
+}
+
+.players-title {
+  background: linear-gradient(90deg, #fff 0%, var(--site-gold-soft, #f0d58f) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.players-page .stat-chip,
+.coaches-page-shell .hero-stat,
+.teams-shell .hero-stat,
+.store-shell .hero-stat {
+  border-color: var(--inner-gold-18) !important;
+}
+
+.players-page .stat-chip strong,
+.coaches-page-shell .hero-stat .n,
+.teams-shell .hero-stat .n,
+.store-shell .hero-stat .n {
+  color: var(--site-gold-soft, #f0d58f) !important;
+}
+
+/* ─── بطاقات ─── */
+.player-card,
+.coaches-page-shell .coach,
+.coaches-page-shell .sidebar,
+.coaches-page-shell .content-card,
+.teams-shell .content-card,
+.teams-shell .sidebar,
+.store-shell .product,
+.store-shell .category-card,
+.store-shell .notice-card {
+  border-color: var(--inner-gold-18) !important;
+}
+
+.player-card:hover,
+.coaches-page-shell .coach:hover {
+  border-color: var(--inner-gold-28) !important;
+}
+
+.player-rating,
+.coaches-page-shell .view-btn,
+.teams-shell .reset-btn,
+.store-shell .hero-btn,
+.store-shell .order-btn {
+  background: var(--inner-green-btn) !important;
+}
+
+.players-page .toolbar-pill.active,
+.coaches-page-shell .pill.active,
+.teams-shell .pill.active {
+  background: color-mix(in srgb, var(--site-gold, #d5b15a) 14%, transparent) !important;
+  border-color: var(--inner-gold-28) !important;
+  color: var(--site-gold-soft, #f0d58f) !important;
+}
+
+.player-position,
+.coaches-page-shell .badge,
+.live-pill {
+  color: var(--site-gold-soft, #f0d58f) !important;
+}
+
+.player-view-btn,
+.players-page .filter-btn.primary {
+  background: linear-gradient(180deg, var(--site-gold-soft, #f0d58f), var(--site-gold, #d5b15a)) !important;
+  color: #08110b !important;
+}
+
+/* ─── أزرار عامة ─── */
 .hero-btn,
 .hero-primary,
 .store-link,
 .submit-btn.gold,
-.btn.gold {
-  background: linear-gradient(180deg, var(--site-gold-soft, #f0d58f), var(--site-gold, #d5b15a));
-  color: #08110b;
+.btn.gold,
+.contact-submit,
+.join-primary-btn {
+  background: linear-gradient(180deg, var(--site-gold-soft, #f0d58f), var(--site-gold, #d5b15a)) !important;
+  color: #08110b !important;
+  border: none;
 }
 
 .hero-ghost,
 .store-ghost,
-.hero-secondary {
-  border-color: rgba(215, 179, 95, 0.22);
+.hero-secondary,
+.join-secondary-btn {
+  border-color: var(--inner-gold-28) !important;
+  color: var(--site-text, #f4f5ef);
 }
 
-.live-pill,
-.pill-live {
-  border-color: rgba(215, 179, 95, 0.28);
-  color: var(--site-gold-soft, #f0d58f);
+.hero-ghost:hover,
+.store-ghost:hover {
+  border-color: var(--site-gold, #d5b15a) !important;
+  color: var(--site-gold-soft, #f0d58f) !important;
+}
+
+/* ─── نماذج وتصفية ─── */
+.players-page .players-search,
+.coaches-page-shell .search,
+.teams-shell .search,
+.store-shell .store-search input {
+  border-color: var(--inner-gold-12) !important;
+}
+
+.players-page .players-search:focus,
+.coaches-page-shell .search:focus,
+.teams-shell .search:focus {
+  border-color: color-mix(in srgb, var(--site-gold, #d5b15a) 42%, transparent) !important;
+  box-shadow: 0 0 0 3px var(--inner-gold-12);
 }
 
 .empty-box,
 .empty-card,
-.players-empty {
+.players-empty,
+.coaches-page-shell .empty-card {
   border-radius: 20px;
-  border: 1px dashed rgba(215, 179, 95, 0.22);
+  border: 1px dashed var(--inner-gold-28) !important;
+  background: rgba(255, 255, 255, 0.02);
+}
+
+/* ─── صفحة التواصل والانضمام ─── */
+.contact-page .contact-card,
+.join-page .section,
+.join-page .type-card {
+  border-color: var(--inner-gold-18);
+}
+
+.join-page .journey-step.is-highlight {
+  border-color: var(--inner-gold-28);
+  background: color-mix(in srgb, var(--site-gold, #d5b15a) 8%, transparent);
+}
+
+.matches-page .match-card {
+  border-color: var(--inner-gold-18) !important;
+}
+
+.matches-page .match-card:hover {
+  border-color: var(--inner-gold-28) !important;
+}
+
+.matches-page .score {
+  color: var(--site-gold-soft, #f0d58f) !important;
+}
+
+@media (max-width: 768px) {
+  .players-hero,
+  .coaches-page-shell .hero-shell {
+    border-radius: 24px;
+  }
+
+  .players-grid {
+    gap: 16px !important;
+  }
 }

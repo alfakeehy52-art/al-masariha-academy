@@ -7,14 +7,14 @@
   <link rel="stylesheet" href="shared-layout.css">
   <style id="players-fifa-style">
     :root{
-      --fifa-gold:#d5b15a;
-      --fifa-gold-2:#f0d78d;
+      --fifa-gold:var(--site-gold,#d5b15a);
+      --fifa-gold-2:var(--site-gold-soft,#f0d78d);
       --fifa-deep:#08140e;
       --fifa-panel:#0c1d15;
       --fifa-line:rgba(255,255,255,.08);
       --fifa-text:#f4f4ef;
       --fifa-muted:#b8c3ba;
-      --fifa-green:#12744c;
+      --fifa-green:var(--site-green,#12744c);
     }
 
     body{
@@ -632,34 +632,13 @@ html, body{
 </style>
 
 
-<style id="sticky-header-fix">
-#site-header{
-  position: sticky;
-  top: 0;
-  z-index: 9999;
-  width: 100%;
-}
-#site-header .site-topbar,
-.site-topbar{
-  position: sticky !important;
-  top: 0 !important;
-  z-index: 9999 !important;
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  box-shadow: 0 8px 24px rgba(0,0,0,.18);
-}
-body{
-  overflow-x: hidden;
-}
-</style>
-
 </head>
-<body>
+<body class="players-page inner-page">
   <div id="site-header"></div>
 
   <section class="players-hero">
     <div class="players-badge">⚽ تشكيلة الأكاديمية</div>
-    <h1 class="players-title">اللاعبون — FIFA Style</h1>
+    <h1 class="players-title">اللاعبون</h1>
     <p class="players-subtitle">قائمة اللاعبين المعتمدين في الأكاديمية — ابحث، صفِّ، وافتح الملف الكامل لكل لاعب.</p>
   </section>
 

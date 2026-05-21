@@ -10,7 +10,9 @@
 <link rel="stylesheet" href="shared-layout.css">
 <style>
 :root{
-  --bg:#05110b;--panel:#081a12;--panel2:#0c1d15;--gold:#d5b15a;--gold-soft:#f0d58f;--text:#f4f5ef;--muted:#b8c4bc;--line:rgba(255,255,255,.08);--green:#0f6a47;
+  --bg:#05110b;--panel:#081a12;--panel2:#0c1d15;
+  --gold:var(--site-gold,#d5b15a);--gold-soft:var(--site-gold-soft,#f0d58f);
+  --text:#f4f5ef;--muted:#b8c4bc;--line:rgba(255,255,255,.08);--green:var(--site-green,#0f6a47);
 }
 *{box-sizing:border-box}body{margin:0;font-family:'Cairo',system-ui,sans-serif;background:radial-gradient(circle at top, rgba(213,177,90,.08), transparent 25%),linear-gradient(180deg,#030a07,#06130d 22%,#041009 100%);color:var(--text)}a{text-decoration:none;color:inherit}.container{width:min(1380px,calc(100% - 48px));margin:auto}
 .coaches-page-shell{padding-top:18px}
@@ -22,7 +24,7 @@
 @media (max-width:1200px){.layout{grid-template-columns:1fr}.coaches-grid{grid-template-columns:repeat(2,1fr)}.hero-content{grid-template-columns:1fr}.hero h2{font-size:48px}}@media (max-width:768px){.coaches-grid{grid-template-columns:1fr}.hero h2{font-size:36px}.hero p{font-size:18px}.content-head h3,.side-title{font-size:26px}}
 </style>
 </head>
-<body>
+<body class="coaches-page inner-page">
 <div id="site-header"></div>
 <div class="coaches-page-shell">
 <section class="hero"><div class="container hero-shell"><div class="hero-bg"></div><div class="hero-content"><div><h2>المدربون</h2><p>كادر فني احترافي يقود تطوير المواهب داخل الأكاديمية، مع ملفات واضحة وتخصصات معروضة بصورة أنيقة ومقنعة.</p></div><div class="hero-stats"><div class="hero-stat"><div class="n" id="heroCoachCount">0</div><div class="t">إجمالي المدربين</div></div><div class="hero-stat"><div class="n" id="heroSpecialties">0</div><div class="t">تخصصات فنية</div></div><div class="hero-stat"><div class="n" id="heroCategories">0</div><div class="t">فئات يشرفون عليها</div></div></div></div></div></section>

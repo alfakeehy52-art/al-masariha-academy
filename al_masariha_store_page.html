@@ -9,7 +9,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="shared-layout.css"/>
 <style>
-:root{--bg:#05110b;--panel:#081a12;--panel-2:#0b2117;--gold:#d5b15a;--gold-soft:#f0d58f;--text:#f3f4ef;--muted:#b6c1b8;--green:#0d6c48;--line:rgba(255,255,255,.08)}
+:root{--bg:#05110b;--panel:#081a12;--panel-2:#0b2117;--gold:var(--site-gold,#d5b15a);--gold-soft:var(--site-gold-soft,#f0d58f);--text:#f3f4ef;--muted:#b6c1b8;--green:var(--site-green,#0d6c48);--line:rgba(255,255,255,.08)}
 *{box-sizing:border-box}
 body{margin:0;font-family:'Cairo',sans-serif;background:radial-gradient(circle at top, rgba(213,177,90,.08), transparent 24%),linear-gradient(180deg,#030a07,#06130d 22%, #041009 100%);color:white}
 a{text-decoration:none;color:inherit}
@@ -83,9 +83,9 @@ footer{display:none}
 @media (max-width:780px){.page-shell{padding-top:18px}.container{width:min(1320px,calc(100% - 30px))}.hero-copy{padding:28px 22px}.hero-copy h1{font-size:40px}.hero-copy p{font-size:18px}.hero-panels,.products-grid,.category-grid{grid-template-columns:1fr}.section-head h2,.notice-card h2{font-size:30px}}
 </style>
 </head>
-<body>
+<body class="store-page inner-page">
 <div id="site-header"></div>
-<div class="page-shell">
+<div class="page-shell store-shell">
 <section class="hero">
   <div class="container hero-box">
     <div class="hero-grid">
