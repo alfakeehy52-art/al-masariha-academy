@@ -51,6 +51,7 @@
         out[key] = String(row[key]);
       }
     });
+    if (row.updated_at) out.updated_at = String(row.updated_at);
     return out;
   }
 

@@ -75,7 +75,7 @@ async function loadData(){
 
   if (coachesRes.error) {
     console.error('Supabase coaches fetch error:', coachesRes.error);
-    tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:32px;color:#ffd0d0;font-weight:800">تعذر تحميل المدربين من قاعدة البيانات. تأكد من جدول coaches وسياسات RLS.</td></tr>';
+    tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:32px;color:#ffd0d0;font-weight:800">تعذر تحميل المدربين. حاول إعادة التحميل.</td></tr>';
     return;
   }
   if (playersRes.error) console.warn('Supabase players linked fetch warning:', playersRes.error);

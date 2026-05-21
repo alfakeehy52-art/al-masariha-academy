@@ -277,7 +277,7 @@ async function renderNews(){
     </article>`).join('');
   }catch(e){
     console.error(e);
-    featured.innerHTML='<div class="feature-card" style="padding:28px;color:#b8c4bc">تعذر التحميل. نفّذ NEWS_MEDIA_RLS.sql في Supabase.</div>';
+    featured.innerHTML='<div class="feature-card" style="padding:28px;color:#b8c4bc">تعذر التحميل. حاول لاحقاً.</div>';
     grid.innerHTML='';
   }
 }

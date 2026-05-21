@@ -145,7 +145,7 @@ async function renderStatsPage(){
     if(summary) renderHighlights(summary);
   }catch(e){
     console.error(e);
-    document.getElementById('topStats').innerHTML='<div class="stat-box" style="grid-column:1/-1"><strong>!</strong><span>تعذر التحميل — نفّذ ACADEMY_STATS_RLS.sql</span></div>';
+    document.getElementById('topStats').innerHTML='<div class="stat-box" style="grid-column:1/-1"><strong>!</strong><span>تعذر التحميل. حاول لاحقاً.</span></div>';
   }
 }
 document.addEventListener('DOMContentLoaded',renderStatsPage);

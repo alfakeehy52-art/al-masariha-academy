@@ -851,7 +851,7 @@
         }, 600);
       } catch (error) {
         console.error("Supabase insert player error:", error);
-        showToast(error?.message || "تعذر حفظ اللاعب. تأكد من إعداد جدول players.", "error");
+        showToast(error?.message || "تعذر حفظ اللاعب.", "error");
       } finally {
         saveButtons.forEach(btn => {
           btn.disabled = false;

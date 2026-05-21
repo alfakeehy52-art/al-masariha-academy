@@ -28,7 +28,7 @@
       <div class="topbar">
         <div class="title-box">
           <h2>الفرق والفئات</h2>
-          <p>إدارة احترافية للفرق والفئات العمرية. الفرق <strong>النشطة</strong> تظهر في <a href="al_masariha_teams_page.html" style="color:var(--gold2)">صفحة الفرق العامة</a>. نفّذ <code>docs/TEAMS_RLS.sql</code> في Supabase إن لم تُطبَّق السياسات بعد.</p>
+          <p>إدارة الفرق والفئات العمرية. الفرق <strong>النشطة</strong> تظهر في <a href="al_masariha_teams_page.html" style="color:var(--gold2)">صفحة الفرق العامة</a>.</p>
         </div>
         <div class="actions">
           <button class="btn btn-secondary" type="button" id="resetTeamsBtn">إعادة الضبط</button>
@@ -324,7 +324,7 @@
         const { error } = await supabaseClient.from("teams").update(payload).eq("id", editingTeamId);
         if (error){
           console.error("Supabase team update error:", error);
-          showToast("تعذر تحديث الفريق. تأكد من جدول teams وسياسات RLS.", "error");
+          showToast("تعذر تحديث الفريق.", "error");
           return;
         }
 
@@ -337,7 +337,7 @@
         const { error } = await supabaseClient.from("teams").insert([{...payload, created_at: new Date().toISOString()}]);
         if (error){
           console.error("Supabase team insert error:", error);
-          showToast("تعذر إضافة الفريق. تأكد من وجود جدول teams.", "error");
+          showToast("تعذر إضافة الفريق.", "error");
           return;
         }
         showToast("تم إضافة الفريق بنجاح.", "success");

@@ -29,7 +29,7 @@ body{margin:0!important;padding:0!important;font-family:'Cairo',system-ui,sans-s
 <div id="site-header"></div>
 <div class="matches-container">
   <h1 class="matches-title">المباريات <span class="live-pill">بيانات حية</span></h1>
-  <p class="matches-lead">جدول المباريات من Supabase — قادمة ومنتهية وجارية.</p>
+  <p class="matches-lead">مباريات قادمة ومنتهية وجارية.</p>
   <div class="matches-grid" id="matchesGrid">
     <div class="empty-box">جاري تحميل المباريات…</div>
   </div>
@@ -64,7 +64,7 @@ async function renderMatches(){
     </a>`).join('');
   }catch(e){
     console.error(e);
-    grid.innerHTML='<div class="empty-box">تعذر تحميل المباريات. تأكد من تطبيق MATCHES_RLS.sql في Supabase.</div>';
+    grid.innerHTML='<div class="empty-box">تعذر التحميل. حاول لاحقاً.</div>';
   }
 }
 document.addEventListener('DOMContentLoaded',renderMatches);

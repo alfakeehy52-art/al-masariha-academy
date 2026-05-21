@@ -326,7 +326,7 @@
             </div>
             <div id="successBox" class="success-box"></div>
             <div id="errorBox" class="success-box" style="display:none;background:rgba(180,60,60,.15);border-color:rgba(200,80,80,.4);color:#ffd7d7"></div>
-            <div class="note">يُحفظ طلبك في Supabase ويصل للإدارة عبر لوحة «رسائل التواصل». احتفظ برقم المرجع للمتابعة.</div>
+            <div class="note">سيصل طلبك للإدارة. احتفظ برقم المرجع للمتابعة.</div>
           </div>
         </form>
       </section>
@@ -381,7 +381,7 @@
         } catch (err) {
           console.error(err);
           if (errorBox) {
-            errorBox.textContent = "تعذر الإرسال. تأكد من تطبيق CONTACT_MESSAGES_RLS.sql في Supabase.";
+            errorBox.textContent = "تعذر الإرسال. حاول مرة أخرى أو تواصل معنا.";
             errorBox.style.display = "block";
           }
           if (successBox) successBox.classList.remove("show");

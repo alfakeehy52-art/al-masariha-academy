@@ -406,7 +406,7 @@ async function loadCoachView(){
 
   if (coachRes.error) {
     console.error('Supabase coach fetch error:', coachRes.error);
-    renderEmpty('تعذر تحميل المدرب من قاعدة البيانات. تأكد من سياسات RLS.');
+    renderEmpty('تعذر تحميل المدرب. حاول إعادة التحميل.');
     return;
   }
   if (playersRes.error) {

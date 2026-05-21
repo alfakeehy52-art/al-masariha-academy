@@ -223,7 +223,7 @@ async function updateMemberStatus(id,status){
     showToast("تم تحديث حالة العضوية بنجاح.", status==="rejected"?"error":"success");
   }catch(e){
     console.error(e);
-    showToast("تعذر تحديث حالة العضوية. تأكد من سياسات RLS.","error");
+    showToast("تعذر تحديث حالة العضوية.","error");
   }
 }
 

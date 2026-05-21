@@ -182,7 +182,7 @@
     if (error) {
       console.error(error);
       rows = [];
-      if (els.tbody) els.tbody.innerHTML = `<tr><td colspan="7" class="empty-state">تعذر التحميل — تأكد من MATCHES_RLS.sql</td></tr>`;
+      if (els.tbody) els.tbody.innerHTML = `<tr><td colspan="7" class="empty-state">تعذر التحميل</td></tr>`;
       return;
     }
     rows = Array.isArray(data) ? data : [];
@@ -221,7 +221,7 @@
     }
     if (error) {
       console.error(error);
-      alert("تعذر الحفظ. تأكد من سياسات RLS.");
+      alert("تعذر الحفظ.");
       return;
     }
     resetForm();
@@ -243,7 +243,7 @@
     const { error } = await supabaseClient.from("matches").insert(DEFAULT_SEED);
     if (error) {
       console.error(error);
-      alert("تعذر التحميل — ربما الجدول غير جاهز بعد.");
+      alert("تعذر التحميل.");
       return;
     }
     await loadRows();

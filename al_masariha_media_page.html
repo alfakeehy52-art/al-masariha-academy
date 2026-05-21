@@ -34,7 +34,7 @@ body{margin:0;font-family:'Cairo',sans-serif;background:#05110b;color:white}
 <section class="hero">
 <div class="container">
 <h1>الصور والفيديو <span class="live-pill">بيانات حية</span></h1>
-<p>أبرز لقطات التدريبات والمباريات من Supabase.</p>
+<p>أبرز لقطات التدريبات والمباريات.</p>
 </div>
 </section>
 <section class="container">
@@ -82,7 +82,7 @@ async function renderMedia(){
     videos.innerHTML=vids.length?vids.map(videoHtml).join(''):'<div class="empty-box">لا توجد فيديوهات منشورة.</div>';
   }catch(e){
     console.error(e);
-    gallery.innerHTML='<div class="empty-box">تعذر التحميل. نفّذ NEWS_MEDIA_RLS.sql في Supabase.</div>';
+    gallery.innerHTML='<div class="empty-box">تعذر التحميل. حاول لاحقاً.</div>';
     videos.innerHTML='';
   }
 }

@@ -5,151 +5,6 @@ document.addEventListener("DOMContentLoaded", () => {
     applySiteSeo(page);
   }
 
-  if (!document.getElementById("site-header-balance-fix")) {
-    const style = document.createElement("style");
-    style.id = "site-header-balance-fix";
-    style.textContent = `
-      @media (min-width: 981px) {
-        .site-topbar{ overflow: visible !important; }
-
-        .site-nav{
-          grid-template-columns: auto minmax(0,1fr) auto !important;
-          align-items: center !important;
-          gap: 14px !important;
-          padding: 10px 0 !important;
-          min-height: 88px !important;
-        }
-
-        .site-brand{ gap: 10px !important; }
-
-        .site-brand-logo{
-          width: 62px !important;
-          height: 62px !important;
-          min-width: 62px !important;
-          min-height: 62px !important;
-        }
-
-        .site-brand-text strong{
-          font-size: 22px !important;
-          line-height: 1 !important;
-        }
-
-        .site-brand-text span{
-          font-size: 16px !important;
-          line-height: 1 !important;
-        }
-
-        .site-actions{
-          gap: 8px !important;
-        }
-
-        .site-btn{
-          padding: 11px 16px !important;
-          font-size: 13px !important;
-          border-radius: 14px !important;
-          white-space: nowrap !important;
-        }
-
-        .site-btn-track{
-          padding: 9px 12px !important;
-          font-size: 11px !important;
-        }
-
-        .site-menu-shell{
-          display: flex !important;
-          justify-content: center !important;
-          width: 100% !important;
-          min-width: 0 !important;
-        }
-
-        .site-menu{
-          display: flex !important;
-          flex-wrap: nowrap !important;
-          justify-content: center !important;
-          align-items: center !important;
-          gap: 4px !important;
-          width: 100% !important;
-          min-width: 0 !important;
-          overflow: hidden !important;
-          white-space: nowrap !important;
-        }
-
-        .site-menu a{
-          flex: 0 1 auto !important;
-          min-width: 0 !important;
-          padding: 12px 10px !important;
-          font-size: 15px !important;
-          font-weight: 900 !important;
-          border-radius: 12px !important;
-          line-height: 1.2 !important;
-        }
-
-        .site-menu a.active::after{
-          right: 10px !important;
-          left: 10px !important;
-          bottom: 5px !important;
-        }
-      }
-
-      @media (max-width: 980px) {
-        .site-menu a{
-          font-size: 16px !important;
-          padding: 14px 12px !important;
-        }
-      }
-
-      .featured-player,
-      .featured-player-card,
-      .star-player-card,
-      .week-star-card,
-      .featured-star-card,
-      .player-spotlight,
-      .home-featured-player{
-        overflow: visible !important;
-      }
-
-      .featured-player h2,
-      .featured-player h3,
-      .featured-player h4,
-      .featured-player-card h2,
-      .featured-player-card h3,
-      .featured-player-card h4,
-      .star-player-card h2,
-      .star-player-card h3,
-      .star-player-card h4,
-      .week-star-card h2,
-      .week-star-card h3,
-      .week-star-card h4,
-      .featured-star-card h2,
-      .featured-star-card h3,
-      .featured-star-card h4,
-      .player-spotlight h2,
-      .player-spotlight h3,
-      .player-spotlight h4,
-      .home-featured-player h2,
-      .home-featured-player h3,
-      .home-featured-player h4{
-        white-space: normal !important;
-        overflow: visible !important;
-        text-overflow: unset !important;
-        line-height: 1.25 !important;
-        overflow-wrap: anywhere !important;
-        word-break: normal !important;
-      }
-
-      .featured-player *,
-      .featured-player-card *,
-      .star-player-card *,
-      .week-star-card *,
-      .featured-star-card *,
-      .player-spotlight *,
-      .home-featured-player *{
-        max-width: 100%;
-      }
-    `;
-    document.head.appendChild(style);
-  }
-
   const headerTemplate = `
 <header class="site-topbar">
   <div class="site-topbar-glow"></div>
@@ -157,15 +12,15 @@ document.addEventListener("DOMContentLoaded", () => {
   <div class="site-wrap site-nav">
 
     <div class="site-brand-shell">
-      <div class="site-brand">
+      <a class="site-brand" href="index.html" aria-label="الرئيسية">
         <div class="site-brand-logo">
-          <img data-academy="logo" src="academy-logo.svg" alt="شعار الأكاديمية" width="62" height="62">
+          <img data-academy="logo" src="academy-logo.svg" alt="" width="56" height="56">
         </div>
         <div class="site-brand-text">
           <strong data-academy="brand_name">أكاديمية المسارحة</strong>
           <span data-academy="brand_subtitle">لكرة القدم</span>
         </div>
-      </div>
+      </a>
     </div>
 
     <div class="site-mobile-controls">
@@ -177,33 +32,43 @@ document.addEventListener("DOMContentLoaded", () => {
     </div>
 
     <nav class="site-menu-shell">
-      <nav class="site-menu">
+      <nav class="site-menu" aria-label="التنقل الرئيسي">
         <a href="index.html" data-page="index.html">الرئيسية</a>
-        <a href="al_masariha_about_page.html" data-page="al_masariha_about_page.html">من نحن</a>
         <a href="al_masariha_players_page.html" data-page="al_masariha_players_page.html">اللاعبون</a>
         <a href="al_masariha_coaches_page.html" data-page="al_masariha_coaches_page.html">المدربون</a>
         <a href="al_masariha_teams_page.html" data-page="al_masariha_teams_page.html">الفرق</a>
         <a href="al_masariha_matches_page.html" data-page="al_masariha_matches_page.html">المباريات</a>
-        <a href="al_masariha_media_page.html" data-page="al_masariha_media_page.html" data-nav-item="media">الإعلام</a>
-        <a href="al_masariha_store_page.html" data-page="al_masariha_store_page.html" data-nav-item="store">المتجر</a>
-        <a href="al_masariha_news_page.html" data-page="al_masariha_news_page.html" data-nav-item="news">الأخبار</a>
-        <a href="al_masariha_contact_page.html" data-page="al_masariha_contact_page.html">تواصل</a>
+        <details class="site-nav-dropdown" data-nav-group="more">
+          <summary>المزيد</summary>
+          <div class="site-nav-dropdown-panel">
+            <a href="al_masariha_about_page.html" data-page="al_masariha_about_page.html">من نحن</a>
+            <a href="al_masariha_media_page.html" data-page="al_masariha_media_page.html" data-nav-item="media">الإعلام</a>
+            <a href="al_masariha_store_page.html" data-page="al_masariha_store_page.html" data-nav-item="store">المتجر</a>
+            <a href="al_masariha_news_page.html" data-page="al_masariha_news_page.html" data-nav-item="news">الأخبار</a>
+            <a href="al_masariha_stats_page.html" data-page="al_masariha_stats_page.html">الإحصائيات</a>
+            <a href="al_masariha_contact_page.html" data-page="al_masariha_contact_page.html">تواصل</a>
+            <a href="admin_login.html" data-nav-item="admin_login" class="site-nav-admin">دخول الإدارة</a>
+          </div>
+        </details>
       </nav>
 
       <div class="site-actions site-actions-mobile">
         <a class="site-btn site-btn-track" href="request_status.html" data-page="request_status.html" data-nav-item="track_join">متابعة انضمام</a>
         <a class="site-btn site-btn-track" href="store_order_status.html" data-page="store_order_status.html" data-nav-item="track_store">متابعة متجر</a>
-        <a class="site-btn site-btn-gold" href="al_masariha_join_page.html">انضم إلينا</a>
-        <a class="site-btn site-btn-dark" href="admin_login.html" data-nav-item="admin_login">دخول الإدارة</a>
+        <a class="site-btn site-btn-admin" href="admin_login.html" data-page="admin_login.html" data-nav-item="admin_login">دخول الإدارة</a>
       </div>
     </nav>
 
     <div class="site-actions-shell">
       <div class="site-actions">
-        <a class="site-btn site-btn-track" href="request_status.html" data-page="request_status.html" data-nav-item="track_join" title="رقم مرجع REQ-…">متابعة انضمام</a>
-        <a class="site-btn site-btn-track" href="store_order_status.html" data-page="store_order_status.html" data-nav-item="track_store" title="رقم مرجع ORD-…">متابعة متجر</a>
-        <a class="site-btn site-btn-gold" href="al_masariha_join_page.html">انضم إلينا</a>
-        <a class="site-btn site-btn-dark" href="admin_login.html" data-nav-item="admin_login">دخول الإدارة</a>
+        <details class="site-nav-dropdown site-nav-dropdown--action" data-nav-group="track">
+          <summary class="site-btn site-btn-track">متابعة طلبك</summary>
+          <div class="site-nav-dropdown-panel site-nav-dropdown-panel--action">
+            <a href="request_status.html" data-page="request_status.html" data-nav-item="track_join">طلب انضمام</a>
+            <a href="store_order_status.html" data-page="store_order_status.html" data-nav-item="track_store">طلب متجر</a>
+          </div>
+        </details>
+        <a class="site-btn site-btn-admin" href="admin_login.html" data-page="admin_login.html" data-nav-item="admin_login">دخول الإدارة</a>
       </div>
     </div>
 
@@ -266,11 +131,71 @@ document.addEventListener("DOMContentLoaded", () => {
   if (headerSlot) headerSlot.innerHTML = headerTemplate;
   if (footerSlot) footerSlot.innerHTML = footerTemplate;
 
-  document.querySelectorAll(".site-menu a").forEach(link => {
+  const morePages = [
+    "al_masariha_about_page.html",
+    "al_masariha_media_page.html",
+    "al_masariha_store_page.html",
+    "al_masariha_news_page.html",
+    "al_masariha_stats_page.html",
+    "al_masariha_contact_page.html",
+    "admin_login.html"
+  ];
+  const trackPages = ["request_status.html", "store_order_status.html", "request_completion.html"];
+
+  document.querySelectorAll(".site-menu a, .site-nav-dropdown-panel a").forEach((link) => {
     if (link.getAttribute("data-page") === page) {
       link.classList.add("active");
     }
   });
+
+  if (page === "admin_login.html") {
+    const adminBtn = document.querySelector('[data-page="admin_login.html"]');
+    if (adminBtn) adminBtn.classList.add("active");
+  }
+
+  if (morePages.indexOf(page) !== -1) {
+    const more = document.querySelector('.site-nav-dropdown[data-nav-group="more"]');
+    if (more) more.classList.add("active");
+  }
+
+  if (trackPages.indexOf(page) !== -1) {
+    const track = document.querySelector('.site-nav-dropdown[data-nav-group="track"]');
+    if (track) track.classList.add("active");
+  }
+
+  function initSiteNavDropdowns() {
+    document.querySelectorAll(".site-nav-dropdown").forEach((dropdown) => {
+      const summary = dropdown.querySelector(":scope > summary");
+      if (!summary) return;
+
+      summary.addEventListener("click", (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        const willOpen = !dropdown.open;
+        document.querySelectorAll(".site-nav-dropdown").forEach((d) => {
+          d.open = false;
+        });
+        dropdown.open = willOpen;
+      });
+    });
+
+    document.addEventListener("click", (e) => {
+      if (e.target.closest(".site-nav-dropdown")) return;
+      document.querySelectorAll(".site-nav-dropdown").forEach((d) => {
+        d.open = false;
+      });
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        document.querySelectorAll(".site-nav-dropdown").forEach((d) => {
+          d.open = false;
+        });
+      }
+    });
+  }
+
+  initSiteNavDropdowns();
 
   const toggle = document.querySelector(".site-menu-toggle");
   const menuShell = document.querySelector(".site-menu-shell");

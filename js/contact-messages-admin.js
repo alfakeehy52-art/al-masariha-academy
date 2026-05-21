@@ -85,7 +85,7 @@
     if (error) {
       console.error(error);
       rows = [];
-      if (els.tbody) els.tbody.innerHTML = `<tr><td colspan="7" class="empty-state">تعذر التحميل — نفّذ CONTACT_MESSAGES_RLS.sql</td></tr>`;
+      if (els.tbody) els.tbody.innerHTML = `<tr><td colspan="7" class="empty-state">تعذر التحميل</td></tr>`;
       return;
     }
     rows = Array.isArray(data) ? data : [];

@@ -94,7 +94,7 @@ async function approve(id, requestId) {
 
   if (compErr) {
     console.error(compErr);
-    toast("تعذر اعتماد الاستكمال. راجع RLS أو صلاحيات الإدارة.", "error");
+    toast("تعذر اعتماد الاستكمال. تحقق من الصلاحيات.", "error");
     return;
   }
 
@@ -106,7 +106,7 @@ async function approve(id, requestId) {
 
   if (joinErr) {
     console.error(joinErr);
-    toast("تم اعتماد المرفقات لكن تعذر تحديث الطلب في join_requests.", "error");
+    toast("تم اعتماد المرفقات لكن تعذر تحديث حالة الطلب.", "error");
     return;
   }
 

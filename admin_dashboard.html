@@ -50,7 +50,7 @@
         <div class="card-head"><h3>ملخص الإدارة</h3></div>
         <div class="card-body">
           <div class="row"><span class="label">آخر نشاط</span><span class="value" id="lastActivity">جاري التحميل...</span></div>
-          <div class="row"><span class="label">جاهزية النظام</span><span class="value" id="systemStatus">متصلة بقاعدة البيانات</span></div>
+          <div class="row"><span class="label">جاهزية النظام</span><span class="value" id="systemStatus">متصل</span></div>
           <div class="row"><span class="label">أولوية اليوم</span><span class="value" id="todayPriority">مراجعة طلبات الانضمام</span></div>
           <div class="row"><span class="label">الصفحة السريعة</span><span class="value">إضافة لاعب جديد</span></div>
           <div class="note">هذه الصفحة أصبحت الآن الصفحة الرئيسية الفعلية للإدارة، منفصلة عن صفحة قائمة اللاعبين.</div>
@@ -142,8 +142,8 @@
         setText('todayPriority', requestsList.filter(r => String(r.status || 'new') === 'new').length ? 'مراجعة الطلبات الجديدة' : 'استكمال بيانات اللاعبين');
       } catch (error){
         console.error('Dashboard Supabase error:', error);
-        setText('systemStatus', 'تعذر الاتصال بقاعدة البيانات');
-        setText('lastActivity', 'تحقق من إعدادات Supabase والجداول');
+        setText('systemStatus', 'تعذر الاتصال');
+        setText('lastActivity', 'تحقق من الاتصال وحاول لاحقاً');
       }
     }
 

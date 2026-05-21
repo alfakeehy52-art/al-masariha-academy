@@ -136,7 +136,7 @@ footer{display:none}
   <div class="container">
     <div class="card notice-card">
       <h2>طلب أو استفسار</h2>
-      <p>المنتجات المنشورة: «اطلب الآن» من بطاقة المنتج. لمتابعة طلب سابق استخدم رقم المرجع ORD-… والجوال.</p>
+      <p>المنتجات المنشورة: «اطلب الآن» من بطاقة المنتج. لمتابعة طلب سابق استخدم رقم المرجع والجوال.</p>
       <div class="notice-actions"><a class="hero-btn" href="store_order_status.html">متابعة طلب متجر</a><a class="hero-ghost" href="request_status.html">متابعة انضمام</a><a class="hero-ghost" href="al_masariha_contact_page.html">تواصل معنا</a></div>
     </div>
   </div>
@@ -233,7 +233,7 @@ function setupOrderModal(){
     }catch(err){
       console.error(err);
       msg.className = 'order-msg err';
-      msg.textContent = 'تعذر إرسال الطلب. تأكد من STORE_ORDERS_RLS.sql والمنتج «منشور».';
+      msg.textContent = 'تعذر إرسال الطلب. حاول مرة أخرى أو تواصل معنا.';
     }
   });
 }
@@ -260,7 +260,7 @@ async function initStorePage(){
     bindOrderButtons();
   }catch(err){
     console.error(err);
-    grid.innerHTML = '<div class="empty-box">تعذر تحميل المنتجات. تأكد من تنفيذ <strong>docs/STORE_PRODUCTS_RLS.sql</strong> في Supabase.</div>';
+    grid.innerHTML = '<div class="empty-box">تعذر تحميل المنتجات. حاول لاحقاً.</div>';
   }
 }
 setupOrderModal();

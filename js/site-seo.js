@@ -16,7 +16,7 @@
     "index.html": {
       title: "أكاديمية المسارحة لكرة القدم | الرئيسية",
       description:
-        "انضم للأكاديمية، تابع اللاعبين والمدربين والمباريات والمتجر — بيانات حية من Supabase."
+        "انضم للأكاديمية، تابع اللاعبين والمدربين والمباريات والمتجر — بيانات محدّثة."
     },
     "al_masariha_about_page.html": {
       title: "من نحن | أكاديمية المسارحة",
@@ -74,15 +74,15 @@
     "al_masariha_store_page.html": {
       title: "متجر الأكاديمية | أكاديمية المسارحة",
       description:
-        "منتجات منشورة من الأكاديمية — اطلب الآن وتابع طلبك برقم ORD- والجوال."
+        "منتجات منشورة من الأكاديمية — اطلب الآن وتابع طلبك برقم المرجع والجوال."
     },
     "store_order_status.html": {
       title: "متابعة طلب المتجر | أكاديمية المسارحة",
-      description: "متابعة طلب متجر الأكاديمية برقم المرجع ORD- ورقم الجوال."
+      description: "متابعة طلب متجر الأكاديمية برقم المرجع ورقم الجوال."
     },
     "al_masariha_contact_page.html": {
       title: "تواصل معنا | أكاديمية المسارحة",
-      description: "أرسل رسالة للإدارة واحتفظ برقم المرجع MSG- للمتابعة."
+      description: "أرسل رسالة للإدارة واحتفظ برقم المرجع للمتابعة."
     },
     "al_masariha_memberships_page.html": {
       title: "العضويات | أكاديمية المسارحة",
@@ -103,7 +103,7 @@
     },
     "request_status.html": {
       title: "متابعة طلب الانضمام | أكاديمية المسارحة",
-      description: "ابحث عن طلبك برقم المرجع REQ- ورقم الجوال."
+      description: "ابحث عن طلبك برقم المرجع ورقم الجوال."
     },
     "request_completion.html": {
       title: "استكمال المرفقات | أكاديمية المسارحة",
@@ -142,6 +142,23 @@
     el.setAttribute("href", href);
   }
 
+  function resolveSiteImage(path) {
+    const p = path || SITE.image;
+    if (/^https?:\/\//i.test(p)) return p;
+    try {
+      return new URL(p, window.location.href).href;
+    } catch {
+      return new URL(SITE.image, window.location.href).href;
+    }
+  }
+
+  function withCacheBust(url, settings) {
+    const ts = settings.updated_at ? new Date(settings.updated_at).getTime() : 0;
+    if (!ts || Number.isNaN(ts)) return url;
+    const sep = url.includes("?") ? "&" : "?";
+    return url + sep + "v=" + ts;
+  }
+
   function normalizePageKey(page) {
     let file = (page || window.location.pathname.split("/").pop() || "index.html").split("?")[0];
     if (!file || file === "/") return "index.html";
@@ -163,7 +180,8 @@
     const canonical = configuredBase
       ? configuredBase.replace(/\/+$/, "") + pathForCanonical
       : window.location.origin + pathForCanonical;
-    const image = new URL(cfg.image || SITE.image, window.location.href).href;
+    const imagePath = cfg.image || settings.logo_url || SITE.image;
+    const image = withCacheBust(resolveSiteImage(imagePath), settings);
 
     document.title = title;
     document.documentElement.setAttribute("lang", "ar");
@@ -187,7 +205,8 @@
     upsertMeta("property", "og:image", image);
 
     upsertLink("canonical", canonical);
-    upsertLink("icon", SITE.image);
+    upsertLink("icon", image);
+    upsertLink("apple-touch-icon", image);
   }
 
   window.applySiteSeo = applySiteSeo;

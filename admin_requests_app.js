@@ -126,7 +126,7 @@ async function loadAcademyMembers(){
   if(error){
     console.error(error);
     academyMembers=[];
-    showToast('تعذر تحميل عضويات الأكاديمية. تأكد من سياسات RLS الخاصة بجدول academy_members.','error');
+    showToast('تعذر تحميل عضويات الأكاديمية.','error');
     return;
   }
   academyMembers=Array.isArray(data)?data:[];
@@ -141,7 +141,7 @@ async function loadRequests(type=null){
     console.error(error);
     requests=[];
     if($('requestsCards')) renderDashboard();
-    if(tbody) tbody.innerHTML=`<tr><td colspan="8" class="empty-cell error-cell">تعذر تحميل الطلبات. تأكد من RLS وسياسات القراءة.</td></tr>`;
+    if(tbody) tbody.innerHTML=`<tr><td colspan="8" class="empty-cell error-cell">تعذر تحميل الطلبات.</td></tr>`;
     showToast('تعذر تحميل الطلبات من قاعدة البيانات، لكن بطاقات التنقل ظاهرة ويمكن فتح الصفحات.','error');
     return;
   }
@@ -560,8 +560,8 @@ async function createAcademyStaff(r){
   const roleLabel=AR?.getRoleLabel?AR.getRoleLabel(staffType):(m.roleLabel||r.coach_specialty||staffType);
   const fullName=String(r.full_name||'').trim();
   const phone=String(r.phone||'').trim();
-  if(!fullName) throw new Error('اسم الكادر مطلوب لإنشاء سجل academy_staff');
-  if(!phone) throw new Error('جوال الكادر مطلوب لإنشاء سجل academy_staff');
+  if(!fullName) throw new Error('اسم الكادر مطلوب');
+  if(!phone) throw new Error('جوال الكادر مطلوب');
   const payload={
     join_request_id:r.id,
     full_name:fullName,
@@ -717,7 +717,7 @@ async function updateStatus(id,status){
     showToast(okMsg, status==='rejected'?'error':'success');
   }catch(e){
     console.error(e);
-    showToast('تعذر تنفيذ العملية. تأكد من الجداول والأعمدة وسياسات RLS.','error')
+    showToast('تعذر تنفيذ العملية.','error')
   }
 }
 function exportCsv(){const rows=[['رقم المرجع','الاسم','النوع','الحالة','الجوال','البريد','المدينة','التاريخ','التفاصيل','الملاحظات']]; filtered().forEach(r=>rows.push([refCode(r),r.full_name||'',getTypeLabel(r.request_type),getStatusLabel(r.status||'new'),r.phone||'',r.email||'',r.city||'',`${formatDate(r.created_at)} ${formatTime(r.created_at)}`,getRequestSummary(r),notes(r)])); const csv=rows.map(row=>row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n'); const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}); const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='academy_requests.csv';document.body.appendChild(a);a.click();a.remove();showToast('تم التصدير بنجاح')}

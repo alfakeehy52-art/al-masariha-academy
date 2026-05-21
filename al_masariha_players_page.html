@@ -660,7 +660,7 @@ body{
   <section class="players-hero">
     <div class="players-badge">⚽ تشكيلة الأكاديمية</div>
     <h1 class="players-title">اللاعبون — FIFA Style</h1>
-    <p class="players-subtitle">قائمة اللاعبين المعتمدين من قاعدة بيانات الأكاديمية — ابحث، صفِّ، وافتح الملف الكامل لكل لاعب.</p>
+    <p class="players-subtitle">قائمة اللاعبين المعتمدين في الأكاديمية — ابحث، صفِّ، وافتح الملف الكامل لكل لاعب.</p>
   </section>
 
   <section class="players-stats">
@@ -948,17 +948,17 @@ body{
 
       if (!players.length){
         grid.innerHTML = '<div class="players-empty">لا توجد نتائج مطابقة حاليًا. جرّب تغيير التصفية أو البحث.</div>';
-        note.textContent = "يتم الآن عرض بيانات اللاعبين من قاعدة البيانات، ولا توجد نتائج مطابقة حسب المعايير الحالية.";
+        note.textContent = "لا توجد نتائج مطابقة حسب المعايير الحالية.";
         return;
       }
 
       grid.innerHTML = players.map(createCard).join("");
-      note.textContent = `يتم الآن عرض ${players.length} لاعب/لاعبين من قاعدة البيانات مباشرة.`;
+      note.textContent = `يتم عرض ${players.length} لاعب/لاعبين.`;
     }
 
     async function initPlayersPage(){
       const grid = document.getElementById("playersGrid");
-      grid.innerHTML = '<div class="players-empty">جاري تحميل اللاعبين من قاعدة البيانات...</div>';
+      grid.innerHTML = '<div class="players-empty">جاري تحميل اللاعبين...</div>';
 
       allPlayers = await readPlayers();
       applyPlayersFilters();

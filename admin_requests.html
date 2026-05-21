@@ -146,7 +146,7 @@
 
       <section class="note-grid">
         <article class="note-box"><h4>دور هذه الصفحة في النظام</h4><p>هذه الصفحة لا تمثل العضوية نفسها، بل تمثل مرحلة ما قبل العضوية. كل ما يأتي من صفحة "انضم إلينا" يجب أن يمر هنا أولاً: طلب جديد → مراجعة → قبول / رفض / استكمال → تحويل إلى عضو فعلي.</p></article>
-        <article class="note-box"><h4>الربط الحالي</h4><p>هذه الصفحة مرتبطة الآن بقاعدة البيانات، وتدعم قبول اللاعب والمدرب وولي الأمر، مع إنشاء السجلات وربط ولي الأمر باللاعب عند توفر بيانات الربط.</p></article>
+        <article class="note-box"><h4>معالجة الطلبات</h4><p>قبول اللاعب والمدرب وولي الأمر، مع إنشاء السجلات وربط ولي الأمر باللاعب عند توفر بيانات الربط.</p></article>
       </section>
     </main>
   </div>
@@ -345,7 +345,7 @@
       if (error) {
         console.error('Supabase fetch error:', error);
         if (tbody) {
-          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#ffd0d0;padding:26px 14px;font-weight:800">تعذر تحميل الطلبات من قاعدة البيانات. تأكد من جدول join_requests وسياسات RLS.</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#ffd0d0;padding:26px 14px;font-weight:800">تعذر تحميل الطلبات. حاول إعادة التحميل.</td></tr>';
         }
         showToast('تعذر تحميل الطلبات من قاعدة البيانات.', 'error');
         return;

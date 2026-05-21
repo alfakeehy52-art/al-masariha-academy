@@ -373,7 +373,7 @@
       els.tableBody.innerHTML = "";
       els.emptyState.style.display = "block";
       els.emptyState.textContent =
-        "تعذر تحميل المنتجات. نفّذ docs/STORE_PRODUCTS_RLS.sql في Supabase ثم أعد التحميل.";
+        "تعذر تحميل المنتجات. حاول إعادة التحميل.";
     }
   }
 
@@ -388,7 +388,7 @@
       return;
     }
     await reloadProducts();
-    alert("تمت إضافة أمثلة المتجر إلى Supabase.");
+    alert("تمت إضافة أمثلة المتجر.");
   }
 
   async function clearAllProducts() {
@@ -431,7 +431,7 @@
       }
       await reloadProducts();
       resetForm();
-      alert("تم حفظ المنتج في Supabase.");
+      alert("تم حفظ المنتج.");
     });
 
     [els.name, els.price, els.type, els.category, els.status, els.image, els.emoji, els.player, els.description, els.featured, els.customizable].forEach(

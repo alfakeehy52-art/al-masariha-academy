@@ -29,9 +29,9 @@
   <main class="wrap">
     <div class="card">
       <h1>متابعة طلب المتجر</h1>
-      <p class="lead">أدخل رقم المرجع (ORD-…) والجوال المستخدم عند الطلب. لطلب انضمام للأكاديمية استخدم <a href="request_status.html" style="color:#9de2bf;font-weight:800">متابعة طلب الانضمام (REQ-…)</a>.</p>
+      <p class="lead">أدخل رقم المرجع والجوال المستخدم عند الطلب. لطلب انضمام للأكاديمية استخدم <a href="request_status.html" style="color:#9de2bf;font-weight:800">متابعة طلب الانضمام</a>.</p>
       <form id="lookupForm" class="form-grid">
-        <div class="field"><label for="orderRef">رقم المرجع</label><input id="orderRef" type="text" required placeholder="ORD-20260521-XXXX" /></div>
+        <div class="field"><label for="orderRef">رقم المرجع</label><input id="orderRef" type="text" required placeholder="رقم المرجع الذي وصلك" /></div>
         <div class="field"><label for="orderPhone">رقم الجوال</label><input id="orderPhone" type="tel" required placeholder="05xxxxxxxx" /></div>
         <div class="field full"><button class="btn" type="submit">عرض حالة الطلب</button></div>
       </form>
@@ -72,7 +72,7 @@
         resEl.classList.add('show');
       }catch(ex){
         console.error(ex);
-        errEl.textContent='تعذر الاستعلام. تأكد من STORE_ORDERS_RLS.sql';
+        errEl.textContent='تعذر الاستعلام. حاول مرة أخرى أو تواصل مع الإدارة.';
         errEl.classList.add('show');
       }
     });

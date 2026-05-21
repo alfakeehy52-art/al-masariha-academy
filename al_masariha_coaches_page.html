@@ -51,13 +51,13 @@ function render(){const all=readCoaches();renderHeroStats(all);buildPills('categ
 document.getElementById('searchInput').addEventListener('input',render);document.getElementById('sortExperienceBtn').addEventListener('click',()=>{currentSort='experience';render()});document.getElementById('sortNameBtn').addEventListener('click',()=>{currentSort='name';render()});document.getElementById('resetFiltersBtn').addEventListener('click',()=>{currentCategory='الكل';currentSpecialty='الكل';currentSort='experience';document.getElementById('searchInput').value='';render()});
 async function initCoachesPage(){
   const grid=document.getElementById('coachesGrid');
-  grid.innerHTML='<div class="empty-card" style="grid-column:1/-1"><h4>جاري التحميل...</h4><p>يتم جلب المدربين من قاعدة البيانات.</p></div>';
+  grid.innerHTML='<div class="empty-card" style="grid-column:1/-1"><h4>جاري التحميل...</h4><p>يتم جلب المدربين.</p></div>';
   try{
     allCoaches=await listCoachesPublic();
     render();
   }catch(e){
     console.error('Coaches public load error:',e);
-    grid.innerHTML='<div class="empty-card" style="grid-column:1/-1"><h4>تعذر تحميل المدربين</h4><p>تأكد من تطبيق COACHES_RLS.sql في Supabase ثم أعد تحميل الصفحة.</p></div>';
+    grid.innerHTML='<div class="empty-card" style="grid-column:1/-1"><h4>تعذر تحميل المدربين</h4><p>حاول إعادة تحميل الصفحة لاحقاً.</p></div>';
   }
 }
 initCoachesPage();

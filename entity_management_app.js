@@ -301,7 +301,7 @@ async function loadEntities() {
   if (error) {
     console.error(`Supabase ${cfg.table} fetch error:`, error);
     if (tbody) {
-      tbody.innerHTML = `<tr><td class="empty-cell error-cell" colspan="${cfg.columns.length + 2}">تعذر تحميل البيانات. راجع صلاحيات RLS أو اسم الجدول.</td></tr>`;
+      tbody.innerHTML = `<tr><td class="empty-cell error-cell" colspan="${cfg.columns.length + 2}">تعذر تحميل البيانات. حاول إعادة التحميل.</td></tr>`;
     }
     showToast("تعذر تحميل البيانات من قاعدة البيانات.", "error");
     return;

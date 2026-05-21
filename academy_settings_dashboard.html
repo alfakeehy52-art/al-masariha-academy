@@ -29,12 +29,30 @@
     .status-bar.ok{display:block;background:rgba(13,108,72,.2);border:1px solid rgba(13,108,72,.4);color:#d4ffe8}
     .status-bar.err{display:block;background:rgba(183,66,66,.16);border:1px solid rgba(183,66,66,.35);color:#ffd8d8}
     .hint{color:var(--admin-muted);font-size:13px;line-height:1.8;margin:8px 0 0}
-    @media (max-width:900px){.settings-grid{grid-template-columns:1fr}}
+    .asset-upload{
+      display:grid;grid-template-columns:120px 1fr;gap:16px;align-items:start;
+      padding:16px;border-radius:18px;border:1px dashed rgba(213,177,90,.28);
+      background:rgba(255,255,255,.02)
+    }
+    .asset-preview{
+      width:120px;height:120px;border-radius:20px;border:1px solid var(--admin-line);
+      background:#0a1811;display:grid;place-items:center;overflow:hidden
+    }
+    .asset-preview img{width:100%;height:100%;object-fit:contain}
+    .asset-preview-ph{font-size:36px;opacity:.7}
+    .asset-upload-actions{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
+    .asset-url-row{margin-top:10px}
+    .asset-url-row input[readonly]{opacity:.85;font-size:13px}
+    @media (max-width:900px){
+      .settings-grid{grid-template-columns:1fr}
+      .asset-upload{grid-template-columns:1fr;justify-items:center;text-align:center}
+    }
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/academy-settings.js"></script>
+  <script src="js/academy-media-upload.js"></script>
   <script src="js/admin-auth.js"></script>
   <script>requireAdmin();</script>
 </head>
@@ -52,10 +70,7 @@
       <div class="topbar">
         <div class="page-intro">
           <h1>إعدادات الموقع العام</h1>
-          <p>
-            نفّذ <code>docs/ACADEMY_SETTINGS_RLS.sql</code> في Supabase قبل أول حفظ.
-            التغييرات تظهر في الهيدر، الفوتر، الرئيسية، وصفحة التواصل.
-          </p>
+          <p>إدارة الشعار، النصوص، الألوان، وروابط التواصل. التغييرات تظهر في الصفحات العامة بعد الحفظ.</p>
         </div>
         <div class="header-actions">
           <button type="button" class="btn btn-soft" id="reloadBtn">إعادة تحميل</button>
@@ -83,9 +98,25 @@
               <input id="tagline" name="tagline" type="text" />
             </div>
             <div class="field full">
-              <label for="logo_url">رابط الشعار</label>
-              <input id="logo_url" name="logo_url" type="text" placeholder="academy-logo.svg أو https://..." />
-              <p class="hint">يمكنك لصق رابط صورة من Supabase Storage أو مسار ملف في الموقع.</p>
+              <label>شعار الموقع</label>
+              <div class="asset-upload">
+                <div class="asset-preview" id="logoPreview">
+                  <img id="logoPreviewImg" alt="" hidden />
+                  <span class="asset-preview-ph" id="logoPreviewPh">🏆</span>
+                </div>
+                <div>
+                  <div class="asset-upload-actions">
+                    <input type="file" id="logoFile" accept="image/png,image/jpeg,image/webp,image/gif,image/svg+xml" hidden />
+                    <button type="button" class="btn btn-soft" id="logoBrowseBtn">استعراض ورفع</button>
+                    <button type="button" class="btn btn-soft" id="logoResetBtn">الشعار الافتراضي</button>
+                  </div>
+                  <p class="hint">يُرفع مباشرة إلى تخزين الأكاديمية — ثم اضغط «حفظ الإعدادات».</p>
+                  <div class="asset-url-row">
+                    <label for="logo_url">الرابط المحفوظ</label>
+                    <input id="logo_url" name="logo_url" type="text" placeholder="academy-logo.svg" readonly />
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="field">
               <label for="color_gold">لون الذهبي</label>
@@ -152,8 +183,25 @@
               <textarea id="hero_description" name="hero_description"></textarea>
             </div>
             <div class="field full">
-              <label for="hero_image_url">صورة خلفية الهيرو (رابط)</label>
-              <input id="hero_image_url" name="hero_image_url" type="url" placeholder="https://..." />
+              <label>صورة خلفية الصفحة الرئيسية</label>
+              <div class="asset-upload">
+                <div class="asset-preview" id="heroPreview" style="width:100%;max-width:200px;height:100px">
+                  <img id="heroPreviewImg" alt="" hidden />
+                  <span class="asset-preview-ph" id="heroPreviewPh">🖼</span>
+                </div>
+                <div>
+                  <div class="asset-upload-actions">
+                    <input type="file" id="heroFile" accept="image/png,image/jpeg,image/webp" hidden />
+                    <button type="button" class="btn btn-soft" id="heroBrowseBtn">استعراض ورفع</button>
+                    <button type="button" class="btn btn-soft" id="heroClearBtn">إزالة الصورة</button>
+                  </div>
+                  <p class="hint">صورة عريضة (يفضّل 1600×900). الحد 5 ميجابايت.</p>
+                  <div class="asset-url-row">
+                    <label for="hero_image_url">الرابط المحفوظ</label>
+                    <input id="hero_image_url" name="hero_image_url" type="text" placeholder="يُملأ بعد الرفع" readonly />
+                  </div>
+                </div>
+              </div>
             </div>
             <div class="field full">
               <label for="about_snippet">نبذة «من نحن» في الرئيسية</label>
@@ -193,15 +241,89 @@
       statusBar.className = "status-bar " + (ok ? "ok" : "err");
     }
 
+    function setImagePreview(imgEl, phEl, url) {
+      const u = String(url || "").trim();
+      if (u) {
+        imgEl.src = u;
+        imgEl.hidden = false;
+        phEl.hidden = true;
+      } else {
+        imgEl.removeAttribute("src");
+        imgEl.hidden = true;
+        phEl.hidden = false;
+      }
+    }
+
     function fillForm(s) {
-      form.querySelectorAll("input:not([type=checkbox]), textarea").forEach((el) => {
+      form.querySelectorAll("input:not([type=checkbox]):not([readonly]), textarea").forEach((el) => {
+        if (el.name && s[el.name] != null) el.value = s[el.name];
+      });
+      form.querySelectorAll("input[readonly][name]").forEach((el) => {
         if (el.name && s[el.name] != null) el.value = s[el.name];
       });
       BOOL_FIELDS.forEach((name) => {
         const cb = form.querySelector(`input[name="${name}"]`);
         if (cb) cb.checked = Boolean(s[name]);
       });
+      setImagePreview(
+        document.getElementById("logoPreviewImg"),
+        document.getElementById("logoPreviewPh"),
+        s.logo_url
+      );
+      setImagePreview(
+        document.getElementById("heroPreviewImg"),
+        document.getElementById("heroPreviewPh"),
+        s.hero_image_url
+      );
     }
+
+    function wireAssetUpload(fileInput, browseBtn, urlInput, previewImg, previewPh, uploadPrefix, emptyLabel) {
+      browseBtn.addEventListener("click", () => fileInput.click());
+
+      fileInput.addEventListener("change", async () => {
+        const file = fileInput.files && fileInput.files[0];
+        if (!file) return;
+        try {
+          showStatus("جاري رفع الملف…", true);
+          const { publicUrl } = await uploadSiteAsset(file, { folder: "site-assets", prefix: uploadPrefix });
+          urlInput.value = publicUrl;
+          setImagePreview(previewImg, previewPh, publicUrl);
+          showStatus("تم الرفع. اضغط «حفظ الإعدادات» لتطبيقه على الموقع.", true);
+        } catch (e) {
+          showStatus("فشل الرفع: " + (e.message || e), false);
+        } finally {
+          fileInput.value = "";
+        }
+      });
+
+      if (emptyLabel) {
+        emptyLabel.addEventListener("click", () => {
+          urlInput.value = uploadPrefix === "logo" ? "academy-logo.svg" : "";
+          setImagePreview(previewImg, previewPh, urlInput.value);
+          showStatus(uploadPrefix === "logo" ? "تم تعيين الشعار الافتراضي." : "تم إزالة صورة الهيرو.", true);
+        });
+      }
+    }
+
+    wireAssetUpload(
+      document.getElementById("logoFile"),
+      document.getElementById("logoBrowseBtn"),
+      document.getElementById("logo_url"),
+      document.getElementById("logoPreviewImg"),
+      document.getElementById("logoPreviewPh"),
+      "logo",
+      document.getElementById("logoResetBtn")
+    );
+
+    wireAssetUpload(
+      document.getElementById("heroFile"),
+      document.getElementById("heroBrowseBtn"),
+      document.getElementById("hero_image_url"),
+      document.getElementById("heroPreviewImg"),
+      document.getElementById("heroPreviewPh"),
+      "hero",
+      document.getElementById("heroClearBtn")
+    );
 
     function readForm() {
       const payload = {};
@@ -221,7 +343,7 @@
         fillForm(s);
         showStatus("تم تحميل الإعدادات.", true);
       } catch (e) {
-        showStatus("تعذر التحميل: " + (e.message || e) + " — هل نفّذت ACADEMY_SETTINGS_RLS.sql؟", false);
+        showStatus("تعذر التحميل. تحقق من اتصالك وحاول مرة أخرى.", false);
       }
     }
 

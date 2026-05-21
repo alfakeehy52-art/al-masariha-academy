@@ -25,7 +25,7 @@
 <body>
 <div id="site-header"></div>
 <div class="teams-shell">
-<section class="hero"><div class="container hero-shell"><div class="hero-bg"></div><div class="hero-content"><div><h2>الفرق والفئات</h2><p>فرق الأكاديمية النشطة من قاعدة البيانات — مع عدد اللاعبين المرتبطين بكل فريق. الفرق قيد المراجعة أو الموقوفة لا تظهر هنا.</p></div><div class="hero-stats"><div class="hero-stat"><div class="n" id="heroTeamsCount">0</div><div class="t">فرق نشطة</div></div><div class="hero-stat"><div class="n" id="heroCategoriesCount">0</div><div class="t">فئات</div></div><div class="hero-stat"><div class="n" id="heroPlayersLinked">0</div><div class="t">لاعب مرتبط</div></div></div></div></div></section>
+<section class="hero"><div class="container hero-shell"><div class="hero-bg"></div><div class="hero-content"><div><h2>الفرق والفئات</h2><p>فرق الأكاديمية النشطة — مع عدد اللاعبين المرتبطين بكل فريق. الفرق قيد المراجعة أو الموقوفة لا تظهر هنا.</p></div><div class="hero-stats"><div class="hero-stat"><div class="n" id="heroTeamsCount">0</div><div class="t">فرق نشطة</div></div><div class="hero-stat"><div class="n" id="heroCategoriesCount">0</div><div class="t">فئات</div></div><div class="hero-stat"><div class="n" id="heroPlayersLinked">0</div><div class="t">لاعب مرتبط</div></div></div></div></div></section>
 <section class="main"><div class="container layout"><aside class="sidebar"><h3 class="side-title">تصفية</h3><input class="search" id="searchInput" type="text" placeholder="ابحث باسم الفريق أو الرمز..." /><div class="filter-block"><h4>الفئة</h4><div class="pills" id="categoryPills"></div></div><button class="reset-btn" id="resetFiltersBtn" type="button">إعادة تعيين</button></aside><div class="content-card"><div class="content-head"><h3 id="resultTitle">عرض الفرق</h3><span class="live-pill">بيانات حية</span></div><div class="teams-grid" id="teamsGrid"></div><div class="categories-strip" id="categoriesStrip"></div></div></div></section>
 </div>
 <div id="site-footer"></div>
@@ -114,7 +114,7 @@ document.getElementById('resetFiltersBtn').addEventListener('click', () => {
 });
 async function initTeamsPage(){
   const grid = document.getElementById('teamsGrid');
-  grid.innerHTML = '<div class="empty-card"><h4>جاري التحميل...</h4><p>يتم جلب الفرق من قاعدة البيانات.</p></div>';
+  grid.innerHTML = '<div class="empty-card"><h4>جاري التحميل...</h4><p>يتم جلب الفرق.</p></div>';
   try{
     const client = createSupabaseClient();
     const [teams, playersRes] = await Promise.all([
@@ -126,7 +126,7 @@ async function initTeamsPage(){
     render();
   }catch(e){
     console.error('Teams public load error:', e);
-    grid.innerHTML = '<div class="empty-card"><h4>تعذر تحميل الفرق</h4><p>نفّذ <strong>docs/TEAMS_RLS.sql</strong> في Supabase ثم أعد التحميل.</p></div>';
+    grid.innerHTML = '<div class="empty-card"><h4>تعذر تحميل الفرق</h4><p>حاول إعادة تحميل الصفحة لاحقاً.</p></div>';
   }
 }
 initTeamsPage();
