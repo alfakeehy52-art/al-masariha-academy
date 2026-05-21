@@ -152,7 +152,10 @@
   function applySiteSeo(page) {
     const file = normalizePageKey(page);
     const cfg = PAGE_SEO[file] || {};
-    const title = cfg.title || SITE.brand;
+    const settings = window.ACADEMY_SETTINGS || {};
+    const brandBase = [settings.brand_name_ar, settings.brand_subtitle_ar].filter(Boolean).join(" ").trim();
+    const dynamicBrand = brandBase || SITE.brand;
+    const title = cfg.title || dynamicBrand;
     const description = cfg.description || SITE.defaultDescription;
     const robots = cfg.robots || "index, follow";
     const configuredBase = (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.siteUrl) || "";
@@ -173,7 +176,10 @@
     upsertMeta("name", "twitter:image", image);
 
     upsertMeta("property", "og:type", "website");
-    upsertMeta("property", "og:site_name", SITE.brand);
+    upsertMeta("property", "og:site_name", dynamicBrand);
+    if (settings.twitter_handle) {
+      upsertMeta("name", "twitter:site", settings.twitter_handle);
+    }
     upsertMeta("property", "og:locale", SITE.locale);
     upsertMeta("property", "og:title", title);
     upsertMeta("property", "og:description", description);

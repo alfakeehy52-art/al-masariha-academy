@@ -23,6 +23,7 @@
 15. [`ACADEMY_STATS_RLS_STEP1_COLUMNS.sql`](ACADEMY_STATS_RLS_STEP1_COLUMNS.sql) ثم [`ACADEMY_STATS_RLS.sql`](ACADEMY_STATS_RLS.sql) + `al_masariha_stats_page.html`
 16. [`CONTACT_MESSAGES_RLS.sql`](CONTACT_MESSAGES_RLS.sql) + `contact_messages_dashboard.html` + `al_masariha_contact_page.html`
 17. [`STORE_ORDERS_RLS.sql`](STORE_ORDERS_RLS.sql) + `store_orders_dashboard.html` + `al_masariha_store_page.html`
+18. [`ACADEMY_SETTINGS_RLS.sql`](ACADEMY_SETTINGS_RLS.sql) + `academy_settings_dashboard.html` + الهيدر/الفوتر/الرئيسية
 
 ( [`STAFF_AUTH_RLS.sql`](STAFF_AUTH_RLS.sql) — مُطبَّق مسبقاً على `academy_staff` )
 
@@ -31,7 +32,7 @@
 ```sql
 SELECT tablename, policyname, cmd
 FROM pg_policies
-WHERE tablename IN ('academy_staff', 'join_requests', 'players', 'request_completions', 'coaches', 'store_products', 'store_orders', 'teams', 'academy_members', 'guardians', 'supporters', 'volunteers', 'player_guardians', 'matches', 'academy_news', 'academy_media', 'contact_messages')
+WHERE tablename IN ('academy_staff', 'join_requests', 'players', 'request_completions', 'coaches', 'store_products', 'store_orders', 'teams', 'academy_members', 'guardians', 'supporters', 'volunteers', 'player_guardians', 'matches', 'academy_news', 'academy_media', 'contact_messages', 'academy_settings')
 ORDER BY tablename, policyname;
 ```
 

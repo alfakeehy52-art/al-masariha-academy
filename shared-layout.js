@@ -159,11 +159,11 @@ document.addEventListener("DOMContentLoaded", () => {
     <div class="site-brand-shell">
       <div class="site-brand">
         <div class="site-brand-logo">
-          <img src="academy-logo.svg" alt="شعار الأكاديمية" width="62" height="62">
+          <img data-academy="logo" src="academy-logo.svg" alt="شعار الأكاديمية" width="62" height="62">
         </div>
         <div class="site-brand-text">
-          <strong>أكاديمية المسارحة</strong>
-          <span>لكرة القدم</span>
+          <strong data-academy="brand_name">أكاديمية المسارحة</strong>
+          <span data-academy="brand_subtitle">لكرة القدم</span>
         </div>
       </div>
     </div>
@@ -184,26 +184,26 @@ document.addEventListener("DOMContentLoaded", () => {
         <a href="al_masariha_coaches_page.html" data-page="al_masariha_coaches_page.html">المدربون</a>
         <a href="al_masariha_teams_page.html" data-page="al_masariha_teams_page.html">الفرق</a>
         <a href="al_masariha_matches_page.html" data-page="al_masariha_matches_page.html">المباريات</a>
-        <a href="al_masariha_media_page.html" data-page="al_masariha_media_page.html">الإعلام</a>
-        <a href="al_masariha_store_page.html" data-page="al_masariha_store_page.html">المتجر</a>
-        <a href="al_masariha_news_page.html" data-page="al_masariha_news_page.html">الأخبار</a>
+        <a href="al_masariha_media_page.html" data-page="al_masariha_media_page.html" data-nav-item="media">الإعلام</a>
+        <a href="al_masariha_store_page.html" data-page="al_masariha_store_page.html" data-nav-item="store">المتجر</a>
+        <a href="al_masariha_news_page.html" data-page="al_masariha_news_page.html" data-nav-item="news">الأخبار</a>
         <a href="al_masariha_contact_page.html" data-page="al_masariha_contact_page.html">تواصل</a>
       </nav>
 
       <div class="site-actions site-actions-mobile">
-        <a class="site-btn site-btn-track" href="request_status.html" data-page="request_status.html">متابعة انضمام</a>
-        <a class="site-btn site-btn-track" href="store_order_status.html" data-page="store_order_status.html">متابعة متجر</a>
+        <a class="site-btn site-btn-track" href="request_status.html" data-page="request_status.html" data-nav-item="track_join">متابعة انضمام</a>
+        <a class="site-btn site-btn-track" href="store_order_status.html" data-page="store_order_status.html" data-nav-item="track_store">متابعة متجر</a>
         <a class="site-btn site-btn-gold" href="al_masariha_join_page.html">انضم إلينا</a>
-        <a class="site-btn site-btn-dark" href="admin_login.html">دخول الإدارة</a>
+        <a class="site-btn site-btn-dark" href="admin_login.html" data-nav-item="admin_login">دخول الإدارة</a>
       </div>
     </nav>
 
     <div class="site-actions-shell">
       <div class="site-actions">
-        <a class="site-btn site-btn-track" href="request_status.html" data-page="request_status.html" title="رقم مرجع REQ-…">متابعة انضمام</a>
-        <a class="site-btn site-btn-track" href="store_order_status.html" data-page="store_order_status.html" title="رقم مرجع ORD-…">متابعة متجر</a>
+        <a class="site-btn site-btn-track" href="request_status.html" data-page="request_status.html" data-nav-item="track_join" title="رقم مرجع REQ-…">متابعة انضمام</a>
+        <a class="site-btn site-btn-track" href="store_order_status.html" data-page="store_order_status.html" data-nav-item="track_store" title="رقم مرجع ORD-…">متابعة متجر</a>
         <a class="site-btn site-btn-gold" href="al_masariha_join_page.html">انضم إلينا</a>
-        <a class="site-btn site-btn-dark" href="admin_login.html">دخول الإدارة</a>
+        <a class="site-btn site-btn-dark" href="admin_login.html" data-nav-item="admin_login">دخول الإدارة</a>
       </div>
     </div>
 
@@ -216,8 +216,8 @@ document.addEventListener("DOMContentLoaded", () => {
   <div class="site-wrap site-footer-grid">
 
     <div>
-      <div class="site-footer-title">أكاديمية المسارحة لكرة القدم</div>
-      <p class="site-footer-text">نطوّر المواهب ونصنع مستقبل اللاعبين</p>
+      <div class="site-footer-title"><span data-academy="brand_name">أكاديمية المسارحة</span> <span data-academy="brand_subtitle">لكرة القدم</span></div>
+      <p class="site-footer-text" data-academy="tagline">نطوّر المواهب ونصنع مستقبل اللاعبين</p>
     </div>
 
     <div>
@@ -229,9 +229,9 @@ document.addEventListener("DOMContentLoaded", () => {
         <a href="al_masariha_coaches_page.html">المدربون</a>
         <a href="al_masariha_teams_page.html">الفرق</a>
         <a href="al_masariha_matches_page.html">المباريات</a>
-        <a href="al_masariha_media_page.html">الإعلام</a>
-        <a href="al_masariha_store_page.html">المتجر</a>
-        <a href="al_masariha_news_page.html">الأخبار</a>
+        <a href="al_masariha_media_page.html" data-nav-item="media">الإعلام</a>
+        <a href="al_masariha_store_page.html" data-nav-item="store">المتجر</a>
+        <a href="al_masariha_news_page.html" data-nav-item="news">الأخبار</a>
         <a href="al_masariha_join_page.html">انضم إلينا</a>
         <a href="al_masariha_contact_page.html">تواصل معنا</a>
       </div>
@@ -248,13 +248,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
     <div>
       <div class="site-footer-title">تواصل</div>
-      <p class="site-footer-text">المسارحة - السعودية</p>
-      <p class="site-footer-text">info@masariha-academy.com</p>
+      <p class="site-footer-text" data-academy="location">المسارحة - السعودية</p>
+      <p class="site-footer-text"><a data-academy="contact_email_link" href="mailto:info@masariha-academy.com">info@masariha-academy.com</a></p>
     </div>
 
   </div>
 
-  <div class="site-wrap site-copy">
+  <div class="site-wrap site-copy" data-academy="footer_copyright">
     © أكاديمية المسارحة لكرة القدم - جميع الحقوق محفوظة
   </div>
 </footer>
@@ -282,4 +282,44 @@ document.addEventListener("DOMContentLoaded", () => {
       toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
     });
   }
+
+  function loadScriptOnce(src) {
+    return new Promise((resolve, reject) => {
+      const existing = document.querySelector(`script[src="${src}"]`);
+      if (existing) {
+        if (existing.dataset.loaded === "1") return resolve();
+        existing.addEventListener("load", () => resolve());
+        existing.addEventListener("error", () => reject(new Error(src)));
+        return;
+      }
+      const el = document.createElement("script");
+      el.src = src;
+      el.onload = () => {
+        el.dataset.loaded = "1";
+        resolve();
+      };
+      el.onerror = () => reject(new Error("Failed: " + src));
+      document.head.appendChild(el);
+    });
+  }
+
+  async function bootstrapAcademySettings() {
+    if (!document.getElementById("site-header") && !document.getElementById("site-footer")) return;
+    try {
+      if (!window.supabase) {
+        await loadScriptOnce("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2");
+      }
+      if (!window.SUPABASE_CONFIG) await loadScriptOnce("supabase-config.js");
+      if (!window.createSupabaseClient) await loadScriptOnce("js/supabase-client.js");
+      if (!window.initAcademySettingsOnSite) await loadScriptOnce("js/academy-settings.js");
+      await initAcademySettingsOnSite();
+    } catch (err) {
+      console.warn("[shared-layout] academy settings:", err);
+      if (typeof applyAcademySettingsToSite === "function") {
+        applyAcademySettingsToSite();
+      }
+    }
+  }
+
+  bootstrapAcademySettings();
 });

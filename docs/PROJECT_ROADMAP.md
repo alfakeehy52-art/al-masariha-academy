@@ -3,6 +3,8 @@
 **آخر تحديث:** 2026-05-21  
 **الغرض:** متابعة ما أُنجز وأين نتوقف — حتى في محادثة Cursor جديدة.
 
+**ملخص سريع:** [`docs/PROGRESS_CHECKPOINT.md`](PROGRESS_CHECKPOINT.md) ← اقرأه أولاً عند الانتقال لصفحة/محادثة جديدة.
+
 ---
 
 ## كيف تستأنف العمل في محادثة جديدة
@@ -10,7 +12,7 @@
 اكتب للمساعد:
 
 ```text
-اقرأ docs/PROJECT_ROADMAP.md ونكمل من «المرحلة الحالية» أدناه.
+اقرأ docs/PROGRESS_CHECKPOINT.md و docs/PROJECT_ROADMAP.md ونكمل من «التالي».
 ```
 
 أو حدد مرحلة مباشرة: `نبدأ A1` / `نبدأ فحص` / `نكمل RLS`.
@@ -21,11 +23,12 @@
 
 | البند | القيمة |
 |-------|--------|
-| **المرحلة** | **تشغيل إنتاج** — GitHub + Cloudflare Auto Deploy ✅ |
+| **المرحلة** | **E1 إعدادات الأكاديمية** — SQL ✅ + كود ✅ (محلي) |
 | **الإنتاج** | https://al-masariha-academy.pages.dev |
-| **التالي** | D5 دفع متجر — أو تحسينات (SEO Search Console، نطاق مخصص) |
-| **Soft Launch** | ✅ انضمام + طلبات + كوادر + إدارة |
+| **التالي** | ① `git push` لنشر E1 ② تجربة لوحة الإعدادات ③ إعادة تصميم الواجهة ④ D5 دفع (لاحقاً) |
+| **Soft Launch** | ✅ انضمام + طلبات + كوادر + إدارة + متجر |
 | **سير العمل** | `git push origin main` → نشر تلقائي (لا نشر يدوي) |
+| **نقطة التوقف** | [`PROGRESS_CHECKPOINT.md`](PROGRESS_CHECKPOINT.md) |
 
 ---
 
@@ -65,6 +68,10 @@
 - `docs/COACHES_RLS.sql` — RLS + RPC للمدربين
 - `docs/PHASE0_SITE_AUDIT.md` — فحص 55 صفحة
 - `docs/A1_TEST_REPORT.md` — تقرير اختبار A1
+- `docs/ACADEMY_SETTINGS_RLS.sql` — إعدادات الموقع (جدول + RLS)
+- `js/academy-settings.js` — تحميل/حفظ/تطبيق الإعدادات على الواجهة
+- `academy_settings_dashboard.html` — لوحة إعدادات (بدل placeholder)
+- `docs/PROGRESS_CHECKPOINT.md` — **نقطة التوقف** عند محادثة/صفحة جديدة
 
 ---
 
@@ -142,6 +149,7 @@
 | D3 | SEO أساسي (عناوين، وصف، Open Graph) | ✅ | 2026-05-21 |
 | D4 | نشر Cloudflare Pages + GitHub Auto Deploy | ✅ | `al-masariha-academy.pages.dev` |
 | D5 | دفع إلكتروني للمتجر | ⬜ | لاحقاً |
+| E1 | إعدادات الأكاديمية — جدول + لوحة + ربط الهيدر/الفوتر/الرئيسية | ✅ SQL + ✅ كود | 2026-05-21 — يحتاج `git push` للإنتاج |
 
 ---
 
@@ -157,6 +165,7 @@
 | مباريات | ✅ Supabase | ✅ | DONE |
 | أخبار/إعلام | ✅ Supabase | ✅ لوحات | DONE |
 | إحصائيات | ✅ RPC | ✅ لوحة داخلية | DONE (بعد SQL) |
+| إعدادات الموقع | ✅ من DB | ✅ لوحة | DONE (E1 — SQL ✅) |
 | كوادر | join | ✅ staff | PARTIAL |
 | أولياء/داعمون/متطوعون | join | entity app | ✅ |
 
@@ -212,6 +221,10 @@
 | 2026-05-21 | إغلاق **D3** — `js/site-seo.js` + `robots.txt` + `sitemap.xml` |
 | 2026-05-21 | **D4 جاهز** — `_headers` / `_redirects` / `نشر-cloudflare.cmd` + اختبار SEO |
 | 2026-05-21 | **إنتاج** — GitHub `main` + Cloudflare Auto Deploy + Staff/Admin RLS |
+| 2026-05-21 | **E1** — `academy_settings` + لوحة إعدادات + ربط الموقع؛ SQL نُفّذ في Supabase |
+| 2026-05-21 | **توثيق** — `PROGRESS_CHECKPOINT.md` لحفظ المراحل عند الانتقال لمحادثة جديدة |
+| 2026-05-21 | **RLS لاعبين عامة** — `players_public_select` (صفحة اللاعبين) |
+| 2026-05-21 | **SEO** — `normalizePageKey` لروابط بدون `.html` — commit `6a788ef` |
 
 ---
 
