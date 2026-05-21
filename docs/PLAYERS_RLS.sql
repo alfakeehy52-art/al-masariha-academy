@@ -27,6 +27,15 @@ create policy admin_manage_players on public.players
     or coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') = 'admin'
   );
 
+-- ─── عامة: قراءة اللاعبين النشطين (صفحة اللاعبين + الرئيسية) ───
+drop policy if exists players_public_select on public.players;
+create policy players_public_select on public.players
+  for select to anon, authenticated
+  using (
+    coalesce(status, '') in ('active', 'نشط', 'مكتمل')
+    or coalesce(player_status, '') in ('active', 'نشط', 'معتمد', 'مكتمل')
+  );
+
 -- ─── بحث محدود للعامة (ربط ولي أمر بلاعب في صفحة الانضمام) ───
 create or replace function public.search_players_public(p_term text)
 returns table (

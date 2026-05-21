@@ -142,16 +142,24 @@
     el.setAttribute("href", href);
   }
 
+  function normalizePageKey(page) {
+    let file = (page || window.location.pathname.split("/").pop() || "index.html").split("?")[0];
+    if (!file || file === "/") return "index.html";
+    if (!file.includes(".")) file += ".html";
+    return file;
+  }
+
   function applySiteSeo(page) {
-    const file = page || window.location.pathname.split("/").pop() || "index.html";
+    const file = normalizePageKey(page);
     const cfg = PAGE_SEO[file] || {};
     const title = cfg.title || SITE.brand;
     const description = cfg.description || SITE.defaultDescription;
     const robots = cfg.robots || "index, follow";
     const configuredBase = (window.SUPABASE_CONFIG && window.SUPABASE_CONFIG.siteUrl) || "";
+    const pathForCanonical = window.location.pathname.replace(/\/+$/, "") || "/";
     const canonical = configuredBase
-      ? configuredBase.replace(/\/+$/, "") + "/" + file
-      : (window.location.origin + window.location.pathname).replace(/\/+$/, "") || window.location.href.split("?")[0];
+      ? configuredBase.replace(/\/+$/, "") + pathForCanonical
+      : window.location.origin + pathForCanonical;
     const image = new URL(cfg.image || SITE.image, window.location.href).href;
 
     document.title = title;

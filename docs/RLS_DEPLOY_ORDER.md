@@ -9,6 +9,7 @@
 2. تحقق: `pg_policies` لـ `join_requests` و `players` → يجب **0 rows**
 3. [`JOIN_REQUESTS_RLS.sql`](JOIN_REQUESTS_RLS.sql) + اختبار
 4. [`PLAYERS_RLS.sql`](PLAYERS_RLS.sql) + اختبار
+4b. إن كانت صفحة اللاعبين فارغة للزوار: [`PLAYERS_RLS_PUBLIC_READ.sql`](PLAYERS_RLS_PUBLIC_READ.sql)
 5. [`REQUEST_COMPLETIONS_RLS.sql`](REQUEST_COMPLETIONS_RLS.sql) + اختبار رفع المرفقات
 6. [`COACHES_RLS.sql`](COACHES_RLS.sql) + اختبار صفحة المدربين العامة + الرئيسية ✅ (2026-05-21)
 7. [`STORE_PRODUCTS_RLS.sql`](STORE_PRODUCTS_RLS.sql) + اختبار المتجر العام + لوحة الإدارة
