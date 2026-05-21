@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>إدارة المباريات | أكاديمية المسارحة</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin_theme.css">
+  <style>
+    .status-upcoming{color:#ffe79c;background:rgba(213,177,90,.12)}
+    .status-live{color:#caffdd;background:rgba(21,145,95,.14)}
+    .status-finished{color:#caddff;background:rgba(88,166,255,.12)}
+    .status-draft,.status-cancelled{color:#dce5f4;background:rgba(255,255,255,.06)}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/admin-auth.js"></script>
+  <script>requireAdmin();</script>
+</head>
+<body class="store-admin">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>إدارة المباريات</h1>
+        <p>إضافة مباريات للواجهة العامة. الحالات المنشورة: قادمة، جارية، منتهية.</p>
+      </div>
+      <div id="admin-sidebar"></div>
+    </aside>
+    <main class="main">
+      <div class="topbar">
+        <div class="page-intro">
+          <h1>جدول المباريات</h1>
+          <p>نفّذ <code>docs/MATCHES_RLS.sql</code> في Supabase قبل أول استخدام.</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-soft" type="button" id="seedMatchesBtn">أمثلة افتراضية</button>
+          <a class="btn btn-soft" href="al_masariha_matches_page.html" target="_blank" rel="noopener">الصفحة العامة</a>
+        </div>
+      </div>
+
+      <section class="cards">
+        <article class="card stat-card"><div class="stat-label">إجمالي المباريات</div><div class="stat-value" id="totalMatches">0</div></article>
+        <article class="card stat-card"><div class="stat-label">قادمة / جارية</div><div class="stat-value" id="upcomingCount">0</div></article>
+        <article class="card stat-card"><div class="stat-label">منتهية</div><div class="stat-value" id="finishedCount">0</div></article>
+        <article class="card stat-card"><div class="stat-label">الصفحة العامة</div><div class="stat-note"><a href="al_masariha_matches_page.html" target="_blank" rel="noopener">معاينة</a></div></article>
+      </section>
+
+      <section class="content-grid">
+        <section class="panel">
+          <h2>إضافة / تعديل مباراة</h2>
+          <p class="lead">المسودة والملغاة لا تظهر للزوار.</p>
+          <form id="matchForm">
+            <input type="hidden" id="matchId" />
+            <div class="form-grid">
+              <div class="field"><label for="homeTeam">الفريق المحلي</label><input id="homeTeam" type="text" required /></div>
+              <div class="field"><label for="awayTeam">الفريق الضيف</label><input id="awayTeam" type="text" required /></div>
+              <div class="field"><label for="homeScore">أهداف المحلي</label><input id="homeScore" type="number" min="0" /></div>
+              <div class="field"><label for="awayScore">أهداف الضيف</label><input id="awayScore" type="number" min="0" /></div>
+              <div class="field"><label for="matchAt">التاريخ والوقت</label><input id="matchAt" type="datetime-local" /></div>
+              <div class="field"><label for="venue">الملعب</label><input id="venue" type="text" /></div>
+              <div class="field"><label for="competition">البطولة</label><input id="competition" type="text" /></div>
+              <div class="field"><label for="matchStatus">الحالة</label>
+                <select id="matchStatus">
+                  <option value="upcoming">قادمة</option>
+                  <option value="live">جارية</option>
+                  <option value="finished">منتهية</option>
+                  <option value="draft">مسودة</option>
+                  <option value="cancelled">ملغاة</option>
+                </select>
+              </div>
+              <div class="field full"><label for="scorersNote">الهدافون (سطر لكل هدف)</label><textarea id="scorersNote" rows="4"></textarea></div>
+              <div class="field full"><label for="playerOfMatch">أفضل لاعب</label><input id="playerOfMatch" type="text" /></div>
+              <div class="field"><label for="statPossession">الاستحواذ</label><input id="statPossession" type="text" placeholder="60%" /></div>
+              <div class="field"><label for="statShots">التسديدات</label><input id="statShots" type="text" /></div>
+              <div class="field"><label for="statCorners">الركنيات</label><input id="statCorners" type="text" /></div>
+              <div class="field"><label for="statCards">البطاقات</label><input id="statCards" type="text" /></div>
+              <div class="field full"><label for="videoUrl">رابط فيديو (اختياري)</label><input id="videoUrl" type="url" /></div>
+            </div>
+            <label class="toggle-box" style="margin-top:14px;display:flex;max-width:320px;">
+              <div><b>مباراة مميزة</b><span>تظهر في الرئيسية عند التفعيل</span></div>
+              <input type="checkbox" id="matchFeatured" />
+            </label>
+            <div class="form-actions">
+              <button class="btn btn-primary" type="submit">حفظ</button>
+              <button class="btn btn-soft" type="button" id="resetMatchFormBtn">تفريغ</button>
+            </div>
+          </form>
+        </section>
+      </section>
+
+      <section class="panel" style="margin-top:22px;">
+        <h2>قائمة المباريات</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>المباراة</th><th>النتيجة</th><th>التاريخ</th><th>الملعب</th><th>الحالة</th><th>مميزة</th><th>إجراءات</th></tr>
+            </thead>
+            <tbody id="matchesTableBody"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="emptyMatchesState" style="display:none;">لا توجد مباريات. أضف مباراة أو حمّل الأمثلة.</div>
+      </section>
+    </main>
+  </div>
+  <script src="js/matches-admin.js"></script>
+  <script src="admin_sidebar.js"></script>
+</body>
+</html>

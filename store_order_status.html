@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>متابعة طلب المتجر | أكاديمية المسارحة</title>
+  <link rel="stylesheet" href="shared-layout.css" />
+  <style>
+    body{background:#05110b;color:#fff;font-family:'Cairo',system-ui,sans-serif}
+    .wrap{width:min(720px,calc(100% - 32px));margin:40px auto}
+    .card{padding:28px;border-radius:24px;border:1px solid rgba(213,177,90,.2);background:#081a12}
+    h1{margin:0 0 12px;font-size:32px}
+    .lead{color:#b8c4bc;line-height:1.9;margin:0 0 24px}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .field{display:grid;gap:8px}
+    .field.full{grid-column:1/-1}
+    label{font-weight:800}
+    input{min-height:48px;padding:12px 14px;border-radius:14px;border:1px solid rgba(255,255,255,.12);background:#0d1a12;color:#fff;font-family:inherit;width:100%;box-sizing:border-box}
+    .btn{min-height:48px;padding:0 20px;border-radius:14px;border:none;background:linear-gradient(180deg,#e2c16c,#cda84d);color:#111;font-weight:900;font-family:inherit;cursor:pointer}
+    .result{margin-top:20px;padding:18px;border-radius:16px;background:rgba(21,145,95,.12);border:1px solid rgba(21,145,95,.3);display:none;line-height:1.9}
+    .result.show{display:block}
+    .err{margin-top:16px;padding:14px;border-radius:14px;background:rgba(180,60,60,.15);border:1px solid rgba(200,80,80,.35);color:#ffd7d7;display:none}
+    .err.show{display:block}
+    @media(max-width:640px){.form-grid{grid-template-columns:1fr}}
+  </style>
+</head>
+<body>
+  <div id="site-header"></div>
+  <main class="wrap">
+    <div class="card">
+      <h1>متابعة طلب المتجر</h1>
+      <p class="lead">أدخل رقم المرجع (ORD-…) والجوال المستخدم عند الطلب. لطلب انضمام للأكاديمية استخدم <a href="request_status.html" style="color:#9de2bf;font-weight:800">متابعة طلب الانضمام (REQ-…)</a>.</p>
+      <form id="lookupForm" class="form-grid">
+        <div class="field"><label for="orderRef">رقم المرجع</label><input id="orderRef" type="text" required placeholder="ORD-20260521-XXXX" /></div>
+        <div class="field"><label for="orderPhone">رقم الجوال</label><input id="orderPhone" type="tel" required placeholder="05xxxxxxxx" /></div>
+        <div class="field full"><button class="btn" type="submit">عرض حالة الطلب</button></div>
+      </form>
+      <div id="lookupErr" class="err"></div>
+      <div id="lookupResult" class="result"></div>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/store-order-submit.js"></script>
+  <script src="js/site-seo.js"></script>
+<script src="shared-layout.js"></script>
+  <script>
+    function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+    const params=new URLSearchParams(location.search);
+    if(params.get('ref')) document.getElementById('orderRef').value=params.get('ref');
+    if(params.get('phone')) document.getElementById('orderPhone').value=params.get('phone');
+    document.getElementById('lookupForm').addEventListener('submit',async(e)=>{
+      e.preventDefault();
+      const errEl=document.getElementById('lookupErr');
+      const resEl=document.getElementById('lookupResult');
+      errEl.classList.remove('show');
+      resEl.classList.remove('show');
+      try{
+        const row=await lookupStoreOrderPublic(document.getElementById('orderRef').value,document.getElementById('orderPhone').value);
+        if(!row){
+          errEl.textContent='لم يُعثر على طلب بهذا المرجع والجوال.';
+          errEl.classList.add('show');
+          return;
+        }
+        const total=Number(row.line_total||(row.product_price*row.quantity)||0).toFixed(2);
+        resEl.innerHTML=`<b>المنتج:</b> ${esc(row.product_name)}<br>
+          <b>الكمية:</b> ${esc(row.quantity)} — <b>الإجمالي:</b> ${esc(total)} ر.س<br>
+          <b>الحالة:</b> ${esc(orderStatusLabel(row.status))}<br>
+          <b>التاريخ:</b> ${esc(new Date(row.created_at).toLocaleString('ar-SA'))}`;
+        resEl.classList.add('show');
+      }catch(ex){
+        console.error(ex);
+        errEl.textContent='تعذر الاستعلام. تأكد من STORE_ORDERS_RLS.sql';
+        errEl.classList.add('show');
+      }
+    });
+  </script>
+</body>
+</html>

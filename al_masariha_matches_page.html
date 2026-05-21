@@ -3,124 +3,73 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>المباريات</title>
+<title>المباريات | أكاديمية المسارحة</title>
 <link rel="stylesheet" href="shared-layout.css">
 <style>
-body{
-  margin:0 !important;
-  padding:0 !important;
-  font-family:'Cairo', system-ui, sans-serif !important;
-
-  background:#05110c;
-  color:#fff;
-}
-
-.matches-container{
-  width:min(1200px,90%);
-  margin:40px auto;
-}
-
-.matches-title{
-  font-size:36px;
-  font-weight:900;
-  margin-bottom:20px;
-}
-
-.matches-grid{
-  display:grid;
-  grid-template-columns:repeat(auto-fit,minmax(280px,1fr));
-  gap:20px;
-}
-
-.match-card{
-  background:#0c1d15;
-  border-radius:20px;
-  padding:20px;
-  border:1px solid rgba(255,255,255,.08);
-  text-align:center;
-  transition:.2s;
-}
-
-.match-card:hover{
-  transform:translateY(-5px);
-}
-
-.teams{
-  display:flex;
-  justify-content:space-between;
-  align-items:center;
-  margin-bottom:15px;
-}
-
-.team{
-  font-weight:900;
-}
-
-.score{
-  font-size:28px;
-  color:#d5b15a;
-}
-
-.match-info{
-  color:#bbb;
-  font-size:14px;
-}
-
+body{margin:0!important;padding:0!important;font-family:'Cairo',system-ui,sans-serif!important;background:#05110c;color:#fff}
+.matches-container{width:min(1200px,90%);margin:40px auto 60px}
+.matches-title{font-size:36px;font-weight:900;margin-bottom:8px}
+.matches-lead{color:#b8c4bc;margin:0 0 24px;line-height:1.9}
+.live-pill{display:inline-flex;padding:6px 12px;border-radius:999px;background:rgba(15,106,71,.15);border:1px solid rgba(15,106,71,.28);color:#9de2bf;font-size:12px;font-weight:900;margin-inline-start:10px;vertical-align:middle}
+.matches-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
+.match-card{background:#0c1d15;border-radius:20px;padding:20px;border:1px solid rgba(255,255,255,.08);text-align:center;transition:.2s}
+.match-card:hover{transform:translateY(-5px);border-color:rgba(213,177,90,.28)}
+.teams{display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;gap:12px}
+.team{font-weight:900;flex:1}
+.score{font-size:28px;color:#d5b15a;white-space:nowrap}
+.match-info{color:#bbb;font-size:14px;margin-top:4px}
+.match-status{display:inline-block;margin-top:10px;padding:6px 12px;border-radius:999px;font-size:12px;font-weight:800;border:1px solid rgba(255,255,255,.1)}
+.st-upcoming{color:#ffe79c;background:rgba(213,177,90,.12)}
+.st-live{color:#caffdd;background:rgba(21,145,95,.14)}
+.st-finished{color:#caddff;background:rgba(88,166,255,.12)}
+.empty-box{padding:32px;border:1px dashed rgba(213,177,90,.28);border-radius:18px;color:#b8c4bc;text-align:center;line-height:1.9;grid-column:1/-1}
 </style>
-
-<style id="page-base-hardfix">
-html, body{
-  margin:0 !important;
-  padding:0 !important;
-  font-family:'Cairo', system-ui, sans-serif !important;
-}
-</style>
-
 </head>
 <body>
-
 <div id="site-header"></div>
-
 <div class="matches-container">
-<h1 class="matches-title">المباريات</h1>
-
-<div class="matches-grid">
-
-<a class="match-card" href="al_masariha_match_details.html" style="text-decoration:none;color:inherit;display:block;">
-<div class="teams">
-<div class="team">المسارحة</div>
-<div class="score">2 - 1</div>
-<div class="team">النخبة</div>
+  <h1 class="matches-title">المباريات <span class="live-pill">بيانات حية</span></h1>
+  <p class="matches-lead">جدول المباريات من Supabase — قادمة ومنتهية وجارية.</p>
+  <div class="matches-grid" id="matchesGrid">
+    <div class="empty-box">جاري تحميل المباريات…</div>
+  </div>
 </div>
-<div class="match-info">📅 2026/05/12</div>
-<div class="match-info">📍 ملعب الأكاديمية</div>
-</a>
-
-<a class="match-card" href="al_masariha_match_details.html" style="text-decoration:none;color:inherit;display:block;">
-<div class="teams">
-<div class="team">المسارحة</div>
-<div class="score">1 - 1</div>
-<div class="team">الشباب</div>
-</div>
-<div class="match-info">📅 2026/05/20</div>
-<div class="match-info">📍 ملعب المدينة</div>
-</a>
-
-<a class="match-card" href="al_masariha_match_details.html" style="text-decoration:none;color:inherit;display:block;">
-<div class="teams">
-<div class="team">المسارحة</div>
-<div class="score">-</div>
-<div class="team">النجوم</div>
-</div>
-<div class="match-info">📅 قادمة</div>
-<div class="match-info">📍 سيتم التحديد</div>
-</div>
-
-</a>
-</div>
-
 <div id="site-footer"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/supabase-public-lookup.js"></script>
+<script>
+function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function fmtDate(v){
+  if(!v)return '—';
+  const d=new Date(v);
+  if(Number.isNaN(d.getTime()))return '—';
+  return d.toLocaleDateString('ar-SA',{year:'numeric',month:'2-digit',day:'2-digit'});
+}
+function statusClass(s){return s==='live'?'st-live':s==='finished'?'st-finished':'st-upcoming'}
+async function renderMatches(){
+  const grid=document.getElementById('matchesGrid');
+  try{
+    const list=typeof listMatchesPublic==='function'?await listMatchesPublic():[];
+    if(!list.length){
+      grid.innerHTML='<div class="empty-box">لا توجد مباريات منشورة حالياً. أضف مباريات من لوحة الإدارة.</div>';
+      return;
+    }
+    grid.innerHTML=list.map(m=>`<a class="match-card" href="al_masariha_match_details.html?id=${encodeURIComponent(m.id)}" style="text-decoration:none;color:inherit;display:block">
+      <div class="teams"><div class="team">${esc(m.homeTeam)}</div><div class="score">${esc(m.scoreLabel)}</div><div class="team">${esc(m.awayTeam)}</div></div>
+      <div class="match-info">📅 ${esc(fmtDate(m.matchAt))}${m.competition?' · '+esc(m.competition):''}</div>
+      <div class="match-info">📍 ${esc(m.venue||'—')}</div>
+      <span class="match-status ${statusClass(m.status)}">${esc(m.statusLabel)}</span>
+    </a>`).join('');
+  }catch(e){
+    console.error(e);
+    grid.innerHTML='<div class="empty-box">تعذر تحميل المباريات. تأكد من تطبيق MATCHES_RLS.sql في Supabase.</div>';
+  }
+}
+document.addEventListener('DOMContentLoaded',renderMatches);
+</script>
+<script src="js/site-seo.js"></script>
 <script src="shared-layout.js"></script>
-
 </body>
 </html>

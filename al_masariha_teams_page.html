@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>الفرق والفئات | أكاديمية المسارحة لكرة القدم</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="shared-layout.css">
+<style>
+:root{--bg:#05110b;--panel:#081a12;--gold:#d5b15a;--gold-soft:#f0d58f;--text:#f4f5ef;--muted:#b8c4bc;--line:rgba(255,255,255,.08);--green:#0f6a47}
+*{box-sizing:border-box}body{margin:0;font-family:'Cairo',system-ui,sans-serif;background:radial-gradient(circle at top, rgba(213,177,90,.08), transparent 25%),linear-gradient(180deg,#030a07,#06130d 22%,#041009 100%);color:var(--text)}a{text-decoration:none;color:inherit}.container{width:min(1380px,calc(100% - 48px));margin:auto}
+.teams-shell{padding-top:18px}
+.hero{padding:24px 0 18px}.hero-shell{position:relative;overflow:hidden;border:1px solid var(--line);border-radius:28px;background:#07160f;box-shadow:0 22px 50px rgba(0,0,0,.35);min-height:340px}.hero-bg{position:absolute;inset:0;background:linear-gradient(180deg,rgba(0,0,0,.12),rgba(0,0,0,.62)),linear-gradient(90deg,rgba(0,0,0,.08),rgba(0,0,0,.45)),url('https://images.unsplash.com/photo-1574629810360-7efbbe195018?auto=format&fit=crop&w=1800&q=80') center/cover no-repeat}.hero-content{position:relative;z-index:2;padding:48px 40px 34px;display:grid;grid-template-columns:1fr auto;gap:24px;align-items:end}.hero h2{margin:0;font-size:64px;line-height:1.05;font-weight:900}.hero p{margin:14px 0 0;font-size:22px;color:#dfe5df;max-width:760px;line-height:1.9}.hero-stats{display:flex;gap:14px;flex-wrap:wrap}.hero-stat{min-width:150px;background:rgba(8,24,16,.72);border:1px solid rgba(213,177,90,.18);border-radius:20px;padding:14px 16px;text-align:center}.hero-stat .n{font-size:32px;font-weight:900;color:var(--gold)}.hero-stat .t{font-size:14px;color:#cad4cc;margin-top:4px}
+.main{padding:26px 0 36px}.layout{display:grid;grid-template-columns:300px 1fr;gap:24px}.sidebar,.content-card{background:linear-gradient(180deg,rgba(9,28,19,.94),rgba(5,17,11,.96));border:1px solid rgba(51,79,62,.9);border-radius:26px;box-shadow:0 20px 40px rgba(0,0,0,.15)}.sidebar{padding:22px}.side-title{margin:0 0 16px;font-size:26px;font-weight:900}.search{width:100%;height:50px;border-radius:16px;border:1px solid var(--line);background:rgba(255,255,255,.03);color:#fff;padding:0 16px;font-family:inherit;font-size:15px}.filter-block{margin-top:20px}.filter-block h4{margin:0 0 10px;font-size:18px;font-weight:900}.pills{display:flex;flex-wrap:wrap;gap:10px}.pill{padding:9px 14px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid var(--line);font-size:14px;color:#d9e0dc;cursor:pointer}.pill.active{background:rgba(213,177,90,.14);border-color:rgba(213,177,90,.4);color:var(--gold-soft)}.reset-btn{margin-top:20px;width:100%;height:46px;border:none;border-radius:16px;background:linear-gradient(180deg,#138256,#0d6e49);color:white;font-weight:900;font-family:inherit;font-size:15px;cursor:pointer}
+.content-card{padding:22px}.content-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:18px;flex-wrap:wrap}.content-head h3{margin:0;font-size:32px;font-weight:900}.live-pill{padding:8px 14px;border-radius:999px;background:rgba(15,106,71,.15);border:1px solid rgba(15,106,71,.28);color:#9de2bf;font-size:13px;font-weight:900}
+.teams-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}.team-card{background:linear-gradient(180deg,#102117,#09130d);border:1px solid rgba(213,177,90,.22);border-radius:24px;padding:20px;transition:.2s ease}.team-card:hover{transform:translateY(-3px);border-color:rgba(213,177,90,.4)}.team-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.team-name{font-size:26px;font-weight:900;line-height:1.2}.team-code{font-size:14px;font-weight:900;color:var(--gold-soft);background:rgba(213,177,90,.1);border:1px solid rgba(213,177,90,.22);padding:6px 12px;border-radius:999px}.team-meta{margin-top:12px;color:#cad4cc;font-size:15px;line-height:1.85}.team-tags{display:flex;gap:10px;flex-wrap:wrap;margin-top:14px}.tag{padding:7px 12px;border-radius:999px;font-size:12px;font-weight:800;border:1px solid var(--line);background:rgba(255,255,255,.04)}.tag.cat{color:#aad1ff;border-color:rgba(88,166,255,.24)}.tag.players{color:#9de2bf;border-color:rgba(15,106,71,.24)}.team-actions{margin-top:18px;display:flex;gap:10px;flex-wrap:wrap}.btn-view{display:inline-flex;align-items:center;justify-content:center;padding:11px 16px;border-radius:14px;background:linear-gradient(180deg,#138256,#0d6e49);color:#fff;font-weight:900;font-size:14px}.btn-players{display:inline-flex;align-items:center;justify-content:center;padding:11px 16px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:#fff;font-weight:800;font-size:14px}
+.empty-card{padding:36px 24px;border:1px dashed rgba(213,177,90,.28);border-radius:22px;background:rgba(255,255,255,.02);text-align:center;color:#c8d2cb;grid-column:1/-1}.empty-card h4{margin:0 0 10px;font-size:24px}.empty-card p{margin:0;line-height:1.9}
+.categories-strip{margin-top:22px;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}.cat-box{padding:16px;border-radius:18px;border:1px solid var(--line);background:rgba(255,255,255,.03);text-align:center}.cat-box b{display:block;font-size:18px}.cat-box span{display:block;margin-top:6px;color:#cad4cc;font-size:13px}
+@media (max-width:1200px){.layout{grid-template-columns:1fr}.teams-grid{grid-template-columns:1fr}.hero-content{grid-template-columns:1fr}.hero h2{font-size:44px}.categories-strip{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media (max-width:768px){.hero h2{font-size:34px}.categories-strip{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div id="site-header"></div>
+<div class="teams-shell">
+<section class="hero"><div class="container hero-shell"><div class="hero-bg"></div><div class="hero-content"><div><h2>الفرق والفئات</h2><p>فرق الأكاديمية النشطة من قاعدة البيانات — مع عدد اللاعبين المرتبطين بكل فريق. الفرق قيد المراجعة أو الموقوفة لا تظهر هنا.</p></div><div class="hero-stats"><div class="hero-stat"><div class="n" id="heroTeamsCount">0</div><div class="t">فرق نشطة</div></div><div class="hero-stat"><div class="n" id="heroCategoriesCount">0</div><div class="t">فئات</div></div><div class="hero-stat"><div class="n" id="heroPlayersLinked">0</div><div class="t">لاعب مرتبط</div></div></div></div></div></section>
+<section class="main"><div class="container layout"><aside class="sidebar"><h3 class="side-title">تصفية</h3><input class="search" id="searchInput" type="text" placeholder="ابحث باسم الفريق أو الرمز..." /><div class="filter-block"><h4>الفئة</h4><div class="pills" id="categoryPills"></div></div><button class="reset-btn" id="resetFiltersBtn" type="button">إعادة تعيين</button></aside><div class="content-card"><div class="content-head"><h3 id="resultTitle">عرض الفرق</h3><span class="live-pill">بيانات حية</span></div><div class="teams-grid" id="teamsGrid"></div><div class="categories-strip" id="categoriesStrip"></div></div></div></section>
+</div>
+<div id="site-footer"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/supabase-public-lookup.js"></script>
+<script>
+let allTeams = [];
+let allPlayers = [];
+let currentCategory = 'الكل';
+
+const categoryInfo = {
+  'براعم': { range: 'تحت 12', note: 'مرحلة التأسيس والمهارات الأساسية.' },
+  'ناشئين': { range: 'تحت 15', note: 'تطوير الانضباط والتمركز.' },
+  'شباب': { range: 'تحت 18', note: 'جاهزية تنافسية أعلى.' },
+  'فريق أول': { range: 'مفتوح', note: 'أعلى مستوى داخل الأكاديمية.' }
+};
+
+function escapeHtml(v){
+  return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+function uniq(list){ return [...new Set(list.filter(Boolean))]; }
+function countPlayers(teamName){
+  const name = String(teamName || '').trim();
+  return allPlayers.filter(p => String(p.team || '').trim() === name).length;
+}
+function buildPills(containerId, values, activeValue, onClick){
+  const wrap = document.getElementById(containerId);
+  wrap.innerHTML = '';
+  ['الكل', ...values].forEach(value => {
+    const pill = document.createElement('div');
+    pill.className = 'pill' + (value === activeValue ? ' active' : '');
+    pill.textContent = value;
+    pill.addEventListener('click', () => onClick(value));
+    wrap.appendChild(pill);
+  });
+}
+function renderHero(teams){
+  const linked = teams.reduce((s, t) => s + countPlayers(t.name), 0);
+  document.getElementById('heroTeamsCount').textContent = teams.length;
+  document.getElementById('heroCategoriesCount').textContent = uniq(teams.map(t => t.category)).length;
+  document.getElementById('heroPlayersLinked').textContent = linked;
+}
+function renderCategoriesStrip(teams){
+  const strip = document.getElementById('categoriesStrip');
+  const cats = Object.keys(categoryInfo);
+  strip.innerHTML = cats.map(cat => {
+    const count = teams.filter(t => t.category === cat).length;
+    const info = categoryInfo[cat];
+    return `<div class="cat-box"><b>${escapeHtml(cat)}</b><span>${escapeHtml(info.range)} • ${count} فريق</span></div>`;
+  }).join('');
+}
+function getFilteredTeams(){
+  const search = document.getElementById('searchInput').value.trim().toLowerCase();
+  return allTeams.filter(t => {
+    const hay = [t.name, t.code, t.category, t.notes].join(' ').toLowerCase();
+    const matchesSearch = !search || hay.includes(search);
+    const matchesCategory = currentCategory === 'الكل' || t.category === currentCategory;
+    return matchesSearch && matchesCategory;
+  }).sort((a, b) => String(a.category).localeCompare(String(b.category), 'ar') || String(a.name).localeCompare(String(b.name), 'ar'));
+}
+function render(){
+  renderHero(allTeams);
+  buildPills('categoryPills', uniq(allTeams.map(t => t.category)), currentCategory, v => { currentCategory = v; render(); });
+  const teams = getFilteredTeams();
+  document.getElementById('resultTitle').textContent = `عرض ${teams.length} فريق${teams.length === 1 ? '' : ''}`;
+  const grid = document.getElementById('teamsGrid');
+  if (!teams.length){
+    grid.innerHTML = '<div class="empty-card"><h4>لا توجد فرق نشطة مطابقة</h4><p>أضف فرقًا من لوحة «الفرق والفئات» بحالة «نشط» لتظهر هنا.</p></div>';
+    renderCategoriesStrip(allTeams);
+    return;
+  }
+  grid.innerHTML = teams.map(t => {
+    const playersN = countPlayers(t.name);
+    const info = categoryInfo[t.category] || { range: '-', note: '' };
+    return `<article class="team-card"><div class="team-top"><div class="team-name">${escapeHtml(t.name)}</div><div class="team-code">${escapeHtml(t.code || '—')}</div></div><div class="team-meta">${escapeHtml(t.notes || info.note || 'فريق أكاديمية مسجّل في النظام.')}</div><div class="team-tags"><span class="tag cat">${escapeHtml(t.category)} • ${escapeHtml(info.range)}</span><span class="tag players">${playersN} لاعب</span><span class="tag">${escapeHtml(t.status)}</span></div><div class="team-actions"><a class="btn-view" href="al_masariha_players_page.html">عرض اللاعبين</a></div></article>`;
+  }).join('');
+  renderCategoriesStrip(allTeams);
+}
+document.getElementById('searchInput').addEventListener('input', render);
+document.getElementById('resetFiltersBtn').addEventListener('click', () => {
+  currentCategory = 'الكل';
+  document.getElementById('searchInput').value = '';
+  render();
+});
+async function initTeamsPage(){
+  const grid = document.getElementById('teamsGrid');
+  grid.innerHTML = '<div class="empty-card"><h4>جاري التحميل...</h4><p>يتم جلب الفرق من قاعدة البيانات.</p></div>';
+  try{
+    const client = createSupabaseClient();
+    const [teams, playersRes] = await Promise.all([
+      typeof listTeamsPublic === 'function' ? listTeamsPublic() : [],
+      client.from('players').select('id,full_name,team,status').in('status', ['active', 'نشط'])
+    ]);
+    allTeams = teams;
+    allPlayers = Array.isArray(playersRes.data) ? playersRes.data : [];
+    render();
+  }catch(e){
+    console.error('Teams public load error:', e);
+    grid.innerHTML = '<div class="empty-card"><h4>تعذر تحميل الفرق</h4><p>نفّذ <strong>docs/TEAMS_RLS.sql</strong> في Supabase ثم أعد التحميل.</p></div>';
+  }
+}
+initTeamsPage();
+</script>
+<script src="js/site-seo.js"></script>
+<script src="shared-layout.js"></script>
+</body>
+</html>

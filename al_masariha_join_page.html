@@ -191,7 +191,7 @@
           <h3 class="section-title">الإقرار</h3>
           <div class="policy-box"><div class="policy-row">أقر بأن البيانات المدخلة صحيحة وأن الطلب يخضع للمراجعة والاعتماد من إدارة الأكاديمية.</div></div>
           <div class="field full" style="margin-top:16px"><label class="field-inline"><input type="checkbox" id="confirmPolicy" required /><span>أوافق على إرسال الطلب للمراجعة.</span></label></div>
-          <div class="action-row"><button type="submit" class="submit-btn">إرسال الطلب</button><a href="request_status.html" class="ghost-btn">متابعة طلب سابق</a><a href="index.html" class="ghost-btn">العودة للرئيسية</a></div>
+          <div class="action-row"><button type="submit" class="submit-btn">إرسال الطلب</button><a href="request_status.html" class="ghost-btn">متابعة انضمام (REQ)</a><a href="store_order_status.html" class="ghost-btn">متابعة متجر (ORD)</a><a href="index.html" class="ghost-btn">العودة للرئيسية</a></div>
           <div id="statusFollowBox" class="policy-box" style="display:none;margin-top:16px;border-color:rgba(46,204,113,.34);background:rgba(46,204,113,.08)">
             <div class="policy-row">تم حفظ طلبك. احتفظ برقم المرجع، ويمكنك متابعة حالة الطلب من زر المتابعة.</div>
             <a id="statusFollowLink" href="request_status.html" class="submit-btn" style="width:fit-content;min-width:190px">متابعة حالة الطلب</a>
@@ -203,7 +203,8 @@
   <div class="toast-wrap" id="toastWrap"></div>
   <div id="site-footer"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="shared-layout.js"></script>
+  <script src="js/site-seo.js"></script>
+<script src="shared-layout.js"></script>
   <script src="supabase-config.js"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/supabase-public-lookup.js"></script>

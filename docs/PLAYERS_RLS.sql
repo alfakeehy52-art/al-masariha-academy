@@ -35,7 +35,7 @@ returns table (
   code text,
   phone text,
   category text,
-  position text,
+  "position" text,
   team text
 )
 language sql
@@ -49,7 +49,7 @@ as $$
     p.code,
     p.phone,
     p.category,
-    p.position,
+    p."position",
     p.team
   from public.players p
   where nullif(trim(p_term), '') is not null

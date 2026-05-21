@@ -27,7 +27,7 @@
   <main class="page">
     <section class="hero">
       <h1>البحث عن الطلب</h1>
-      <p>استخدم رقم المرجع مع رقم الجوال المسجل في الطلب. وفي حال نسيان رقم المرجع يمكنك استرجاعه من خلال رقم الجوال والبريد الإلكتروني.</p>
+      <p>استخدم رقم المرجع <strong>REQ-…</strong> مع رقم الجوال المسجل في الطلب. وفي حال نسيان رقم المرجع يمكنك استرجاعه من خلال رقم الجوال والبريد الإلكتروني. لطلب متجر استخدم <a href="store_order_status.html" style="color:var(--gold2);font-weight:800">متابعة طلب المتجر (ORD-…)</a>.</p>
     </section>
 
     <section class="card search-card">
@@ -64,7 +64,8 @@
   </div>
 
   <div class="toast-wrap" id="toastWrap"></div>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="js/site-seo.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/supabase-public-lookup.js"></script>
@@ -79,7 +80,9 @@
     function typeLabel(t){return TYPE[t]||t||'-'}
     function dateFmt(v){if(!v)return '-';const d=new Date(v);return Number.isNaN(d.getTime())?String(v):d.toLocaleDateString('ar-SA',{year:'numeric',month:'2-digit',day:'2-digit'})}
     function isApprovedStatus(s){return ['approved','accepted','معتمد','مقبول'].includes(String(s||'').trim().toLowerCase()) || statusLabel(s)==='مقبول'}
-    function shouldComplete(s){return !isApprovedStatus(s) && (['pending','needs_completion'].includes(String(s||'')) || statusLabel(s)==='بانتظار استكمال')}
+    function isRejectedStatus(s){return ['rejected','مرفوض'].includes(String(s||'').trim().toLowerCase())}
+    function shouldComplete(s){return !isApprovedStatus(s) && !isRejectedStatus(s) && (['pending','needs_completion'].includes(String(s||'')) || statusLabel(s)==='بانتظار استكمال')}
+    function canPrepareAttachments(s){return !isApprovedStatus(s) && !isRejectedStatus(s) && ['new','review','reviewing'].includes(String(s||''))}
     function completionUrl(row){return `request_completion.html?request_id=${encodeURIComponent(row.id)}&ref=${encodeURIComponent(row.reference_code||'')}&phone=${encodeURIComponent(row.phone||'')}`}
     function renderRequest(row){
       $('resultBox').classList.add('show');
@@ -95,6 +98,7 @@
       const actions=[];
       if(!isApprovedStatus(row.status)){
         if(shouldComplete(row.status)) actions.push(`<a class="btn gold" href="${completionUrl(row)}">استكمال البيانات والمرفقات</a>`);
+        else if(canPrepareAttachments(row.status)) actions.push(`<a class="btn" href="${completionUrl(row)}">تحضير المرفقات مسبقًا</a>`);
         actions.push(`<a class="btn" href="index.html">الرئيسية</a>`);
         actions.push(`<a class="btn" href="al_masariha_join_page.html">تقديم طلب جديد</a>`);
       }
@@ -131,9 +135,20 @@
         box.innerHTML=`<h3>تم اعتماد الطلب رسميًا</h3><div class="review-list"><div class="review-item good"><b>تهانينا، تم اعتماد طلبك رسميًا.</b><span>تم إغلاق مرحلة الاستكمال، ولا يمكن إعادة رفع المرفقات بعد الاعتماد النهائي.</span></div></div><div class="result-actions">${link}<a class="btn" href="index.html">العودة للرئيسية</a></div>`;
         return;
       }
-      const {data,error}=await sb.from('request_completions').select('*').eq('request_id',row.id).maybeSingle();
+      let data=null; let error=null;
+      try{
+        data=await lookupRequestCompletion(row.reference_code,row.phone);
+      }catch(err){error=err;}
       if(error){console.error(error);box.innerHTML='<h3>مراجعة المرفقات</h3><div class="review-list"><div class="review-item warn">تعذر قراءة حالة المرفقات حاليًا.</div></div>';return}
-      if(!data){box.innerHTML='<h3>مراجعة المرفقات</h3><div class="review-list"><div class="review-item warn">لم يتم استكمال المرفقات بعد.</div></div>';return}
+      if(!data){
+        const hint=shouldComplete(row.status)
+          ? 'لم يتم رفع المرفقات بعد. استخدم زر «استكمال البيانات والمرفقات» أعلاه لرفع الملفات.'
+          : canPrepareAttachments(row.status)
+            ? 'لم يتم رفع المرفقات بعد. يمكنك البدء بتحميل النماذج والمرفقات من الزر أعلاه، أو انتظار طلب الإدارة للاستكمال.'
+            : 'لم يتم استكمال المرفقات بعد.';
+        box.innerHTML=`<h3>مراجعة المرفقات</h3><div class="review-list"><div class="review-item warn">${hint}</div></div>`;
+        return;
+      }
       const rejected=FILE_REVIEW_FIELDS.filter(f=>isRejected(data[f.status]));
       const items=(rejected.length?rejected:FILE_REVIEW_FIELDS).map(f=>{
         const cls=isRejected(data[f.status])?'bad':(isAccepted(data[f.status])?'good':'warn');

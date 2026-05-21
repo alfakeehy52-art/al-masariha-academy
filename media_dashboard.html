@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>إدارة الإعلام | أكاديمية المسارحة</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin_theme.css">
+  <style>
+    .status-published{color:#caffdd;background:rgba(21,145,95,.14)}
+    .status-draft,.status-archived{color:#dce5f4;background:rgba(255,255,255,.06)}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/admin-auth.js"></script>
+  <script>requireAdmin();</script>
+</head>
+<body class="store-admin">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>إدارة الإعلام</h1>
+        <p>صور وفيديوهات للصفحة العامة. أضف رابط YouTube للفيديو عند الحاجة.</p>
+      </div>
+      <div id="admin-sidebar"></div>
+    </aside>
+    <main class="main">
+      <div class="topbar">
+        <div class="page-intro">
+          <h1>مكتبة الصور والفيديو</h1>
+          <p>نفّذ <code>docs/NEWS_MEDIA_RLS.sql</code> في Supabase قبل أول استخدام.</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-soft" type="button" id="seedMediaBtn">أمثلة افتراضية</button>
+          <a class="btn btn-soft" href="al_masariha_media_page.html" target="_blank" rel="noopener">الصفحة العامة</a>
+        </div>
+      </div>
+
+      <section class="cards">
+        <article class="card stat-card"><div class="stat-label">إجمالي الوسائط</div><div class="stat-value" id="totalMedia">0</div></article>
+        <article class="card stat-card"><div class="stat-label">صور</div><div class="stat-value" id="photoMediaCount">0</div></article>
+        <article class="card stat-card"><div class="stat-label">فيديو</div><div class="stat-value" id="videoMediaCount">0</div></article>
+      </section>
+
+      <section class="content-grid">
+        <section class="panel">
+          <h2>إضافة / تعديل وسيط</h2>
+          <form id="mediaForm">
+            <input type="hidden" id="mediaId" />
+            <div class="form-grid">
+              <div class="field full"><label for="mediaTitle">العنوان</label><input id="mediaTitle" type="text" required /></div>
+              <div class="field full"><label for="mediaDescription">الوصف</label><textarea id="mediaDescription" rows="3"></textarea></div>
+              <div class="field"><label for="mediaType">النوع</label>
+                <select id="mediaType">
+                  <option value="photo">صورة</option>
+                  <option value="video">فيديو</option>
+                </select>
+              </div>
+              <div class="field"><label for="mediaEmoji">أيقونة</label><input id="mediaEmoji" type="text" value="📷" /></div>
+              <div class="field full"><label for="mediaImageUrl">رابط صورة / غلاف (اختياري)</label><input id="mediaImageUrl" type="url" /></div>
+              <div class="field full"><label for="mediaVideoUrl">رابط فيديو YouTube (للفيديو)</label><input id="mediaVideoUrl" type="url" /></div>
+              <div class="field"><label for="mediaPublishedAt">تاريخ النشر</label><input id="mediaPublishedAt" type="datetime-local" /></div>
+              <div class="field"><label for="mediaSortOrder">ترتيب العرض</label><input id="mediaSortOrder" type="number" value="0" /></div>
+              <div class="field"><label for="mediaStatus">الحالة</label>
+                <select id="mediaStatus">
+                  <option value="draft">مسودة</option>
+                  <option value="published">منشور</option>
+                  <option value="archived">مؤرشف</option>
+                </select>
+              </div>
+            </div>
+            <label class="toggle-box" style="margin-top:14px;display:flex;max-width:320px;">
+              <div><b>مميز</b><span>يُعرض أولاً ضمن نوعه</span></div>
+              <input type="checkbox" id="mediaFeatured" />
+            </label>
+            <div class="form-actions">
+              <button class="btn btn-primary" type="submit">حفظ</button>
+              <button class="btn btn-soft" type="button" id="resetMediaFormBtn">تفريغ</button>
+            </div>
+          </form>
+        </section>
+      </section>
+
+      <section class="panel" style="margin-top:22px;">
+        <h2>قائمة الوسائط</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>العنوان</th><th>النوع</th><th>التاريخ</th><th>الحالة</th><th>مميز</th><th>إجراءات</th></tr>
+            </thead>
+            <tbody id="mediaTableBody"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="emptyMediaState" style="display:none;">لا توجد وسائط. أضف عنصرًا أو حمّل الأمثلة.</div>
+      </section>
+    </main>
+  </div>
+  <script src="js/media-admin.js"></script>
+  <script src="admin_sidebar.js"></script>
+</body>
+</html>

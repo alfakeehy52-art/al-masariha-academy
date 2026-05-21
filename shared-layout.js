@@ -1,6 +1,10 @@
 document.addEventListener("DOMContentLoaded", () => {
   const page = window.location.pathname.split("/").pop() || "index.html";
 
+  if (typeof applySiteSeo === "function") {
+    applySiteSeo(page);
+  }
+
   if (!document.getElementById("site-header-balance-fix")) {
     const style = document.createElement("style");
     style.id = "site-header-balance-fix";
@@ -44,6 +48,11 @@ document.addEventListener("DOMContentLoaded", () => {
           font-size: 13px !important;
           border-radius: 14px !important;
           white-space: nowrap !important;
+        }
+
+        .site-btn-track{
+          padding: 9px 12px !important;
+          font-size: 11px !important;
         }
 
         .site-menu-shell{
@@ -172,6 +181,8 @@ document.addEventListener("DOMContentLoaded", () => {
         <a href="index.html" data-page="index.html">الرئيسية</a>
         <a href="al_masariha_about_page.html" data-page="al_masariha_about_page.html">من نحن</a>
         <a href="al_masariha_players_page.html" data-page="al_masariha_players_page.html">اللاعبون</a>
+        <a href="al_masariha_coaches_page.html" data-page="al_masariha_coaches_page.html">المدربون</a>
+        <a href="al_masariha_teams_page.html" data-page="al_masariha_teams_page.html">الفرق</a>
         <a href="al_masariha_matches_page.html" data-page="al_masariha_matches_page.html">المباريات</a>
         <a href="al_masariha_media_page.html" data-page="al_masariha_media_page.html">الإعلام</a>
         <a href="al_masariha_store_page.html" data-page="al_masariha_store_page.html">المتجر</a>
@@ -180,6 +191,8 @@ document.addEventListener("DOMContentLoaded", () => {
       </nav>
 
       <div class="site-actions site-actions-mobile">
+        <a class="site-btn site-btn-track" href="request_status.html" data-page="request_status.html">متابعة انضمام</a>
+        <a class="site-btn site-btn-track" href="store_order_status.html" data-page="store_order_status.html">متابعة متجر</a>
         <a class="site-btn site-btn-gold" href="al_masariha_join_page.html">انضم إلينا</a>
         <a class="site-btn site-btn-dark" href="admin_login.html">دخول الإدارة</a>
       </div>
@@ -187,6 +200,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     <div class="site-actions-shell">
       <div class="site-actions">
+        <a class="site-btn site-btn-track" href="request_status.html" data-page="request_status.html" title="رقم مرجع REQ-…">متابعة انضمام</a>
+        <a class="site-btn site-btn-track" href="store_order_status.html" data-page="store_order_status.html" title="رقم مرجع ORD-…">متابعة متجر</a>
         <a class="site-btn site-btn-gold" href="al_masariha_join_page.html">انضم إلينا</a>
         <a class="site-btn site-btn-dark" href="admin_login.html">دخول الإدارة</a>
       </div>
@@ -211,12 +226,23 @@ document.addEventListener("DOMContentLoaded", () => {
         <a href="index.html">الرئيسية</a>
         <a href="al_masariha_about_page.html">من نحن</a>
         <a href="al_masariha_players_page.html">اللاعبون</a>
+        <a href="al_masariha_coaches_page.html">المدربون</a>
+        <a href="al_masariha_teams_page.html">الفرق</a>
         <a href="al_masariha_matches_page.html">المباريات</a>
         <a href="al_masariha_media_page.html">الإعلام</a>
         <a href="al_masariha_store_page.html">المتجر</a>
         <a href="al_masariha_news_page.html">الأخبار</a>
         <a href="al_masariha_join_page.html">انضم إلينا</a>
         <a href="al_masariha_contact_page.html">تواصل معنا</a>
+      </div>
+    </div>
+
+    <div>
+      <div class="site-footer-title">متابعة الطلبات</div>
+      <div class="site-footer-links">
+        <a href="request_status.html">طلب انضمام (REQ-…)</a>
+        <a href="store_order_status.html">طلب متجر (ORD-…)</a>
+        <a href="request_completion.html">استكمال مرفقات</a>
       </div>
     </div>
 

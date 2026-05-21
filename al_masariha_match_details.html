@@ -1,238 +1,126 @@
-
 <!DOCTYPE html>
-
-<html dir="rtl" lang="ar">
+<html lang="ar" dir="rtl">
 <head>
 <meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>تفاصيل المباراة | أكاديمية المسارحة لكرة القدم</title>
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
-<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet"/>
-<style>
-
-body{
-margin:0;
-font-family:'Cairo',sans-serif;
-background:#05110b;
-color:white;
-}
-
-.container{
-width:min(1200px,calc(100% - 40px));
-margin:auto;
-}
-
-header{
-background:#06140e;
-border-bottom:1px solid #1f2e26;
-}
-
-.nav{
-display:flex;
-align-items:center;
-justify-content:space-between;
-min-height:70px;
-}
-
-.logo{
-font-weight:900;
-font-size:20px;
-}
-
-.menu{
-display:flex;
-gap:20px;
-}
-
-.menu a{
-color:#dcdcdc;
-text-decoration:none;
-font-weight:700;
-}
-
-.menu a.active{
-color:#d5b15a;
-}
-
-.hero{
-padding:40px 0;
-text-align:center;
-}
-
-.hero h1{
-font-size:38px;
-margin-bottom:5px;
-}
-
-.scoreboard{
-margin-top:30px;
-background:#081a12;
-border:1px solid #24352c;
-border-radius:16px;
-padding:30px;
-text-align:center;
-}
-
-.score{
-font-size:48px;
-font-weight:900;
-margin:10px 0;
-}
-
-.teams{
-font-size:20px;
-font-weight:700;
-}
-
-.info{
-margin-top:10px;
-color:#b6c1b8;
-}
-
-.section{
-margin-top:40px;
-}
-
-.section h2{
-margin-bottom:15px;
-}
-
-.list{
-background:#081a12;
-border:1px solid #24352c;
-border-radius:14px;
-padding:18px;
-line-height:1.9;
-}
-
-.stats{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:15px;
-}
-
-.stat{
-background:#081a12;
-border:1px solid #24352c;
-border-radius:14px;
-padding:14px;
-text-align:center;
-}
-
-.stat strong{
-font-size:24px;
-display:block;
-}
-
-.gallery{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:15px;
-}
-
-.gallery div{
-height:130px;
-background:#0d1f17;
-border-radius:10px;
-display:flex;
-align-items:center;
-justify-content:center;
-font-size:40px;
-}
-
-.video{
-height:300px;
-background:#0d1f17;
-border-radius:16px;
-display:flex;
-align-items:center;
-justify-content:center;
-font-size:50px;
-}
-
-footer{
-margin-top:60px;
-padding:20px 0;
-border-top:1px solid #1f2e26;
-text-align:center;
-color:#aaa;
-}
-
-</style>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>تفاصيل المباراة | أكاديمية المسارحة</title>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <link href="shared-layout.css" rel="stylesheet"/>
-<style id="footer-copy-fix">
-#site-footer .site-copy,
-#site-footer .site-copy *{
-  text-align:center !important;
-}
+<style>
+body{margin:0;font-family:'Cairo',sans-serif;background:#05110b;color:#fff}
+.container{width:min(1200px,calc(100% - 40px));margin:auto}
+.hero{padding:40px 0;text-align:center}
+.hero h1{font-size:38px;margin-bottom:5px}
+.live-pill{display:inline-flex;padding:6px 12px;border-radius:999px;background:rgba(15,106,71,.15);border:1px solid rgba(15,106,71,.28);color:#9de2bf;font-size:12px;font-weight:900;margin-inline-start:8px;vertical-align:middle}
+.scoreboard{margin-top:30px;background:#081a12;border:1px solid #24352c;border-radius:16px;padding:30px;text-align:center}
+.score{font-size:48px;font-weight:900;margin:10px 0;color:#d5b15a}
+.teams{font-size:20px;font-weight:700}
+.info{margin-top:10px;color:#b6c1b8}
+.section{margin-top:40px}
+.section h2{margin-bottom:15px}
+.list{background:#081a12;border:1px solid #24352c;border-radius:14px;padding:18px;line-height:1.9;white-space:pre-line}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:15px}
+.stat{background:#081a12;border:1px solid #24352c;border-radius:14px;padding:14px;text-align:center}
+.stat strong{font-size:24px;display:block;color:#d5b15a}
+.video{min-height:220px;background:#0d1f17;border-radius:16px;display:grid;place-items:center;border:1px solid #24352c}
+.video a{color:#d5b15a;font-weight:900}
+.empty-note{color:#b6c1b8;text-align:center;padding:24px;border:1px dashed rgba(255,255,255,.12);border-radius:14px}
+.back-link{display:inline-flex;margin:24px 0;color:#d5b15a;font-weight:800}
+@media(max-width:768px){.stats{grid-template-columns:repeat(2,1fr)}}
 </style>
-
 </head>
-<body><div id="site-header"></div>
-
+<body>
+<div id="site-header"></div>
+<a class="back-link container" href="al_masariha_matches_page.html">← العودة للمباريات</a>
 <section class="hero">
 <div class="container">
-<h1>تفاصيل المباراة</h1>
-<div class="scoreboard">
-<div class="teams">أكاديمية المسارحة × فريق الحي</div>
-<div class="score">3 - 1</div>
-<div class="info">
-📅 10 مارس 2026   |   🏟 ملعب الأكاديمية
-</div>
+<h1>تفاصيل المباراة <span class="live-pill" id="matchLivePill" style="display:none">بيانات حية</span></h1>
+<div class="scoreboard" id="matchScoreboard">
+  <div class="teams" id="matchTeams">جاري التحميل…</div>
+  <div class="score" id="matchScore">—</div>
+  <div class="info" id="matchMeta"></div>
 </div>
 </div>
 </section>
-<section class="container section">
+<section class="container section" id="scorersSection" style="display:none">
 <h2>الهدافون</h2>
-<div class="list">
-⚽ محمد القحطاني — الدقيقة 45<br/>
-⚽ محمد القحطاني — الدقيقة 67<br/>
-⚽ أحمد الشهري — الدقيقة 80
-</div>
+<div class="list" id="matchScorers"></div>
 </section>
-<section class="container section">
+<section class="container section" id="mvpSection" style="display:none">
 <h2>أفضل لاعب في المباراة</h2>
-<div class="list">
-⭐ محمد القحطاني — مهاجم — سجل هدفين
-</div>
+<div class="list" id="matchMvp"></div>
 </section>
-<section class="container section">
+<section class="container section" id="statsSection" style="display:none">
 <h2>إحصائيات المباراة</h2>
-<div class="stats">
-<div class="stat">
-<strong>60%</strong>
-الاستحواذ
-</div>
-<div class="stat">
-<strong>8</strong>
-التسديدات
-</div>
-<div class="stat">
-<strong>5</strong>
-الركنيات
-</div>
-<div class="stat">
-<strong>2</strong>
-البطاقات
-</div>
-</div>
+<div class="stats" id="matchStats"></div>
 </section>
-<section class="container section">
+<section class="container section" id="videoSection" style="display:none">
 <h2>فيديو المباراة</h2>
-<div class="video">
-▶
-</div>
+<div class="video" id="matchVideo"></div>
 </section>
-<section class="container section">
-<h2>صور المباراة</h2>
-<div class="gallery">
-<div>📷</div>
-<div>📷</div>
-<div>📷</div>
-<div>📷</div>
-</div>
-</section>
-
-<div id="site-footer"></div><script src="shared-layout.js"></script></body>
+<div id="site-footer"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/supabase-public-lookup.js"></script>
+<script>
+function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function qp(name){return new URLSearchParams(location.search).get(name)}
+function fmtDate(v){
+  if(!v)return '';
+  const d=new Date(v);
+  if(Number.isNaN(d.getTime()))return '';
+  return d.toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric'});
+}
+async function loadMatch(){
+  const id=qp('id');
+  const board=document.getElementById('matchScoreboard');
+  if(!id){
+    board.innerHTML='<div class="empty-note">لم يُحدَّد معرّف المباراة. <a href="al_masariha_matches_page.html">العودة للقائمة</a></div>';
+    return;
+  }
+  try{
+    const m=typeof getMatchPublic==='function'?await getMatchPublic(id):null;
+    if(!m){
+      board.innerHTML='<div class="empty-note">المباراة غير موجودة أو غير منشورة.</div>';
+      return;
+    }
+    document.getElementById('matchLivePill').style.display='inline-flex';
+    document.getElementById('matchTeams').textContent=m.homeTeam+' × '+m.awayTeam;
+    document.getElementById('matchScore').textContent=m.scoreLabel;
+    document.getElementById('matchMeta').textContent=[
+      m.matchAt?'📅 '+fmtDate(m.matchAt):'',
+      m.venue?'🏟 '+m.venue:'',
+      m.competition?'🏆 '+m.competition:'',
+      '📌 '+m.statusLabel
+    ].filter(Boolean).join('   |   ');
+    if(m.scorersNote){
+      document.getElementById('scorersSection').style.display='block';
+      document.getElementById('matchScorers').textContent=m.scorersNote;
+    }
+    if(m.playerOfMatch){
+      document.getElementById('mvpSection').style.display='block';
+      document.getElementById('matchMvp').textContent='⭐ '+m.playerOfMatch;
+    }
+    const s=m.stats||{};
+    const keys=[['possession','الاستحواذ'],['shots','التسديدات'],['corners','الركنيات'],['cards','البطاقات']];
+    const items=keys.filter(([k])=>s[k]);
+    if(items.length){
+      document.getElementById('statsSection').style.display='block';
+      document.getElementById('matchStats').innerHTML=items.map(([k,l])=>`<div class="stat"><strong>${esc(s[k])}</strong>${l}</div>`).join('');
+    }
+    if(m.videoUrl){
+      document.getElementById('videoSection').style.display='block';
+      document.getElementById('matchVideo').innerHTML=`<a href="${esc(m.videoUrl)}" target="_blank" rel="noopener">مشاهدة الفيديو ↗</a>`;
+    }
+  }catch(e){
+    console.error(e);
+    board.innerHTML='<div class="empty-note">تعذر تحميل التفاصيل.</div>';
+  }
+}
+document.addEventListener('DOMContentLoaded',loadMatch);
+</script>
+<script src="js/site-seo.js"></script>
+<script src="shared-layout.js"></script>
+</body>
 </html>

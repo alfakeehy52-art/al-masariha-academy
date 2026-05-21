@@ -1,12 +1,118 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>استكمال الطلبات | الإدارة</title><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<style>:root{--gold:#d5b15a;--gold2:#f0d58f;--text:#f3f4ef;--muted:#b6c1b8;--line:rgba(255,255,255,.08);--shadow:0 22px 55px rgba(0,0,0,.24)}*{box-sizing:border-box}body{margin:0;font-family:'Cairo',system-ui,sans-serif;background:#041009;color:var(--text)}.layout{display:grid;grid-template-columns:318px 1fr;min-height:100vh}.sidebar{background:linear-gradient(180deg,rgba(213,177,90,.10),rgba(255,255,255,.02));border-left:1px solid var(--line);padding:20px 16px;position:sticky;top:0;height:100vh;overflow:hidden}.brand{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:var(--shadow);margin-bottom:18px}.brand h1{margin:0;color:var(--gold2);font-weight:900;font-size:26px}.brand p{margin:8px 0 0;color:var(--muted);line-height:1.9}.main{padding:30px}.card{border:1px solid var(--line);border-radius:28px;background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.02));box-shadow:var(--shadow);padding:24px;margin-bottom:20px}.hero h1{font-size:42px;margin:0}.hero p{color:var(--muted)}table{width:100%;border-collapse:collapse;min-width:980px}th,td{padding:14px;border-bottom:1px solid rgba(255,255,255,.07);text-align:right}th{color:var(--gold2)}.wrap{overflow:auto}.btn{min-height:42px;border:1px solid var(--line);border-radius:13px;padding:0 14px;background:rgba(255,255,255,.05);color:#fff;font:inherit;font-weight:900;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center}.gold{background:linear-gradient(180deg,#e4c36f,#d5b15a);color:#08110b}.actions{display:flex;gap:8px;flex-wrap:wrap}.toast{position:fixed;left:20px;bottom:20px;max-width:520px;padding:14px 16px;border-radius:16px;background:#102217;color:#ffe79c;font-weight:900;display:none;z-index:10}.toast.show{display:block}@media(max-width:1100px){.layout{grid-template-columns:1fr}.sidebar{height:auto;position:relative}}</style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="js/supabase-client.js"></script><script src="js/admin-auth.js"></script><script>requireAdmin();</script></head>
-<body><div class="layout"><aside class="sidebar"><div class="brand"><h1>أكاديمية كرة القدم</h1><p>مراجعة استكمال البيانات والمرفقات.</p></div><div id="admin-sidebar"></div></aside><main class="main"><section class="card hero"><h1>استكمال الطلبات</h1><p>عرض المرفقات المرسلة من أصحاب الطلبات بعد طلب الاستكمال.</p></section><section class="card"><div class="wrap"><table><thead><tr><th>الاسم</th><th>النوع</th><th>الجوال</th><th>الحالة</th><th>الهوية</th><th>الصورة</th><th>العقد/الشهادة</th><th>الإجراء</th></tr></thead><tbody id="tbody"><tr><td colspan="8">جاري التحميل...</td></tr></tbody></table></div></section></main></div><div class="toast" id="toast"></div>
-<script src="admin_sidebar.js"></script><script>
-const sb = createSupabaseClient(); const $=id=>document.getElementById(id);
-function toast(msg){$('toast').textContent=msg;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),3000)} function link(url){return url?`<a class="btn" href="${url}" target="_blank">عرض</a>`:'-'}
-async function load(){const {data,error}=await sb.from('request_completions').select('*').order('created_at',{ascending:false}); if(error){console.error(error);$('tbody').innerHTML='<tr><td colspan="8">تعذر تحميل البيانات.</td></tr>';return} if(!data?.length){$('tbody').innerHTML='<tr><td colspan="8">لا توجد استكمالات حالياً.</td></tr>';return} $('tbody').innerHTML=data.map(r=>`<tr><td>${r.full_name||'-'}</td><td>${r.request_type||'-'}</td><td>${r.phone||'-'}</td><td>${r.status||'-'}</td><td>${link(r.id_document_url)}</td><td>${link(r.personal_photo_url)}</td><td>${link(r.contract_file_url)}</td><td><div class="actions"><button class="btn gold" onclick="approve('${r.id}','${r.request_id}')">اعتماد نهائي</button><button class="btn" onclick="setReview('${r.id}')">تحت المراجعة</button></div></td></tr>`).join('')}
-async function setReview(id){const {error}=await sb.from('request_completions').update({status:'reviewing'}).eq('id',id); if(error){toast('تعذر التحديث');return} toast('تم التحديث'); load()}
-async function approve(id,requestId){const {error}=await sb.from('request_completions').update({status:'approved'}).eq('id',id); if(error){toast('تعذر الاعتماد');return} await sb.from('join_requests').update({status:'approved',reviewed_at:new Date().toISOString(),updated_at:new Date().toISOString()}).eq('id',requestId); toast('تم الاعتماد النهائي'); load()}
-document.addEventListener('DOMContentLoaded',load);
+<style>:root{--gold:#d5b15a;--gold2:#f0d58f;--text:#f3f4ef;--muted:#b6c1b8;--line:rgba(255,255,255,.08);--shadow:0 22px 55px rgba(0,0,0,.24);--ok:#2ecc71;--warn:#ffe79c}*{box-sizing:border-box}body{margin:0;font-family:'Cairo',system-ui,sans-serif;background:#041009;color:var(--text)}.layout{display:grid;grid-template-columns:318px 1fr;min-height:100vh}.sidebar{background:linear-gradient(180deg,rgba(213,177,90,.10),rgba(255,255,255,.02));border-left:1px solid var(--line);padding:20px 16px;position:sticky;top:0;height:100vh;overflow:hidden}.brand{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:var(--shadow);margin-bottom:18px}.brand h1{margin:0;color:var(--gold2);font-weight:900;font-size:26px}.brand p{margin:8px 0 0;color:var(--muted);line-height:1.9}.main{padding:30px}.card{border:1px solid var(--line);border-radius:28px;background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.02));box-shadow:var(--shadow);padding:24px;margin-bottom:20px}.hero h1{font-size:42px;margin:0}.hero p{color:var(--muted);line-height:1.8}.note{margin-top:12px;padding:12px 14px;border-radius:14px;background:rgba(213,177,90,.08);border:1px solid rgba(213,177,90,.22);color:var(--warn);font-weight:800;font-size:14px}table{width:100%;border-collapse:collapse;min-width:1100px}th,td{padding:14px;border-bottom:1px solid rgba(255,255,255,.07);text-align:right;vertical-align:middle}th{color:var(--gold2)}.wrap{overflow:auto}.btn{min-height:42px;border:1px solid var(--line);border-radius:13px;padding:0 14px;background:rgba(255,255,255,.05);color:#fff;font:inherit;font-weight:900;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}.gold{background:linear-gradient(180deg,#e4c36f,#d5b15a);color:#08110b}.gold:disabled{opacity:.45;cursor:not-allowed}.actions{display:flex;gap:8px;flex-wrap:wrap}.progress-ok{color:var(--ok);font-weight:900}.progress-warn{color:var(--warn);font-weight:900}.toast{position:fixed;left:20px;bottom:20px;max-width:560px;padding:14px 16px;border-radius:16px;background:#102217;color:#ffe79c;font-weight:900;display:none;z-index:10;line-height:1.7}.toast.show{display:block}.toast.error{color:#ffd7d7;border:1px solid rgba(197,82,82,.35)}@media(max-width:1100px){.layout{grid-template-columns:1fr}.sidebar{height:auto;position:relative}}</style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="js/supabase-client.js"></script><script src="js/admin-auth.js"></script><script>requireAdmin();</script></head>
+<body><div class="layout"><aside class="sidebar"><div class="brand"><h1>أكاديمية كرة القدم</h1><p>مراجعة استكمال البيانات والمرفقات.</p></div><div id="admin-sidebar"></div></aside><main class="main"><section class="card hero"><h1>استكمال الطلبات</h1><p>نظرة سريعة على المرفقات. الاعتماد النهائي يتطلب قبول كل الملفات الإجبارية — نفس شرط <a href="admin_requests.html" style="color:var(--gold2)">إدارة الطلبات</a>.</p><div class="note">للاعبين: العمود «ملف إضافي» يعرض نموذج الانضمام أو الكشف الطبي (وليس عقد المدرب).</div></section><section class="card"><div class="wrap"><table><thead><tr><th>الاسم</th><th>النوع</th><th>الجوال</th><th>الحالة</th><th>تقدم المراجعة</th><th>الهوية</th><th>الصورة</th><th>ملف إضافي</th><th>الإجراء</th></tr></thead><tbody id="tbody"><tr><td colspan="9">جاري التحميل...</td></tr></tbody></table></div></section></main></div><div class="toast" id="toast"></div>
+<script src="admin_sidebar.js"></script><script src="js/request-completion-review.js"></script><script>
+const sb = createSupabaseClient();
+const $ = id => document.getElementById(id);
+let completions = [];
+
+function toast(msg, type = "success") {
+  const el = $("toast");
+  el.textContent = msg;
+  el.className = "toast show" + (type === "error" ? " error" : "");
+  setTimeout(() => { el.classList.remove("show"); el.classList.remove("error"); }, 4200);
+}
+
+function link(url) {
+  return url ? `<a class="btn" href="${url}" target="_blank" rel="noopener">عرض</a>` : "-";
+}
+
+function escAttr(v) {
+  return String(v ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+}
+
+function progressClass(completion, type) {
+  return completionIsFullyApproved(completion, type) ? "progress-ok" : "progress-warn";
+}
+
+function renderRow(r) {
+  const ready = completionIsFullyApproved(r, r.request_type);
+  const progress = reviewProgressLabel(r, r.request_type);
+  const extraUrl = primaryExtraFileUrl(r, r.request_type);
+  const approveDisabled = ready ? "" : " disabled title=\"يجب قبول كل المرفقات الإجبارية أولاً\"";
+  return `<tr>
+    <td>${escAttr(r.full_name || "-")}</td>
+    <td>${escAttr(r.request_type || "-")}</td>
+    <td>${escAttr(r.phone || "-")}</td>
+    <td>${escAttr(r.status || "-")}</td>
+    <td class="${progressClass(r, r.request_type)}">${progress}</td>
+    <td>${link(r.id_document_url)}</td>
+    <td>${link(r.personal_photo_url)}</td>
+    <td>${link(extraUrl)}</td>
+    <td><div class="actions">
+      <a class="btn" href="admin_requests.html">مراجعة تفصيلية</a>
+      <button class="btn gold" onclick="approve('${escAttr(r.id)}','${escAttr(r.request_id)}')"${approveDisabled}>اعتماد نهائي</button>
+      <button class="btn" onclick="setReview('${escAttr(r.id)}')">تحت المراجعة</button>
+    </div></td>
+  </tr>`;
+}
+
+async function load() {
+  const { data, error } = await sb.from("request_completions").select("*").order("created_at", { ascending: false });
+  if (error) {
+    console.error(error);
+    $("tbody").innerHTML = '<tr><td colspan="9">تعذر تحميل البيانات.</td></tr>';
+    return;
+  }
+  completions = Array.isArray(data) ? data : [];
+  if (!completions.length) {
+    $("tbody").innerHTML = '<tr><td colspan="9">لا توجد استكمالات حالياً.</td></tr>';
+    return;
+  }
+  $("tbody").innerHTML = completions.map(renderRow).join("");
+}
+
+async function setReview(id) {
+  const { error } = await sb.from("request_completions").update({
+    status: "reviewing",
+    updated_at: new Date().toISOString()
+  }).eq("id", id);
+  if (error) { toast("تعذر التحديث", "error"); return; }
+  toast("تم التحديث");
+  load();
+}
+
+async function approve(id, requestId) {
+  const row = completions.find(c => String(c.id) === String(id));
+  if (!row) { toast("لم يُعثر على السجل.", "error"); return; }
+
+  const missing = reviewMissingItems(row, row.request_type);
+  if (missing.length) {
+    toast("لا يمكن الاعتماد النهائي قبل قبول: " + missing.join("، "), "error");
+    return;
+  }
+
+  const now = new Date().toISOString();
+  const { error: compErr } = await sb.from("request_completions").update({
+    status: "approved",
+    final_review_status: "approved",
+    final_review_note: "تم اعتماد جميع المرفقات الإجبارية من لوحة الاستكمال.",
+    reviewed_at: now,
+    updated_at: now
+  }).eq("id", id);
+
+  if (compErr) {
+    console.error(compErr);
+    toast("تعذر اعتماد الاستكمال. راجع RLS أو صلاحيات الإدارة.", "error");
+    return;
+  }
+
+  const { error: joinErr } = await sb.from("join_requests").update({
+    status: "approved",
+    reviewed_at: now,
+    updated_at: now
+  }).eq("id", requestId);
+
+  if (joinErr) {
+    console.error(joinErr);
+    toast("تم اعتماد المرفقات لكن تعذر تحديث الطلب في join_requests.", "error");
+    return;
+  }
+
+  toast("تم الاعتماد النهائي — كل المرفقات الإجبارية مقبولة.");
+  load();
+}
+
+document.addEventListener("DOMContentLoaded", load);
 </script></body></html>

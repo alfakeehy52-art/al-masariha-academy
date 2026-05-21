@@ -1,10 +1,1 @@
-/admin/admin_login.html /admin_login.html 301
-/admin/admin_login /admin_login.html 301
-/join /al_masariha_join_page.html 200
-/join.html /al_masariha_join_page.html 200
-/join-us /al_masariha_join_page.html 200
-/al_masariha_registration_page.html /al_masariha_join_page.html 200
-/registration /al_masariha_join_page.html 200
-/staff/login /staff_login.html 200
-/staff /staff_login.html 200
-/staff/dashboard /staff_dashboard.html 200
+/ /index.html 200

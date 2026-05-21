@@ -151,6 +151,14 @@
   color:var(--site-text);
 }
 
+.site-btn-track{
+  background:rgba(21,145,95,.12);
+  color:#caffdd;
+  border-color:rgba(21,145,95,.28);
+  padding:11px 14px;
+  font-size:12px;
+}
+
 .site-btn:hover{
   transform:translateY(-2px);
   box-shadow:0 14px 28px rgba(0,0,0,.18);
@@ -165,7 +173,7 @@
 
 .site-footer-grid{
   display:grid;
-  grid-template-columns:1.4fr 1fr 1fr;
+  grid-template-columns:1.2fr 1fr 1fr 1fr;
   gap:30px;
 }
 
@@ -710,4 +718,51 @@
 .site-footer,
 .site-footer *{
   font-family:'Cairo', system-ui, sans-serif !important;
+}
+
+/* ─── وسم المحتوى التجريبي (A5) ─── */
+.demo-banner{
+  margin:0 0 20px;
+  padding:14px 18px;
+  border-radius:18px;
+  border:1px dashed rgba(215,179,95,.35);
+  background:linear-gradient(180deg, rgba(215,179,95,.10), rgba(255,255,255,.03));
+  color:var(--site-muted);
+  font-size:15px;
+  font-weight:800;
+  line-height:1.9;
+  text-align:center;
+}
+
+.demo-banner strong{
+  color:var(--site-gold-soft);
+}
+
+.demo-chip{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin-inline-start:10px;
+  padding:5px 11px;
+  border-radius:999px;
+  background:rgba(215,179,95,.12);
+  border:1px solid rgba(215,179,95,.28);
+  color:var(--site-gold-soft);
+  font-size:12px;
+  font-weight:900;
+  vertical-align:middle;
+  white-space:nowrap;
+}
+
+.demo-section-muted{
+  position:relative;
+}
+
+.demo-section-muted::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  border-radius:inherit;
+  pointer-events:none;
+  box-shadow:inset 0 0 0 1px rgba(215,179,95,.08);
 }

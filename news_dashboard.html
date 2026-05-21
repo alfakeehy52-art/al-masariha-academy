@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>إدارة الأخبار | أكاديمية المسارحة</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin_theme.css">
+  <style>
+    .status-published{color:#caffdd;background:rgba(21,145,95,.14)}
+    .status-draft,.status-archived{color:#dce5f4;background:rgba(255,255,255,.06)}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/admin-auth.js"></script>
+  <script>requireAdmin();</script>
+</head>
+<body class="store-admin">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>إدارة الأخبار</h1>
+        <p>نشر أخبار الأكاديمية للواجهة العامة. المسودة والمؤرشف لا يظهران للزوار.</p>
+      </div>
+      <div id="admin-sidebar"></div>
+    </aside>
+    <main class="main">
+      <div class="topbar">
+        <div class="page-intro">
+          <h1>أخبار الأكاديمية</h1>
+          <p>نفّذ <code>docs/NEWS_MEDIA_RLS.sql</code> في Supabase قبل أول استخدام.</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-soft" type="button" id="seedNewsBtn">أمثلة افتراضية</button>
+          <a class="btn btn-soft" href="al_masariha_news_page.html" target="_blank" rel="noopener">الصفحة العامة</a>
+        </div>
+      </div>
+
+      <section class="cards">
+        <article class="card stat-card"><div class="stat-label">إجمالي الأخبار</div><div class="stat-value" id="totalNews">0</div></article>
+        <article class="card stat-card"><div class="stat-label">منشورة</div><div class="stat-value" id="publishedNewsCount">0</div></article>
+        <article class="card stat-card"><div class="stat-label">الصفحة العامة</div><div class="stat-note"><a href="al_masariha_news_page.html" target="_blank" rel="noopener">معاينة</a></div></article>
+      </section>
+
+      <section class="content-grid">
+        <section class="panel">
+          <h2>إضافة / تعديل خبر</h2>
+          <form id="newsForm">
+            <input type="hidden" id="newsId" />
+            <div class="form-grid">
+              <div class="field full"><label for="newsTitle">العنوان</label><input id="newsTitle" type="text" required /></div>
+              <div class="field full"><label for="newsSummary">ملخص قصير</label><textarea id="newsSummary" rows="3"></textarea></div>
+              <div class="field full"><label for="newsBody">نص كامل (اختياري)</label><textarea id="newsBody" rows="5"></textarea></div>
+              <div class="field"><label for="newsCategory">التصنيف</label><input id="newsCategory" type="text" placeholder="مباريات، تدريب…" /></div>
+              <div class="field"><label for="newsEmoji">أيقونة</label><input id="newsEmoji" type="text" value="📰" /></div>
+              <div class="field full"><label for="newsImageUrl">رابط صورة (اختياري)</label><input id="newsImageUrl" type="url" /></div>
+              <div class="field"><label for="newsPublishedAt">تاريخ النشر</label><input id="newsPublishedAt" type="datetime-local" /></div>
+              <div class="field"><label for="newsStatus">الحالة</label>
+                <select id="newsStatus">
+                  <option value="draft">مسودة</option>
+                  <option value="published">منشور</option>
+                  <option value="archived">مؤرشف</option>
+                </select>
+              </div>
+            </div>
+            <label class="toggle-box" style="margin-top:14px;display:flex;max-width:320px;">
+              <div><b>خبر مميز</b><span>يظهر في أعلى صفحة الأخبار</span></div>
+              <input type="checkbox" id="newsFeatured" />
+            </label>
+            <div class="form-actions">
+              <button class="btn btn-primary" type="submit">حفظ</button>
+              <button class="btn btn-soft" type="button" id="resetNewsFormBtn">تفريغ</button>
+            </div>
+          </form>
+        </section>
+      </section>
+
+      <section class="panel" style="margin-top:22px;">
+        <h2>قائمة الأخبار</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>الخبر</th><th>التصنيف</th><th>التاريخ</th><th>الحالة</th><th>مميز</th><th>إجراءات</th></tr>
+            </thead>
+            <tbody id="newsTableBody"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="emptyNewsState" style="display:none;">لا توجد أخبار. أضف خبرًا أو حمّل الأمثلة.</div>
+      </section>
+    </main>
+  </div>
+  <script src="js/news-admin.js"></script>
+  <script src="admin_sidebar.js"></script>
+</body>
+</html>

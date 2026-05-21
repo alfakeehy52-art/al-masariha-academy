@@ -1,0 +1,20 @@
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: SAMEORIGIN
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+/*.html
+  Cache-Control: public, max-age=300
+
+/academy-logo.svg
+  Cache-Control: public, max-age=86400
+
+/shared-layout.css
+  Cache-Control: public, max-age=3600
+
+/admin_*
+  X-Robots-Tag: noindex
+
+/*_dashboard.html
+  X-Robots-Tag: noindex

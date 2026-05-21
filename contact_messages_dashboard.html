@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>رسائل التواصل | أكاديمية المسارحة</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin_theme.css">
+  <style>
+    .status-new{color:#ffe79c;background:rgba(213,177,90,.12)}
+    .status-read{color:#caddff;background:rgba(88,166,255,.12)}
+    .status-replied{color:#caffdd;background:rgba(21,145,95,.14)}
+    .status-archived{color:#dce5f4;background:rgba(255,255,255,.06)}
+    .mini-select{min-height:36px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:#0d1a12;color:#fff;font-family:inherit;padding:4px 8px}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/admin-auth.js"></script>
+  <script>requireAdmin();</script>
+</head>
+<body class="store-admin">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>رسائل التواصل</h1>
+        <p>استفسارات الزوار من صفحة «تواصل معنا».</p>
+      </div>
+      <div id="admin-sidebar"></div>
+    </aside>
+    <main class="main">
+      <div class="topbar">
+        <div class="page-intro">
+          <h1>صندوق الرسائل</h1>
+          <p>نفّذ <code>docs/CONTACT_MESSAGES_RLS.sql</code> في Supabase قبل أول استخدام.</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-soft" type="button" id="refreshMessagesBtn">تحديث</button>
+          <a class="btn btn-soft" href="al_masariha_contact_page.html" target="_blank" rel="noopener">الصفحة العامة</a>
+        </div>
+      </div>
+
+      <section class="cards">
+        <article class="card stat-card"><div class="stat-label">إجمالي الرسائل</div><div class="stat-value" id="totalMessages">0</div></article>
+        <article class="card stat-card"><div class="stat-label">جديدة</div><div class="stat-value" id="newMessagesCount">0</div></article>
+        <article class="card stat-card"><div class="stat-label">تصفية</div>
+          <select id="statusFilter" style="margin-top:8px;width:100%;min-height:40px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#0d1a12;color:#fff;font-family:inherit">
+            <option value="all">الكل</option>
+            <option value="new">جديدة</option>
+            <option value="read">مقروءة</option>
+            <option value="replied">تم الرد</option>
+            <option value="archived">مؤرشفة</option>
+          </select>
+        </article>
+      </section>
+
+      <section class="panel" style="margin-top:22px;">
+        <h2>قائمة الرسائل</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>المرجع</th><th>المرسل</th><th>الموضوع</th><th>المحتوى</th><th>الحالة</th><th>التاريخ</th><th>إجراءات</th></tr>
+            </thead>
+            <tbody id="messagesTableBody"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="emptyMessagesState" style="display:none;">لا توجد رسائل بعد.</div>
+      </section>
+    </main>
+  </div>
+  <script src="js/contact-messages-admin.js"></script>
+  <script src="admin_sidebar.js"></script>
+</body>
+</html>

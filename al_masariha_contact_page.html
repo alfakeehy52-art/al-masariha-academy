@@ -324,8 +324,9 @@
             <div class="submit-row">
               <button type="submit" class="submit-btn">إرسال الرسالة</button>
             </div>
-            <div id="successBox" class="success-box">تم إرسال رسالتك بنجاح. هذه نسخة تجريبية حاليًا، ويمكن لاحقًا ربطها ببريد إداري أو قاعدة بيانات.</div>
-            <div class="note">هذا النموذج جاهز من حيث التصميم وتجميع البيانات، ويمكن لاحقًا ربطه بإيميل رسمي أو لوحة إدارة لاستقبال الرسائل فعليًا.</div>
+            <div id="successBox" class="success-box"></div>
+            <div id="errorBox" class="success-box" style="display:none;background:rgba(180,60,60,.15);border-color:rgba(200,80,80,.4);color:#ffd7d7"></div>
+            <div class="note">يُحفظ طلبك في Supabase ويصل للإدارة عبر لوحة «رسائل التواصل». احتفظ برقم المرجع للمتابعة.</div>
           </div>
         </form>
       </section>
@@ -333,31 +334,60 @@
   </main>
 
   <div id="site-footer"></div>
-  <script src="shared-layout.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/contact-submit.js"></script>
+  <script src="js/site-seo.js"></script>
+<script src="shared-layout.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", function () {
       const form = document.getElementById("contactForm");
       const successBox = document.getElementById("successBox");
+      const errorBox = document.getElementById("errorBox");
+      const submitBtn = form?.querySelector(".submit-btn");
 
       if (!form) return;
 
-      form.addEventListener("submit", function (e) {
+      form.addEventListener("submit", async function (e) {
         e.preventDefault();
-
         const formData = new FormData(form);
-        const data = {
-          name: formData.get("name"),
+        const payload = {
+          fullName: formData.get("name"),
           phone: formData.get("phone"),
           email: formData.get("email"),
           subject: formData.get("subject"),
           message: formData.get("message")
         };
-
-        console.log("Contact Message:", data);
-
-        successBox.classList.add("show");
-        form.reset();
-        window.scrollTo({ top: 0, behavior: "smooth" });
+        if (!String(payload.phone || "").trim() && !String(payload.email || "").trim()) {
+          if (errorBox) {
+            errorBox.textContent = "أدخل رقم الجوال أو البريد الإلكتروني على الأقل.";
+            errorBox.style.display = "block";
+          }
+          if (successBox) successBox.classList.remove("show");
+          return;
+        }
+        if (submitBtn) submitBtn.disabled = true;
+        if (errorBox) errorBox.style.display = "none";
+        try {
+          const row = await submitContactMessage(payload);
+          const ref = row?.reference_code || "—";
+          if (successBox) {
+            successBox.textContent = "تم إرسال رسالتك بنجاح. رقم المرجع: " + ref;
+            successBox.classList.add("show");
+          }
+          form.reset();
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        } catch (err) {
+          console.error(err);
+          if (errorBox) {
+            errorBox.textContent = "تعذر الإرسال. تأكد من تطبيق CONTACT_MESSAGES_RLS.sql في Supabase.";
+            errorBox.style.display = "block";
+          }
+          if (successBox) successBox.classList.remove("show");
+        } finally {
+          if (submitBtn) submitBtn.disabled = false;
+        }
       });
     });
   </script>

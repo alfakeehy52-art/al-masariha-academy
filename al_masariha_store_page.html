@@ -52,7 +52,19 @@ a{text-decoration:none;color:inherit}
 .product-info h3{margin:0 0 8px;font-size:24px}
 .product-desc{color:#c7d0ca;min-height:52px;line-height:1.8;font-size:14px;margin-bottom:10px}
 .price{color:#d5b15a;font-weight:900;font-size:20px}
-.buy{margin-top:14px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.04);border:1px solid var(--line);padding:11px 16px;border-radius:14px;font-weight:800;text-decoration:none;color:white}
+.buy{margin-top:14px;display:inline-flex;align-items:center;justify-content:center;background:rgba(255,255,255,.04);border:1px solid var(--line);padding:11px 16px;border-radius:14px;font-weight:800;text-decoration:none;color:white;cursor:pointer;font-family:inherit;font-size:14px}
+.buy.primary{background:linear-gradient(180deg,#e2c16c,#cda84d);color:#111;border-color:rgba(241,214,141,.35)}
+.order-modal{position:fixed;inset:0;background:rgba(0,0,0,.65);display:none;align-items:center;justify-content:center;padding:20px;z-index:9999}
+.order-modal.show{display:flex}
+.order-dialog{width:min(520px,100%);max-height:90vh;overflow:auto;padding:24px;border-radius:24px;border:1px solid rgba(213,177,90,.2);background:#081a12}
+.order-dialog h3{margin:0 0 8px;font-size:26px}
+.order-dialog .sub{color:#b8c4bc;margin:0 0 18px;line-height:1.8}
+.order-fields{display:grid;gap:12px}
+.order-fields input,.order-fields textarea{width:100%;box-sizing:border-box;border-radius:14px;border:1px solid var(--line);background:#0d1a12;color:#fff;padding:12px 14px;font-family:inherit}
+.order-actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap}
+.order-msg{margin-top:14px;padding:12px;border-radius:12px;display:none;line-height:1.8}
+.order-msg.ok{display:block;background:rgba(21,145,95,.15);border:1px solid rgba(21,145,95,.35)}
+.order-msg.err{display:block;background:rgba(180,60,60,.15);border:1px solid rgba(200,80,80,.35);color:#ffd7d7}
 .categories{padding:24px}
 .category-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:18px}
 .category-card{padding:20px;border-radius:22px;border:1px solid var(--line);background:rgba(255,255,255,.03)}
@@ -63,6 +75,8 @@ a{text-decoration:none;color:inherit}
 .notice-card h2{margin:0 0 10px;font-size:38px;color:var(--gold-soft)}
 .notice-card p{margin:0;color:#d2dad4;line-height:1.9;font-size:16px}
 .notice-actions{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin-top:18px}
+.empty-box{padding:28px 20px;border:1px dashed rgba(213,177,90,.25);border-radius:18px;color:#cad4cc;text-align:center;line-height:1.9;grid-column:1/-1}
+.product-img img{width:100%;height:100%;object-fit:cover}
 footer{display:none}
 #site-footer .site-copy,#site-footer .site-copy *{text-align:center !important}
 @media (max-width:1180px){.hero-grid,.overview-grid{grid-template-columns:1fr}.products-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.category-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
@@ -76,17 +90,17 @@ footer{display:none}
   <div class="container hero-box">
     <div class="hero-grid">
       <div class="hero-copy">
-        <div class="eyebrow">واجهة المتجر الحالية</div>
+        <div class="eyebrow">بيانات حية من Supabase</div>
         <h1>متجر الأكاديمية</h1>
-        <p>عرض بصري احترافي لمنتجات الأكاديمية وتجهيزاتها المستقبلية، مع إبراز الهوية الرسمية وإمكانية تطوير الصفحة لاحقًا إلى متجر متكامل وربطه بالنظام الداخلي.</p>
-        <div class="hero-actions"><a class="hero-btn" href="al_masariha_contact_page.html">استفسر عن المنتجات</a><a class="hero-ghost" href="index.html">العودة للرئيسية</a></div>
+        <p>منتجات منشورة و«قريبًا» من Supabase. المنتجات <strong>المنشورة</strong> يمكن طلبها مباشرة — الدفع الإلكتروني لاحقًا.</p>
+        <div class="hero-actions"><a class="hero-btn" href="store_order_status.html">متابعة طلب متجر</a><a class="hero-ghost" href="request_status.html">متابعة انضمام</a><a class="hero-ghost" href="al_masariha_contact_page.html">استفسار عام</a></div>
       </div>
       <div class="hero-side">
         <div class="hero-panels">
-          <div class="mini-panel"><b>6</b><span>نماذج عرض أولية للمنتجات داخل واجهة المتجر الحالية.</span></div>
-          <div class="mini-panel"><b>4</b><span>تصنيفات أساسية يمكن البناء عليها لاحقًا داخل المتجر والنظام الداخلي.</span></div>
-          <div class="mini-panel"><b>جاهز</b><span>للتطوير لاحقًا إلى عرض ديناميكي مرتبط ببيانات الإدارة.</span></div>
-          <div class="mini-panel"><b>مرن</b><span>ليستوعب منتجات اللاعبين وتجهيزات الأكاديمية والجمهور.</span></div>
+          <div class="mini-panel"><b id="storeStatTotal">0</b><span>منتج معروض للزوار (منشور أو قريبًا).</span></div>
+          <div class="mini-panel"><b id="storeStatPublished">0</b><span>منتجات منشورة جاهزة للاستفسار.</span></div>
+          <div class="mini-panel"><b id="storeStatSoon">0</b><span>منتجات قيد الإطلاق قريبًا.</span></div>
+          <div class="mini-panel"><b id="storeStatCats">0</b><span>فئات نشطة في الكتالوج الحالي.</span></div>
         </div>
       </div>
     </div>
@@ -95,16 +109,11 @@ footer{display:none}
 <section class="section">
   <div class="container">
     <div class="card store-overview">
-      <div class="section-head"><h2>عرض المنتجات</h2><div class="badge gold">تصور احترافي للمتجر</div></div>
+      <div class="section-head"><h2>عرض المنتجات</h2><div class="badge gold">بيانات حية</div></div>
       <div class="overview-grid">
-        <div class="lead-card"><h3>فكرة المتجر الحالية</h3><p>الصفحة تعرض المنتجات بشكل احترافي ومتناسق مع هوية الموقع، مع ترك مساحة كافية للتوسع لاحقًا إلى طلبات وتخصيص وربط بالنظام الداخلي من لوحة الإدارة.</p><div class="lead-badges"><span class="badge gold">منتجات لاعبين</span><span class="badge green">احتياجات أكاديمية</span><span class="badge">منتجات جمهور</span></div></div>
-        <div class="products-grid">
-          <article class="product"><div class="product-img"><span class="product-status">قريبًا</span>👕</div><div class="product-info"><h3>قميص الأكاديمية</h3><div class="product-desc">القميص الرسمي بواجهة عرض واضحة ومتناسقة مع هوية الأكاديمية الحالية.</div><div class="price">129 ر.س</div><a class="buy" href="al_masariha_contact_page.html">استفسر الآن</a></div></article>
-          <article class="product"><div class="product-img"><span class="product-status">عرض مبدئي</span>🧥</div><div class="product-info"><h3>جاكيت التدريب</h3><div class="product-desc">منتج مناسب للاعبين والجهاز الفني ضمن تجهيزات المواسم والأنشطة الرياضية.</div><div class="price">189 ر.س</div><a class="buy" href="al_masariha_contact_page.html">استفسر الآن</a></div></article>
-          <article class="product"><div class="product-img"><span class="product-status">احتياج أكاديمية</span>⚽</div><div class="product-info"><h3>كرة تدريب</h3><div class="product-desc">من العناصر الأساسية داخل الأكاديمية ويمكن إظهارها منظمًا ضمن احتياجات المتجر.</div><div class="price">99 ر.س</div><a class="buy" href="al_masariha_contact_page.html">استفسر الآن</a></div></article>
-          <article class="product"><div class="product-img"><span class="product-status">ملحق رياضي</span>🎒</div><div class="product-info"><h3>حقيبة رياضية</h3><div class="product-desc">حقيبة عملية مناسبة للتدريبات والتنقل وتدعم صورة الأكاديمية الموحدة.</div><div class="price">89 ر.س</div><a class="buy" href="al_masariha_contact_page.html">استفسر الآن</a></div></article>
-          <article class="product"><div class="product-img"><span class="product-status">جمهور</span>🧢</div><div class="product-info"><h3>قبعة الأكاديمية</h3><div class="product-desc">قطعة بسيطة تدعم الحضور البصري للأكاديمية وتصلح للفعاليات والمباريات.</div><div class="price">49 ر.س</div><a class="buy" href="al_masariha_contact_page.html">استفسر الآن</a></div></article>
-          <article class="product"><div class="product-img"><span class="product-status">إكسسوار</span>🧦</div><div class="product-info"><h3>جوارب رياضية</h3><div class="product-desc">جزء تكميلي مناسب للعرض ضمن منتجات اللاعبين والزي الرياضي المتناسق.</div><div class="price">29 ر.س</div><a class="buy" href="al_masariha_contact_page.html">استفسر الآن</a></div></article>
+        <div class="lead-card"><h3>من لوحة الإدارة</h3><p>أضف المنتجات من <strong>إدارة المتجر</strong> واختر حالة <strong>منشور</strong> أو <strong>قريبًا</strong> لتظهر هنا. المسودات والمخفية لا تُعرض للزوار.</p><div class="lead-badges"><span class="badge gold">منتجات لاعبين</span><span class="badge green">احتياجات أكاديمية</span><span class="badge">منتجات جمهور</span></div></div>
+        <div class="products-grid" id="storeProductsGrid">
+          <div class="empty-box">جاري تحميل المنتجات…</div>
         </div>
       </div>
     </div>
@@ -126,14 +135,138 @@ footer{display:none}
 <section class="section">
   <div class="container">
     <div class="card notice-card">
-      <h2>الواجهة جاهزة للتطوير المرحلي</h2>
-      <p>الشكل الحالي احترافي ومناسب للعرض، ويمكن لاحقًا ربطه بمنتجات الإدارة الداخلية لتتحول الصفحة إلى متجر مرن ومتجدد بدون إعادة بناء من الصفر.</p>
-      <div class="notice-actions"><a class="hero-btn" href="al_masariha_contact_page.html">تواصل معنا</a><a class="hero-ghost" href="index.html">العودة للرئيسية</a></div>
+      <h2>طلب أو استفسار</h2>
+      <p>المنتجات المنشورة: «اطلب الآن» من بطاقة المنتج. لمتابعة طلب سابق استخدم رقم المرجع ORD-… والجوال.</p>
+      <div class="notice-actions"><a class="hero-btn" href="store_order_status.html">متابعة طلب متجر</a><a class="hero-ghost" href="request_status.html">متابعة انضمام</a><a class="hero-ghost" href="al_masariha_contact_page.html">تواصل معنا</a></div>
     </div>
   </div>
 </section>
 </div>
+<div class="order-modal" id="orderModal" aria-hidden="true">
+  <div class="order-dialog" role="dialog">
+    <h3 id="orderModalTitle">طلب منتج</h3>
+    <p class="sub" id="orderModalSub"></p>
+    <form id="orderForm" class="order-fields">
+      <input type="hidden" id="orderProductId" />
+      <label>الاسم الكامل<input type="text" id="orderName" required /></label>
+      <label>رقم الجوال<input type="tel" id="orderPhone" required /></label>
+      <label>البريد (اختياري)<input type="email" id="orderEmail" /></label>
+      <label>الكمية<input type="number" id="orderQty" min="1" value="1" /></label>
+      <label>ملاحظات<textarea id="orderNotes" rows="3"></textarea></label>
+      <div class="order-actions">
+        <button type="submit" class="hero-btn" style="border:none;cursor:pointer">إرسال الطلب</button>
+        <button type="button" class="hero-ghost" id="orderModalClose" style="border:none;cursor:pointer">إلغاء</button>
+      </div>
+      <div id="orderModalMsg" class="order-msg"></div>
+    </form>
+  </div>
+</div>
 <div id="site-footer"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/supabase-public-lookup.js"></script>
+<script src="js/store-order-submit.js"></script>
+<script>
+function escapeHtml(v){
+  return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+}
+function contactUrl(productName){
+  const q = productName ? '?subject=' + encodeURIComponent('استفسار: ' + productName) : '';
+  return 'al_masariha_contact_page.html' + q;
+}
+let productsCache = [];
+function renderProductCard(p){
+  const img = p.image
+    ? `<img src="${escapeHtml(p.image)}" alt="${escapeHtml(p.name)}">`
+    : escapeHtml(p.emoji || '📦');
+  const price = p.price > 0 ? `${p.price} ر.س` : '—';
+  const badge = escapeHtml(p.statusLabel || p.status);
+  const typeHint = p.type ? `<span class="badge" style="margin-top:8px;display:inline-block">${escapeHtml(p.type)}</span>` : '';
+  const cta = p.status === 'published'
+    ? `<button type="button" class="buy primary" data-order="${escapeHtml(p.id)}">اطلب الآن</button>`
+    : `<a class="buy" href="${contactUrl(p.name)}">استفسر</a>`;
+  return `<article class="product"><div class="product-img"><span class="product-status">${badge}</span>${img}</div><div class="product-info"><h3>${escapeHtml(p.name)}</h3><div class="product-desc">${escapeHtml(p.description || '')}</div>${typeHint}<div class="price">${price}</div>${cta}</div></article>`;
+}
+function openOrderModal(product){
+  const modal = document.getElementById('orderModal');
+  const msg = document.getElementById('orderModalMsg');
+  if(!product || !modal) return;
+  document.getElementById('orderProductId').value = product.id;
+  document.getElementById('orderModalTitle').textContent = 'طلب: ' + product.name;
+  document.getElementById('orderModalSub').textContent = (product.price > 0 ? product.price + ' ر.س — ' : '') + 'سيُرسل الطلب للإدارة بدون دفع إلكتروني حالياً.';
+  msg.className = 'order-msg';
+  msg.textContent = '';
+  modal.classList.add('show');
+}
+function bindOrderButtons(){
+  document.querySelectorAll('[data-order]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const id = btn.getAttribute('data-order');
+      const p = productsCache.find(x => String(x.id) === String(id));
+      openOrderModal(p);
+    });
+  });
+}
+function setupOrderModal(){
+  const modal = document.getElementById('orderModal');
+  const close = () => modal?.classList.remove('show');
+  document.getElementById('orderModalClose')?.addEventListener('click', close);
+  modal?.addEventListener('click', e => { if(e.target === modal) close(); });
+  document.getElementById('orderForm')?.addEventListener('submit', async e => {
+    e.preventDefault();
+    const msg = document.getElementById('orderModalMsg');
+    try{
+      const row = await submitStoreOrder({
+        productId: document.getElementById('orderProductId').value,
+        customerName: document.getElementById('orderName').value,
+        phone: document.getElementById('orderPhone').value,
+        email: document.getElementById('orderEmail').value,
+        quantity: document.getElementById('orderQty').value,
+        notes: document.getElementById('orderNotes').value
+      });
+      const ref = row?.reference_code || '—';
+      msg.className = 'order-msg ok';
+      msg.innerHTML = `تم إرسال الطلب. رقم المرجع: <b>${escapeHtml(ref)}</b><br><a href="store_order_status.html?ref=${encodeURIComponent(ref)}&phone=${encodeURIComponent(document.getElementById('orderPhone').value)}" style="color:#9de2bf">متابعة الطلب</a>`;
+      document.getElementById('orderForm').reset();
+      document.getElementById('orderQty').value = '1';
+    }catch(err){
+      console.error(err);
+      msg.className = 'order-msg err';
+      msg.textContent = 'تعذر إرسال الطلب. تأكد من STORE_ORDERS_RLS.sql والمنتج «منشور».';
+    }
+  });
+}
+function updateStoreStats(products){
+  const cats = new Set(products.map(p => p.category).filter(Boolean));
+  const el = (id, v) => { const n = document.getElementById(id); if(n) n.textContent = v; };
+  el('storeStatTotal', products.length);
+  el('storeStatPublished', products.filter(p => p.status === 'published').length);
+  el('storeStatSoon', products.filter(p => p.status === 'coming_soon').length);
+  el('storeStatCats', cats.size);
+}
+async function initStorePage(){
+  const grid = document.getElementById('storeProductsGrid');
+  if(!grid) return;
+  try{
+    const products = typeof listStoreProductsPublic === 'function' ? await listStoreProductsPublic() : [];
+    productsCache = products;
+    updateStoreStats(products);
+    if(!products.length){
+      grid.innerHTML = '<div class="empty-box">لا توجد منتجات معروضة حالياً. أضف منتجات من لوحة الإدارة بحالة «منشور» أو «قريبًا».</div>';
+      return;
+    }
+    grid.innerHTML = products.map(renderProductCard).join('');
+    bindOrderButtons();
+  }catch(err){
+    console.error(err);
+    grid.innerHTML = '<div class="empty-box">تعذر تحميل المنتجات. تأكد من تنفيذ <strong>docs/STORE_PRODUCTS_RLS.sql</strong> في Supabase.</div>';
+  }
+}
+setupOrderModal();
+initStorePage();
+</script>
+<script src="js/site-seo.js"></script>
 <script src="shared-layout.js"></script>
 </body>
 </html>

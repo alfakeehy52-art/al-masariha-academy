@@ -10,6 +10,8 @@
     /** مرجع احتياطي للتاريخ الهجري إذا فشل المتصفح (يُحدَّث دورياً) */
     hijriToday: { year: 1447, month: 11, day: 1 },
     /** إعادة التوجيه بعد تفعيل/رابط بريد الكادر (يُضبط تلقائياً من الصفحة إن تُرك فارغاً) */
-    staffActivationRedirect: ""
+    staffActivationRedirect: "",
+    /** النطاق العام — Cloudflare Pages */
+    siteUrl: "https://al-masariha-academy.pages.dev"
   };
 })();

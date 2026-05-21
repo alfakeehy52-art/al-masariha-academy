@@ -139,6 +139,13 @@
       color:#ecf0ea;
       font-weight:800;
       text-decoration:none;
+      font-family:inherit;
+      font-size:inherit;
+      cursor:pointer;
+    }
+
+    button.toolbar-pill{
+      appearance:none;
     }
 
     .toolbar-pill.active{
@@ -653,7 +660,7 @@ body{
   <section class="players-hero">
     <div class="players-badge">⚽ تشكيلة الأكاديمية</div>
     <h1 class="players-title">اللاعبون — FIFA Style</h1>
-    <p class="players-subtitle">نسخة تجريبية احترافية لعرض لاعبي الأكاديمية بأسلوب بصري قوي. يمكنك الآن تجربة الشكل والتنقل، ولاحقًا نستبدل الأسماء والبيانات التجريبية بأسماء اللاعبين الحقيقية بسهولة.</p>
+    <p class="players-subtitle">قائمة اللاعبين المعتمدين من قاعدة بيانات الأكاديمية — ابحث، صفِّ، وافتح الملف الكامل لكل لاعب.</p>
   </section>
 
   <section class="players-stats">
@@ -666,11 +673,11 @@ body{
   <section class="players-toolbar">
     <h2>بطاقات اللاعبين</h2>
     <div class="toolbar-pills">
-      <a class="toolbar-pill active" href="#" data-filter="all">الكل</a>
-      <a class="toolbar-pill" href="#" data-filter="attack">الهجوم</a>
-      <a class="toolbar-pill" href="#" data-filter="midfield">الوسط</a>
-      <a class="toolbar-pill" href="#" data-filter="defense">الدفاع</a>
-      <a class="toolbar-pill" href="#" data-filter="goalkeeper">الحراسة</a>
+      <button type="button" class="toolbar-pill active" data-filter="all">الكل</button>
+      <button type="button" class="toolbar-pill" data-filter="attack">الهجوم</button>
+      <button type="button" class="toolbar-pill" data-filter="midfield">الوسط</button>
+      <button type="button" class="toolbar-pill" data-filter="defense">الدفاع</button>
+      <button type="button" class="toolbar-pill" data-filter="goalkeeper">الحراسة</button>
     </div>
   </section>
 
@@ -959,8 +966,7 @@ body{
 
     document.addEventListener("DOMContentLoaded", () => {
       document.querySelectorAll(".toolbar-pill").forEach(btn => {
-        btn.addEventListener("click", e => {
-          e.preventDefault();
+        btn.addEventListener("click", () => {
           document.querySelectorAll(".toolbar-pill").forEach(x => x.classList.remove("active"));
           btn.classList.add("active");
           currentRoleFilter = btn.dataset.filter || "all";
@@ -985,6 +991,7 @@ body{
     });
   </script>
 
-  <script src="shared-layout.js"></script>
+  <script src="js/site-seo.js"></script>
+<script src="shared-layout.js"></script>
 </body>
 </html>

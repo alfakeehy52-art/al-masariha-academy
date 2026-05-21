@@ -211,21 +211,12 @@ h1{margin:0 0 8px;font-size:34px}
 </div>
 
 <script>
-const COACHES_STORAGE_KEY = 'academyCoaches';
-const PLAYERS_STORAGE_KEY = 'academyPlayers';
+const supabaseClient = createSupabaseClient();
+const app = document.getElementById('app');
+let allPlayers = [];
 
-function readCoaches(){
-  try{
-    const raw = JSON.parse(localStorage.getItem(COACHES_STORAGE_KEY) || '[]');
-    return Array.isArray(raw) ? raw : [];
-  }catch(e){ return []; }
-}
-
-function readPlayers(){
-  try{
-    const raw = JSON.parse(localStorage.getItem(PLAYERS_STORAGE_KEY) || '[]');
-    return Array.isArray(raw) ? raw : [];
-  }catch(e){ return []; }
+function coachCode(coach){
+  return `COA-${String(coach.id || '').replace(/-/g, '').slice(0, 8).toUpperCase()}`;
 }
 
 function escapeHtml(v){
@@ -260,51 +251,42 @@ function overallFromPlayer(player){
 }
 
 function getLinkedPlayers(coach){
-  const players = readPlayers();
-  return players.filter(player => {
-    const checks = [
-      player.coachId,
-      player.assignedCoachId,
-      player.supervisorCoachId,
-      player.linkedCoachId
+  const id = String(coach.id || '').trim();
+  const name = String(coach.full_name || '').trim();
+  const code = coachCode(coach);
+  return allPlayers.filter(player => {
+    const coachIdChecks = [
+      player.coach_id, player.assigned_coach_id,
+      player.supervisor_coach_id, player.linked_coach_id
     ].map(v => String(v || '').trim());
+    if (coachIdChecks.includes(id)) return true;
 
-    if (checks.includes(String(coach.id))) return true;
-
-    const nameChecks = [
-      player.coachName,
-      player.assignedCoachName,
-      player.supervisorCoachName,
-      player.linkedCoachName
+    const coachNameChecks = [
+      player.coach_name, player.assigned_coach_name,
+      player.supervisor_coach_name, player.linked_coach_name
     ].map(v => String(v || '').trim());
+    if (coachNameChecks.includes(name)) return true;
 
-    if (nameChecks.includes(String(coach.fullName || '').trim())) return true;
-
-    const codeChecks = [
-      player.coachCode,
-      player.assignedCoachCode,
-      player.linkedCoachCode
+    const coachCodeChecks = [
+      player.coach_code, player.assigned_coach_code, player.linked_coach_code
     ].map(v => String(v || '').trim());
-
-    if (codeChecks.includes(String(coach.code || '').trim())) return true;
-
-    return false;
+    return coachCodeChecks.includes(code);
   });
 }
 
 function renderPlayerCard(player){
-  const fullName = escapeHtml(player.fullName || '-');
-  const shirt = escapeHtml(player.shirtNumber || player.code || '-');
+  const fullName = escapeHtml(player.full_name || '-');
+  const shirt = escapeHtml(player.shirt_number || player.code || '-');
   const category = escapeHtml(normalizeCategory(player.category));
   const position = escapeHtml(player.position || 'لاعب');
-  const foot = escapeHtml(player.preferredFoot || 'القدم اليمنى');
+  const foot = escapeHtml(player.preferred_foot || 'القدم اليمنى');
   const overall = escapeHtml(overallFromPlayer(player));
   const age = escapeHtml(player.age || '—');
-  const status = escapeHtml(player.playerStatus || player.status || 'نشط');
+  const status = escapeHtml(player.player_status || player.status || 'نشط');
   const city = escapeHtml(player.city || '—');
   const avatar = player.image
     ? `<img src="${escapeHtml(player.image)}" alt="${fullName}">`
-    : `<span>${escapeHtml(getInitials(player.fullName || ''))}</span>`;
+    : `<span>${escapeHtml(getInitials(player.full_name || ''))}</span>`;
 
   return `
     <article class="player-fifa-card">
@@ -338,41 +320,48 @@ function renderPlayerCard(player){
   `;
 }
 
-const params = new URLSearchParams(window.location.search);
-const id = Number(params.get('id') || 0);
-const coach = readCoaches().find(c => Number(c.id) === id);
-const app = document.getElementById('app');
+function renderEmpty(message){
+  app.innerHTML = `<div class="card"><div class="empty">${escapeHtml(message)}</div></div>`;
+}
 
-if(!coach){
-  app.innerHTML = '<div class="card"><div class="empty">تعذر العثور على ملف المدرب المطلوب.</div></div>';
-} else {
+function renderLoading(){
+  app.innerHTML = '<div class="card"><div class="empty">جاري تحميل ملف المدرب من قاعدة البيانات...</div></div>';
+}
+
+function renderCoachView(coach){
   const linkedPlayers = getLinkedPlayers(coach);
+  const code = coachCode(coach);
+  const exp = coach.experience_years ? `${coach.experience_years} سنة` : '-';
 
   app.innerHTML = `
     <div class="hero">
       <div class="card">
         <div class="card-body">
-          <div class="photo">${coach.image ? `<img src="${escapeHtml(coach.image)}" alt="${escapeHtml(coach.fullName)}">` : getInitials(coach.fullName)}</div>
+          <div class="photo">${coach.image ? `<img src="${escapeHtml(coach.image)}" alt="${escapeHtml(coach.full_name)}">` : getInitials(coach.full_name)}</div>
         </div>
       </div>
 
       <div class="card">
         <div class="card-body">
-          <h1>${escapeHtml(coach.fullName || '-')}</h1>
-          <div class="subtitle">${escapeHtml(coach.jobTitle || '-')} • ${escapeHtml(coach.specialty || '-')}</div>
+          <h1>${escapeHtml(coach.full_name || '-')}</h1>
+          <div class="subtitle">${escapeHtml(coach.job_title || '-')} • ${escapeHtml(coach.specialty || '-')}</div>
 
           <div class="grid">
-            <div class="item"><span>الكود</span><strong>${escapeHtml(coach.code || '-')}</strong></div>
+            <div class="item"><span>الكود</span><strong>${escapeHtml(code)}</strong></div>
             <div class="item"><span>الفئة</span><strong>${escapeHtml(coach.category || '-')}</strong></div>
-            <div class="item"><span>سنوات الخبرة</span><strong>${escapeHtml(coach.experienceYears ? coach.experienceYears + ' سنة' : '-')}</strong></div>
+            <div class="item"><span>سنوات الخبرة</span><strong>${escapeHtml(exp)}</strong></div>
             <div class="item"><span>الجوال</span><strong>${escapeHtml(coach.phone || '-')}</strong></div>
-            <div class="item"><span>الحالة</span><strong>${escapeHtml(coach.coachStatus || coach.status || '-')}</strong></div>
+            <div class="item"><span>الحالة</span><strong>${escapeHtml(coach.status || '-')}</strong></div>
             <div class="item"><span>أبرز شهادة</span><strong>${escapeHtml(coach.certification || '-')}</strong></div>
           </div>
 
           <div class="bio">
             <strong style="display:block;margin-bottom:8px;color:var(--gold-2)">نبذة تعريفية</strong>
             ${escapeHtml(coach.bio || 'لا توجد نبذة مضافة حاليًا.')}
+          </div>
+          ${coach.notes ? `<div class="bio" style="margin-top:12px"><strong style="display:block;margin-bottom:8px;color:var(--gold-2)">ملاحظات إدارية</strong>${escapeHtml(coach.notes)}</div>` : ''}
+          <div style="margin-top:18px;display:flex;gap:10px;flex-wrap:wrap">
+            <a class="btn" href="al_masariha_coach_profile.html?id=${encodeURIComponent(coach.id)}">الملف العام</a>
           </div>
         </div>
       </div>
@@ -393,13 +382,48 @@ if(!coach){
           ? `<div class="players-grid">${linkedPlayers.map(renderPlayerCard).join('')}</div>`
           : `<div class="empty-players">
                لا يوجد لاعبون مرتبطون بهذا المدرب حاليًا.<br>
-               عند ربط اللاعب بالمدرب داخل بيانات اللاعب سيظهر هنا تلقائيًا.
+               عند ربط اللاعب بالمدرب من لوحة تعديل اللاعب سيظهر هنا تلقائيًا.
              </div>`
         }
       </div>
     </section>
   `;
 }
+
+async function loadCoachView(){
+  const id = String(new URLSearchParams(window.location.search).get('id') || '').trim();
+  if (!id) {
+    renderEmpty('لم يتم تمرير معرّف المدرب في الرابط.');
+    return;
+  }
+
+  renderLoading();
+
+  const [coachRes, playersRes] = await Promise.all([
+    supabaseClient.from('coaches').select('*').eq('id', id).maybeSingle(),
+    supabaseClient.from('players').select('id, full_name, code, shirt_number, category, position, preferred_foot, age, city, status, player_status, image, pac, sho, pas, dri, def, phy, coach_id, coach_name, coach_code, assigned_coach_id, assigned_coach_name, assigned_coach_code, supervisor_coach_id, supervisor_coach_name, linked_coach_id, linked_coach_name, linked_coach_code')
+  ]);
+
+  if (coachRes.error) {
+    console.error('Supabase coach fetch error:', coachRes.error);
+    renderEmpty('تعذر تحميل المدرب من قاعدة البيانات. تأكد من سياسات RLS.');
+    return;
+  }
+  if (playersRes.error) {
+    console.warn('Supabase players fetch warning:', playersRes.error);
+  }
+
+  allPlayers = Array.isArray(playersRes.data) ? playersRes.data : [];
+
+  if (!coachRes.data) {
+    renderEmpty('تعذر العثور على ملف المدرب المطلوب.');
+    return;
+  }
+
+  renderCoachView(coachRes.data);
+}
+
+loadCoachView();
 </script>
 
 <script src="admin_sidebar.js"></script>

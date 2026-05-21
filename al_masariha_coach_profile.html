@@ -498,7 +498,7 @@
             <h2>ملف المدرب الاحترافي</h2>
             <p>صفحة تعريفية فخمة لعرض خبرات المدرب ورخصه التدريبية وإنجازاته ومنهجيته الفنية، بأسلوب بصري منظم يعكس احترافية الأكاديمية ويمنح أولياء الأمور والزوار صورة واثقة عن الكادر الفني.</p>
           </div>
-          <div class="headline-chip">جاهز للتحديث بالبيانات الحقيقية</div>
+          <div class="headline-chip" id="headlineChip">COA</div>
         </div>
 
         <div class="summary-grid">
@@ -543,7 +543,7 @@
         </section>
 
         <section class="profile-section">
-          <h3 class="section-title">أبرز الإنجازات</h3>
+          <h3 class="section-title">أبرز الإنجازات <span class="demo-chip">قالب تجريبي</span></h3>
           <div class="achievements-grid">
             <div class="achievement-card"><strong>5</strong><span>بطولات محلية</span></div>
             <div class="achievement-card"><strong>180+</strong><span>لاعبًا تم تدريبهم</span></div>
@@ -552,7 +552,7 @@
         </section>
 
         <section class="profile-section">
-          <h3 class="section-title">المسار المهني</h3>
+          <h3 class="section-title">المسار المهني <span class="demo-chip">قالب تجريبي</span></h3>
           <div class="timeline">
             <div class="timeline-item">
               <div class="timeline-year">2014 — 2017</div>
@@ -571,33 +571,116 @@
       </div>
     </section>
 
-    <div class="profile-note">البيانات الحالية تجريبية لاختبار الشكل العام، ويمكن لاحقًا استبدالها بسهولة بمعلومات المدربين الفعلية وصورهم الرسمية.</div>
+    <div class="profile-note" id="profileNote">يتم تحميل بيانات المدرب من قاعدة البيانات.</div>
   </main>
 
   <div id="site-footer"></div>
-  <script src="shared-layout.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/supabase-public-lookup.js"></script>
+  <script src="js/site-seo.js"></script>
+<script src="shared-layout.js"></script>
 
 <script>
   const coachParams = new URLSearchParams(window.location.search);
-  const coachId = coachParams.get('id') || '1';
-  const coaches = {
-    1: {name:'الكابتن أحمد علي', subtitle:'المدرب الأول — ملف احترافي', role:'المدرب الأول', exp:'12 سنة', spec:'تطوير الفئات السنية', focus:'التأسيس الفني والانضباط', badge:'A', years:'2014 — الآن', achievements:['5','180+','8']},
-    2: {name:'الكابتن محمد سالم', subtitle:'مدرب لياقة — ملف احترافي', role:'مدرب لياقة', exp:'9 سنوات', spec:'الإعداد البدني', focus:'التحمل والقوة', badge:'B', years:'2017 — الآن', achievements:['3','150+','6']},
-    3: {name:'الكابتن خالد حسن', subtitle:'مدرب حراس — ملف احترافي', role:'مدرب حراس', exp:'10 سنوات', spec:'تدريب الحراس', focus:'التمركز وردة الفعل', badge:'A', years:'2015 — الآن', achievements:['4','90+','7']}
-  };
-  const c = coaches[coachId] || coaches['1'];
-  document.querySelector('.coach-side-info h1').textContent = c.name;
-  document.querySelector('.coach-side-info p').textContent = c.subtitle;
-  document.querySelectorAll('.detail-item span')[0].textContent = c.name.replace('الكابتن ','');
-  document.querySelectorAll('.detail-item span')[1].textContent = c.role;
-  document.querySelectorAll('.detail-item span')[2].textContent = c.badge + ' License';
-  document.querySelectorAll('.detail-item span')[3].textContent = c.exp;
-  document.querySelectorAll('.detail-item span')[4].textContent = c.spec;
-  document.querySelectorAll('.detail-item span')[5].textContent = c.focus;
-  document.querySelector('.license-badge strong').textContent = c.badge;
-  document.querySelectorAll('.achievement-card strong')[0].textContent = c.achievements[0];
-  document.querySelectorAll('.achievement-card strong')[1].textContent = c.achievements[1];
-  document.querySelectorAll('.achievement-card strong')[2].textContent = c.achievements[2];
+  const coachId = coachParams.get('id');
+
+  function escapeHtml(v){
+    return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
+  }
+
+  function getInitials(name){
+    const text = String(name || '').trim();
+    if(!text) return '👨‍🏫';
+    const parts = text.split(/\s+/).filter(Boolean);
+    return parts.length === 1 ? parts[0].slice(0,2) : (parts[0][0] || '') + (parts[1][0] || '');
+  }
+
+  function certBadge(cert){
+    const text = String(cert || '').trim();
+    if(!text) return '—';
+    const match = text.match(/\b([A-F])\b/i);
+    return match ? match[1].toUpperCase() : text.slice(0, 1).toUpperCase();
+  }
+
+  function renderNotFound(){
+    document.querySelector('.coach-profile-page').innerHTML = `
+      <section class="profile-section" style="margin:32px auto;max-width:900px">
+        <h3 class="section-title">المدرب غير موجود</h3>
+        <p style="margin:0;color:var(--coach-muted);line-height:1.9">تعذر العثور على المدرب المطلوب. ارجع إلى <a href="al_masariha_coaches_page.html">صفحة المدربين</a> واختر مدربًا من القائمة.</p>
+      </section>`;
+  }
+
+  function renderCoach(c){
+    const fullName = c.fullName || '—';
+    const subtitle = (c.jobTitle || 'مدرب') + ' — ' + (c.specialty || 'التخصص غير محدد');
+    const expYears = Number(c.experienceYears) || 0;
+    const avatarEl = document.querySelector('.coach-avatar');
+    if(c.image){
+      avatarEl.innerHTML = `<img src="${escapeHtml(c.image)}" alt="${escapeHtml(fullName)}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
+    } else {
+      avatarEl.textContent = getInitials(fullName);
+    }
+
+    document.querySelector('.coach-side-info h1').textContent = fullName;
+    document.querySelector('.coach-side-info p').textContent = subtitle;
+    document.querySelector('.coach-status').textContent = c.coachStatus || 'نشط';
+    const chipEl = document.getElementById('headlineChip') || document.querySelector('.headline-chip');
+    if (chipEl) chipEl.textContent = c.code || 'COA';
+    document.querySelector('.license-badge strong').textContent = certBadge(c.certification);
+
+    const pills = document.querySelector('.coach-side-meta');
+    pills.innerHTML = [
+      expYears ? `${expYears} سنوات خبرة` : null,
+      c.category || null,
+      c.specialty || null
+    ].filter(Boolean).map(text => `<span class="meta-pill">${escapeHtml(text)}</span>`).join('');
+
+    const summarySpans = document.querySelectorAll('.summary-box span');
+    summarySpans[0].textContent = expYears ? `${expYears}` : '—';
+    summarySpans[1].textContent = c.category || '—';
+    summarySpans[2].textContent = c.certification || '—';
+    summarySpans[3].textContent = c.coachStatus || '—';
+
+    const detailSpans = document.querySelectorAll('.detail-item span');
+    detailSpans[0].textContent = fullName;
+    detailSpans[1].textContent = c.jobTitle || '—';
+    detailSpans[2].textContent = c.certification || '—';
+    detailSpans[3].textContent = expYears ? `${expYears} سنة` : '—';
+    detailSpans[4].textContent = c.specialty || '—';
+    detailSpans[5].textContent = c.category || '—';
+
+    const bio = String(c.bio || '').trim();
+    const methodFirst = document.querySelector('.method-box p');
+    if(methodFirst && bio){
+      methodFirst.textContent = bio;
+    }
+
+    document.getElementById('profileNote').textContent = bio
+      ? 'ملف المدرب مرتبط ببيانات الأكاديمية في قاعدة البيانات.'
+      : 'لا توجد نبذة تعريفية مضافة لهذا المدرب بعد.';
+  }
+
+  async function initCoachProfile(){
+    if(!coachId){
+      renderNotFound();
+      return;
+    }
+    try{
+      const coach = await getCoachPublic(coachId);
+      if(!coach){
+        renderNotFound();
+        return;
+      }
+      renderCoach(coach);
+    }catch(e){
+      console.error('Coach profile load error:', e);
+      renderNotFound();
+    }
+  }
+
+  initCoachProfile();
 </script>
 </body>
 </html>

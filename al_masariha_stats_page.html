@@ -1,349 +1,156 @@
-
 <!DOCTYPE html>
-
 <html dir="rtl" lang="ar">
 <head>
 <meta charset="utf-8"/>
 <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
 <title>الإحصائيات | أكاديمية المسارحة لكرة القدم</title>
-<link href="https://fonts.googleapis.com" rel="preconnect"/>
-<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&amp;display=swap" rel="stylesheet"/>
 <style>
-body{
-  margin:0;
-  font-family:'Cairo',sans-serif;
-  background:#05110b;
-  color:white;
-}
-.container{
-  width:min(1200px,calc(100% - 40px));
-  margin:auto;
-}
-header{
-  background:#06140e;
-  border-bottom:1px solid #1f2e26;
-}
-.nav{
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  min-height:70px;
-}
-.logo{
-  font-weight:900;
-  font-size:20px;
-}
-.menu{
-  display:flex;
-  gap:20px;
-}
-.menu a{
-  color:#dcdcdc;
-  text-decoration:none;
-  font-weight:700;
-}
-.menu a.active{
-  color:#d5b15a;
-}
-.hero{
-  padding:40px 0 20px;
-  text-align:center;
-}
-.hero h1{
-  font-size:42px;
-  margin:0 0 10px;
-}
-.hero p{
-  color:#c7d0ca;
-  margin:0;
-}
-.top-stats{
-  margin-top:30px;
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:18px;
-}
-.stat-box{
-  background:#081a12;
-  border:1px solid #24352c;
-  border-radius:16px;
-  padding:20px;
-  text-align:center;
-}
-.stat-box strong{
-  display:block;
-  font-size:30px;
-  color:#d5b15a;
-}
-.stat-box span{
-  display:block;
-  margin-top:6px;
-  color:#c7d0ca;
-  font-size:14px;
-}
-.section{
-  margin-top:36px;
-}
-.section h2{
-  margin:0 0 16px;
-  font-size:28px;
-}
-.table-card{
-  background:#081a12;
-  border:1px solid #24352c;
-  border-radius:16px;
-  overflow:hidden;
-}
-table{
-  width:100%;
-  border-collapse:collapse;
-}
-th,td{
-  padding:16px 14px;
-  text-align:right;
-}
-th{
-  background:#0b2117;
-  color:#d5b15a;
-  font-size:15px;
-}
-tr{
-  border-bottom:1px solid #1f2e26;
-}
-tr:last-child{
-  border-bottom:none;
-}
-td{
-  color:#e7ece8;
-}
-.rank{
-  color:#d5b15a;
-  font-weight:900;
-}
-.cards{
-  display:grid;
-  grid-template-columns:repeat(3,1fr);
-  gap:18px;
-}
-.highlight-card{
-  background:#081a12;
-  border:1px solid #24352c;
-  border-radius:16px;
-  padding:22px;
-}
-.highlight-card h3{
-  margin:0 0 10px;
-  font-size:22px;
-}
-.highlight-card p{
-  margin:0;
-  color:#c7d0ca;
-  line-height:1.9;
-}
-footer{
-  margin-top:60px;
-  padding:20px 0;
-  border-top:1px solid #1f2e26;
-  text-align:center;
-  color:#aaa;
-}
-@media (max-width:900px){
-  .top-stats,.cards{
-    grid-template-columns:repeat(2,1fr);
-  }
-}
-@media (max-width:700px){
-  .menu{
-    display:none;
-  }
-  .top-stats,.cards{
-    grid-template-columns:1fr;
-  }
-  th,td{
-    padding:12px 10px;
-    font-size:14px;
-  }
-  .hero h1{
-    font-size:34px;
-  }
-}
+body{margin:0;font-family:'Cairo',sans-serif;background:#05110b;color:white}
+.container{width:min(1200px,calc(100% - 40px));margin:auto}
+.hero{padding:40px 0 20px;text-align:center}
+.hero h1{font-size:42px;margin:0 0 10px}
+.hero p{color:#c7d0ca;margin:0}
+.live-pill{display:inline-block;padding:6px 12px;border-radius:999px;background:rgba(15,106,71,.15);border:1px solid rgba(15,106,71,.28);color:#9de2bf;font-size:12px;font-weight:900;vertical-align:middle;margin-inline-start:8px}
+.top-stats{margin-top:30px;display:grid;grid-template-columns:repeat(4,1fr);gap:18px}
+.stat-box{background:#081a12;border:1px solid #24352c;border-radius:16px;padding:20px;text-align:center}
+.stat-box strong{display:block;font-size:30px;color:#d5b15a}
+.stat-box span{display:block;margin-top:6px;color:#c7d0ca;font-size:14px}
+.section{margin-top:36px}
+.section h2{margin:0 0 16px;font-size:28px}
+.table-card{background:#081a12;border:1px solid #24352c;border-radius:16px;overflow:hidden}
+table{width:100%;border-collapse:collapse}
+th,td{padding:16px 14px;text-align:right}
+th{background:#0b2117;color:#d5b15a;font-size:15px}
+tr{border-bottom:1px solid #1f2e26}
+tr:last-child{border-bottom:none}
+td{color:#e7ece8}
+.rank{color:#d5b15a;font-weight:900}
+.cards{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.highlight-card{background:#081a12;border:1px solid #24352c;border-radius:16px;padding:22px}
+.highlight-card h3{margin:0 0 10px;font-size:22px}
+.highlight-card p{margin:0;color:#c7d0ca;line-height:1.9}
+.empty-row td{color:#b8c4bc;text-align:center;padding:28px}
+@media (max-width:900px){.top-stats,.cards{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:700px){.top-stats,.cards{grid-template-columns:1fr}.hero h1{font-size:34px}}
 </style>
 <link href="shared-layout.css" rel="stylesheet"/>
 <style id="footer-copy-fix">
-#site-footer .site-copy,
-#site-footer .site-copy *{
-  text-align:center !important;
-}
+#site-footer .site-copy,#site-footer .site-copy *{text-align:center !important;}
 </style>
-
 </head>
 <body><div id="site-header"></div>
 
 <section class="hero">
 <div class="container">
-<h1>إحصائيات الأكاديمية</h1>
-<p>تابع ترتيب الهدافين وصناع اللعب وأبرز أرقام الموسم</p>
-<div class="top-stats">
-<div class="stat-box">
-<strong>85</strong>
-<span>إجمالي الأهداف</span>
-</div>
-<div class="stat-box">
-<strong>30</strong>
-<span>عدد المباريات</span>
-</div>
-<div class="stat-box">
-<strong>100+</strong>
-<span>عدد اللاعبين</span>
-</div>
-<div class="stat-box">
-<strong>12</strong>
-<span>نجوم الأسبوع</span>
-</div>
-</div>
-</div>
-</section>
-<section class="container section">
-<h2>ترتيب الهدافين</h2>
-<div class="table-card">
-<table>
-<thead>
-<tr>
-<th>الترتيب</th>
-<th>اللاعب</th>
-<th>المركز</th>
-<th>الأهداف</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="rank">1</td>
-<td>محمد القحطاني</td>
-<td>مهاجم</td>
-<td>7</td>
-</tr>
-<tr>
-<td class="rank">2</td>
-<td>أحمد الشهري</td>
-<td>مهاجم</td>
-<td>5</td>
-</tr>
-<tr>
-<td class="rank">3</td>
-<td>سعد اليامي</td>
-<td>وسط</td>
-<td>4</td>
-</tr>
-<tr>
-<td class="rank">4</td>
-<td>خالد المطيري</td>
-<td>وسط</td>
-<td>3</td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
-<section class="container section">
-<h2>أفضل صانع لعب</h2>
-<div class="table-card">
-<table>
-<thead>
-<tr>
-<th>الترتيب</th>
-<th>اللاعب</th>
-<th>المركز</th>
-<th>التمريرات الحاسمة</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="rank">1</td>
-<td>سعد اليامي</td>
-<td>وسط</td>
-<td>8</td>
-</tr>
-<tr>
-<td class="rank">2</td>
-<td>محمد القحطاني</td>
-<td>مهاجم</td>
-<td>4</td>
-</tr>
-<tr>
-<td class="rank">3</td>
-<td>باسر الشهراني</td>
-<td>جناح</td>
-<td>5</td>
-</tr>
-<tr>
-<td class="rank">4</td>
-<td>خالد المطيري</td>
-<td>وسط</td>
-<td>3</td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
-<section class="container section">
-<h2>أكثر اللاعبين مشاركة</h2>
-<div class="table-card">
-<table>
-<thead>
-<tr>
-<th>الترتيب</th>
-<th>اللاعب</th>
-<th>المركز</th>
-<th>عدد المباريات</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td class="rank">1</td>
-<td>محمد القحطاني</td>
-<td>مهاجم</td>
-<td>12</td>
-</tr>
-<tr>
-<td class="rank">2</td>
-<td>سعد اليامي</td>
-<td>وسط</td>
-<td>12</td>
-</tr>
-<tr>
-<td class="rank">3</td>
-<td>فهد العتيبي</td>
-<td>مدافع</td>
-<td>11</td>
-</tr>
-<tr>
-<td class="rank">4</td>
-<td>عبدالله السبيعي</td>
-<td>حارس</td>
-<td>10</td>
-</tr>
-</tbody>
-</table>
-</div>
-</section>
-<section class="container section">
-<h2>أبرز أرقام الموسم</h2>
-<div class="cards">
-<div class="highlight-card">
-<h3>⭐ أفضل لاعب</h3>
-<p>محمد القحطاني حصل على جائزة أفضل لاعب في المباراة مرتين خلال الموسم الحالي.</p>
-</div>
-<div class="highlight-card">
-<h3>⚽ أقوى هجوم</h3>
-<p>الأكاديمية سجلت 85 هدفًا في مختلف المباريات الودية والمحلية حتى الآن.</p>
-</div>
-<div class="highlight-card">
-<h3>🛡️ ثبات دفاعي</h3>
-<p>خط الدفاع حافظ على شباكه في أكثر من مباراة، مع تطور واضح في التنظيم الخلفي.</p>
+<h1>إحصائيات الأكاديمية <span class="live-pill">بيانات حية</span></h1>
+<p>ترتيب الهدافين وصناع اللعب وأرقام الموسم من بيانات اللاعبين والمباريات في Supabase.</p>
+<div class="top-stats" id="topStats">
+<div class="stat-box"><strong>…</strong><span>جاري التحميل</span></div>
 </div>
 </div>
 </section>
 
-<div id="site-footer"></div><script src="shared-layout.js"></script></body>
+<section class="container section">
+<h2>ترتيب الهدافين</h2>
+<div class="table-card">
+<table>
+<thead><tr><th>الترتيب</th><th>اللاعب</th><th>المركز</th><th>الأهداف</th></tr></thead>
+<tbody id="scorersBody"><tr class="empty-row"><td colspan="4">جاري التحميل…</td></tr></tbody>
+</table>
+</div>
+</section>
+
+<section class="container section">
+<h2>أفضل صانع لعب</h2>
+<div class="table-card">
+<table>
+<thead><tr><th>الترتيب</th><th>اللاعب</th><th>المركز</th><th>التمريرات الحاسمة</th></tr></thead>
+<tbody id="assistsBody"><tr class="empty-row"><td colspan="4">جاري التحميل…</td></tr></tbody>
+</table>
+</div>
+</section>
+
+<section class="container section">
+<h2>أكثر اللاعبين مشاركة</h2>
+<div class="table-card">
+<table>
+<thead><tr><th>الترتيب</th><th>اللاعب</th><th>المركز</th><th>عدد المباريات</th></tr></thead>
+<tbody id="matchesBody"><tr class="empty-row"><td colspan="4">جاري التحميل…</td></tr></tbody>
+</table>
+</div>
+</section>
+
+<section class="container section">
+<h2>أبرز أرقام الموسم</h2>
+<div class="cards" id="highlightsCards">
+<div class="highlight-card"><h3>…</h3><p>جاري التحميل</p></div>
+</div>
+</section>
+
+<div id="site-footer"></div>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="supabase-config.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/supabase-public-lookup.js"></script>
+<script>
+function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+function renderTable(tbodyId, rows, emptyMsg, valueLabel){
+  const tbody=document.getElementById(tbodyId);
+  if(!tbody)return;
+  if(!rows.length){
+    tbody.innerHTML=`<tr class="empty-row"><td colspan="4">${esc(emptyMsg)}</td></tr>`;
+    return;
+  }
+  tbody.innerHTML=rows.map((r,i)=>`<tr>
+    <td class="rank">${esc(r.rank||i+1)}</td>
+    <td>${esc(r.fullName)}</td>
+    <td>${esc(r.position)}</td>
+    <td>${esc(r.metricValue)}</td>
+  </tr>`).join('');
+}
+function renderHighlights(s){
+  const el=document.getElementById('highlightsCards');
+  if(!el)return;
+  const scorer=s.topScorerName?`${esc(s.topScorerName)} (${esc(s.topScorerGoals)} هدف)`:'لا يوجد هداف مسجّل بعد';
+  const assist=s.topAssistName?`${esc(s.topAssistName)} (${esc(s.topAssistValue)} تمريرة)`:'لا يوجد صانع ألعاب مسجّل بعد';
+  el.innerHTML=`
+    <div class="highlight-card"><h3>⭐ أفضل هداف</h3><p>${scorer}</p></div>
+    <div class="highlight-card"><h3>⚽ إجمالي الأهداف</h3><p>سجّلت الأكاديمية <strong>${esc(s.totalGoals)}</strong> هدفًا من بيانات اللاعبين النشطين.</p></div>
+    <div class="highlight-card"><h3>🎯 صانع الألعاب</h3><p>${assist}</p></div>`;
+}
+function renderTopStats(s){
+  const box=document.getElementById('topStats');
+  if(!box)return;
+  const playersLabel=s.totalPlayers>0?String(s.totalPlayers):'0';
+  const scorersLabel=s.activeScorers>0?String(s.activeScorers):'0';
+  box.innerHTML=`
+    <div class="stat-box"><strong>${esc(s.totalGoals)}</strong><span>إجمالي الأهداف</span></div>
+    <div class="stat-box"><strong>${esc(s.totalMatches)}</strong><span>مباريات منتهية</span></div>
+    <div class="stat-box"><strong>${esc(playersLabel)}</strong><span>لاعبون نشطون</span></div>
+    <div class="stat-box"><strong>${esc(scorersLabel)}</strong><span>لاعبون سجّلوا أهدافًا</span></div>`;
+}
+async function renderStatsPage(){
+  try{
+    const summary=typeof getAcademyStatsSummaryPublic==='function'?await getAcademyStatsSummaryPublic():null;
+    const [scorers,assists,matches]=await Promise.all([
+      typeof listPlayerLeaderboardPublic==='function'?listPlayerLeaderboardPublic('goals'):[],
+      typeof listPlayerLeaderboardPublic==='function'?listPlayerLeaderboardPublic('assists'):[],
+      typeof listPlayerLeaderboardPublic==='function'?listPlayerLeaderboardPublic('matches'):[]
+    ]);
+    if(summary) renderTopStats(summary);
+    renderTable('scorersBody',scorers,'لا توجد أهداف مسجّلة للاعبين النشطين بعد.');
+    renderTable('assistsBody',assists,'لا توجد تمريرات حاسمة مسجّلة بعد.');
+    renderTable('matchesBody',matches,'حدّث حقل «عدد المباريات» في ملفات اللاعبين ليظهر الترتيب.');
+    if(summary) renderHighlights(summary);
+  }catch(e){
+    console.error(e);
+    document.getElementById('topStats').innerHTML='<div class="stat-box" style="grid-column:1/-1"><strong>!</strong><span>تعذر التحميل — نفّذ ACADEMY_STATS_RLS.sql</span></div>';
+  }
+}
+document.addEventListener('DOMContentLoaded',renderStatsPage);
+</script>
+<script src="js/site-seo.js"></script>
+<script src="shared-layout.js"></script>
+</body>
 </html>

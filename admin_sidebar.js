@@ -71,7 +71,8 @@ document.addEventListener("DOMContentLoaded", () => {
             { href: "supporters_requests.html", label: "طلبات الداعمين", icon: "heart", match: ["supporters_requests.html"] },
             { href: "volunteers_requests.html", label: "طلبات المتطوعين", icon: "hand", match: ["volunteers_requests.html"] },
             { href: "staff_requests.html", label: "طلبات الكوادر", icon: "coach", match: ["staff_requests.html"] },
-            { href: "admin_completion_dashboard.html", label: "استكمال الطلبات", icon: "clip", match: ["admin_completion_dashboard.html"] }
+            { href: "admin_completion_dashboard.html", label: "استكمال الطلبات", icon: "clip", match: ["admin_completion_dashboard.html"] },
+            { href: "contact_messages_dashboard.html", label: "رسائل التواصل", icon: "bell", match: ["contact_messages_dashboard.html"] }
           ]
         }
       ]
@@ -81,6 +82,7 @@ document.addEventListener("DOMContentLoaded", () => {
       title: "التشغيل الرياضي",
       items: [
         { href: "teams_categories_dashboard.html", label: "الفرق والفئات", desc: "تنظيم الفرق", icon: "stadium", match: ["teams_categories_dashboard.html"] },
+        { href: "matches_dashboard.html", label: "المباريات", desc: "جدول المباريات العام", icon: "stadium", match: ["matches_dashboard.html"] },
         { href: "stats_dashboard.html", label: "الإحصائيات", desc: "مؤشرات الأداء", icon: "chart", match: ["stats_dashboard.html"] }
       ]
     },
@@ -88,7 +90,10 @@ document.addEventListener("DOMContentLoaded", () => {
       id: "commerce",
       title: "التجارة والمحتوى",
       items: [
-        { href: "store_products_dashboard.html", label: "إدارة المتجر", desc: "المنتجات والعروض", icon: "cart", match: ["store_products_dashboard.html"] }
+        { href: "store_products_dashboard.html", label: "إدارة المتجر", desc: "المنتجات والعروض", icon: "cart", match: ["store_products_dashboard.html"] },
+        { href: "store_orders_dashboard.html", label: "طلبات المتجر", desc: "طلبات الزوار", icon: "cart", match: ["store_orders_dashboard.html", "store_order_status.html"] },
+        { href: "news_dashboard.html", label: "الأخبار", desc: "أخبار الواجهة العامة", icon: "clip", match: ["news_dashboard.html"] },
+        { href: "media_dashboard.html", label: "الإعلام", desc: "صور وفيديو", icon: "clip", match: ["media_dashboard.html"] }
       ]
     },
     {
