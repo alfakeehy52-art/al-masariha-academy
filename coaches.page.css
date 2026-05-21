@@ -1,0 +1,136 @@
+/**
+ * صفحة المدربون — ضبط مرحلة 2
+ */
+.coaches-page .hero h2 {
+  background: linear-gradient(90deg, #fff 0%, var(--site-gold-soft, #f0d58f) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.coaches-page .layout {
+  align-items: start;
+}
+
+.coaches-page .sidebar {
+  position: sticky;
+  top: 78px;
+  z-index: 30;
+}
+
+.coaches-page .search {
+  min-height: 52px;
+}
+
+.coaches-page .search:focus {
+  border-color: color-mix(in srgb, var(--site-gold, #d5b15a) 38%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--site-gold, #d5b15a) 12%, transparent);
+}
+
+.coaches-page .small-btn {
+  cursor: pointer;
+  transition: border-color 0.18s ease, background 0.18s ease, color 0.18s ease;
+}
+
+.coaches-page .small-btn.is-active {
+  border-color: color-mix(in srgb, var(--site-gold, #d5b15a) 40%, transparent);
+  background: color-mix(in srgb, var(--site-gold, #d5b15a) 14%, transparent);
+  color: var(--site-gold-soft, #f0d58f);
+}
+
+.coaches-page .view-btn {
+  background: linear-gradient(180deg, var(--site-gold-soft, #f0d58f), var(--site-gold, #d5b15a)) !important;
+  color: #08110b !important;
+}
+
+.coaches-page .reset-btn {
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--site-green, #138256) 90%, #fff),
+    var(--site-green, #0d6e49)
+  ) !important;
+}
+
+.coaches-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.coaches-skeleton-card {
+  min-height: 480px;
+  border-radius: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: linear-gradient(110deg, rgba(255, 255, 255, 0.04) 8%, rgba(255, 255, 255, 0.09) 18%, rgba(255, 255, 255, 0.04) 33%);
+  background-size: 200% 100%;
+  animation: coachesShimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes coachesShimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+@media (max-width: 1200px) {
+  .coaches-skeleton-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .coaches-page .sidebar {
+    position: static;
+  }
+}
+
+@media (max-width: 768px) {
+  .coaches-page .hero-shell {
+    min-height: 280px;
+  }
+
+  .coaches-page .hero-content {
+    padding: 32px 22px 24px;
+  }
+
+  .coaches-page .hero-stats {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 10px;
+    width: 100%;
+  }
+
+  .coaches-page .hero-stat {
+    min-width: 0;
+    padding: 12px 10px;
+  }
+
+  .coaches-page .hero-stat .n {
+    font-size: 26px;
+  }
+
+  .coaches-page .pills {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .coaches-page .pill {
+    text-align: center;
+    justify-content: center;
+  }
+
+  .coaches-page .head-actions {
+    width: 100%;
+  }
+
+  .coaches-page .head-actions .small-btn {
+    flex: 1;
+  }
+
+  .coaches-skeleton-grid,
+  .coaches-page .coaches-grid {
+    grid-template-columns: 1fr;
+  }
+}
