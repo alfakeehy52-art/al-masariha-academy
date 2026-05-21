@@ -1,5 +1,19 @@
+function ensureSiteInnerCss() {
+  if (document.querySelector('link[data-site-inner="true"]')) return;
+  if (!document.getElementById("site-header")) return;
+  const page = (window.location.pathname.split("/").pop() || "index.html").split("?")[0];
+  if (page === "index.html") return;
+  const link = document.createElement("link");
+  link.rel = "stylesheet";
+  link.href = "site-inner.css";
+  link.setAttribute("data-site-inner", "true");
+  document.head.appendChild(link);
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const page = window.location.pathname.split("/").pop() || "index.html";
+
+  ensureSiteInnerCss();
 
   if (typeof applySiteSeo === "function") {
     applySiteSeo(page);

@@ -26,13 +26,41 @@
     };
   }
 
+  const ADMIN_ROLE_LABELS = {
+    admin: "المدير العام",
+    manager: "مدير العمليات",
+    supervisor: "مشرف",
+    staff: "موظف",
+    coach: "مدرب",
+    viewer: "مشاهدة فقط"
+  };
+
   function getAdminRole(user) {
     if (!user) return "";
     return String(
       (user.app_metadata && user.app_metadata.role) ||
         (user.user_metadata && user.user_metadata.role) ||
         ""
-    ).trim();
+    )
+      .trim()
+      .toLowerCase();
+  }
+
+  function getAdminRoleLabel(user) {
+    if (!user) return "مسؤول";
+    if (isAdminUser(user)) {
+      const role = getAdminRole(user);
+      if (!role || role === "admin") return ADMIN_ROLE_LABELS.admin;
+    }
+    const role = getAdminRole(user);
+    return ADMIN_ROLE_LABELS[role] || "مسؤول النظام";
+  }
+
+  function getAdminDisplayIdentity(user) {
+    return {
+      title: getAdminRoleLabel(user),
+      email: user && user.email ? String(user.email).trim() : ""
+    };
   }
 
   function isAdminUser(user) {
@@ -129,6 +157,9 @@
   window.ADMIN_SESSION_KEY = LEGACY_SESSION_KEY;
   window.getAdminSession = getSession;
   window.getAdminRole = getAdminRole;
+  window.getAdminRoleLabel = getAdminRoleLabel;
+  window.getAdminDisplayIdentity = getAdminDisplayIdentity;
+  window.ADMIN_ROLE_LABELS = ADMIN_ROLE_LABELS;
   window.isAdminUser = isAdminUser;
   window.isAdminLoggedIn = isAdminLoggedIn;
   window.requireAdmin = requireAdmin;

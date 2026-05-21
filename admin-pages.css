@@ -1,0 +1,56 @@
+/**
+ * مرحلة 2 — تحسين محتوى لوحات الإدارة (يتم تحميله من admin_sidebar.js)
+ */
+:root {
+  --admin-gold: var(--site-gold, #d5b15a);
+  --admin-gold-soft: var(--site-gold-soft, #f0d58f);
+  --admin-green: var(--site-green, #0d6c48);
+  --gold: var(--admin-gold);
+  --gold-soft: var(--admin-gold-soft);
+  --gold2: var(--admin-gold-soft);
+}
+
+.main {
+  padding: 28px 30px 40px;
+}
+
+.topbar,
+.page-intro {
+  padding: 20px 22px;
+  border-radius: 22px;
+  border: 1px solid var(--admin-line-strong);
+  background: linear-gradient(135deg, rgba(213, 177, 90, 0.08), rgba(255, 255, 255, 0.02));
+  box-shadow: var(--admin-shadow-soft);
+}
+
+.stats .stat,
+.stat-card {
+  border: 1px solid var(--admin-line-strong);
+  background: linear-gradient(180deg, rgba(9, 28, 19, 0.96), rgba(5, 17, 11, 0.98));
+  transition: transform 0.18s ease, border-color 0.18s ease;
+}
+
+.stats .stat:hover,
+.stat-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(213, 177, 90, 0.32);
+}
+
+.card .note {
+  border-color: rgba(213, 177, 90, 0.14);
+}
+
+.quick-link:hover {
+  border-color: rgba(213, 177, 90, 0.34);
+  background: rgba(213, 177, 90, 0.06);
+}
+
+.panel {
+  border: 1px solid var(--admin-line);
+}
+
+@media (max-width: 1100px) {
+  .main {
+    padding: 22px 16px 32px;
+  }
+}

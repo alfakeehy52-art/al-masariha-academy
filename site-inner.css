@@ -1,0 +1,55 @@
+/**
+ * مرحلة 2 — توحيد الصفحات الداخلية العامة مع ألوان الإعدادات
+ */
+:root {
+  --fifa-gold: var(--site-gold, #d5b15a);
+  --fifa-gold-2: var(--site-gold-soft, #f0d78d);
+  --fifa-green: var(--site-green, #11784f);
+  --gold: var(--site-gold, #d5b15a);
+  --gold2: var(--site-gold-soft, #f0d58f);
+  --green: var(--site-green, #11784f);
+}
+
+.page-shell,
+.teams-shell,
+.store-shell {
+  padding-bottom: 48px;
+}
+
+.section .container,
+.players-hero,
+.coaches-hero,
+.store-hero,
+.join-hero,
+.contact-hero,
+.matches-hero {
+  border-color: rgba(215, 179, 95, 0.14);
+}
+
+.hero-btn,
+.hero-primary,
+.store-link,
+.submit-btn.gold,
+.btn.gold {
+  background: linear-gradient(180deg, var(--site-gold-soft, #f0d58f), var(--site-gold, #d5b15a));
+  color: #08110b;
+}
+
+.hero-ghost,
+.store-ghost,
+.hero-secondary {
+  border-color: rgba(215, 179, 95, 0.22);
+}
+
+.live-pill,
+.pill-live {
+  border-color: rgba(215, 179, 95, 0.28);
+  color: var(--site-gold-soft, #f0d58f);
+}
+
+.empty-box,
+.empty-card,
+.players-empty {
+  border-radius: 20px;
+  border: 1px dashed rgba(215, 179, 95, 0.22);
+}

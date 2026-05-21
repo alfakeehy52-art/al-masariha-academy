@@ -196,28 +196,93 @@ document.addEventListener("DOMContentLoaded", () => {
     return `
       <div class="brand admin-sidebar-brand">
         <div class="brand-top">
-          <img src="academy-logo.svg" alt="شعار أكاديمية المسارحة" class="brand-logo" width="52" height="52" onerror="this.style.display='none'">
+          <img id="adminSidebarLogo" src="academy-logo.svg" alt="" class="brand-logo" width="52" height="52">
           <div class="brand-copy">
             <span class="brand-badge">لوحة الإدارة</span>
-            <h1>أكاديمية المسارحة</h1>
-            <p>نظام إداري موحّد للاعبين والطلبات والتشغيل.</p>
+            <h1 id="adminSidebarTitle">أكاديمية المسارحة</h1>
+            <p id="adminSidebarDesc">نظام إداري موحّد للاعبين والطلبات والتشغيل.</p>
           </div>
         </div>
         <div class="admin-user-card" id="adminUserCard" hidden>
           <span class="admin-user-label">المسؤول الحالي</span>
-          <strong id="adminUserEmail">—</strong>
+          <strong id="adminUserName">—</strong>
+          <span class="admin-user-email" id="adminUserEmail"></span>
         </div>
       </div>
     `;
   }
 
+  function loadScriptOnce(src) {
+    return new Promise((resolve, reject) => {
+      if (document.querySelector(`script[src="${src}"]`)) return resolve();
+      const el = document.createElement("script");
+      el.src = src;
+      el.onload = () => resolve();
+      el.onerror = () => reject(new Error("Failed: " + src));
+      document.head.appendChild(el);
+    });
+  }
+
+  function applySidebarBrand(settings) {
+    const s = settings || window.ACADEMY_SETTINGS || {};
+    const logo = document.getElementById("adminSidebarLogo");
+    const title = document.getElementById("adminSidebarTitle");
+    const desc = document.getElementById("adminSidebarDesc");
+    const logoUrl = String(s.logo_url || "academy-logo.svg").trim();
+    const name = String(s.brand_name_ar || "أكاديمية المسارحة").trim();
+    const subtitle = String(s.brand_subtitle_ar || "لكرة القدم").trim();
+
+    if (logo) {
+      logo.src = logoUrl;
+      logo.alt = `شعار ${name}`;
+      logo.onerror = function onLogoErr() {
+        if (logo.src.indexOf("academy-logo.svg") === -1) {
+          logo.src = "academy-logo.svg";
+        } else {
+          logo.style.display = "none";
+        }
+      };
+      logo.style.display = "";
+    }
+    if (title) title.textContent = name;
+    if (desc) {
+      desc.textContent = subtitle
+        ? `${subtitle} — نظام إداري موحّد`
+        : "نظام إداري موحّد للاعبين والطلبات والتشغيل.";
+    }
+  }
+
+  async function bootstrapSidebarBrand() {
+    try {
+      if (!window.supabase) {
+        await loadScriptOnce("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2");
+      }
+      if (!window.SUPABASE_CONFIG) await loadScriptOnce("supabase-config.js");
+      if (!window.createSupabaseClient) await loadScriptOnce("js/supabase-client.js");
+      if (!window.loadAcademySettings) await loadScriptOnce("js/academy-settings.js");
+      const s = await loadAcademySettings();
+      applySidebarBrand(s);
+      if (typeof applyAcademySettingsToSite === "function") applyAcademySettingsToSite(s);
+    } catch (e) {
+      console.warn("[admin-sidebar] brand settings:", e);
+    }
+  }
+
   function ensureThemeLink() {
-    if (document.querySelector('link[data-admin-theme="true"]')) return;
-    const link = document.createElement("link");
-    link.rel = "stylesheet";
-    link.href = "admin_theme.css";
-    link.setAttribute("data-admin-theme", "true");
-    document.head.appendChild(link);
+    if (!document.querySelector('link[data-admin-theme="true"]')) {
+      const link = document.createElement("link");
+      link.rel = "stylesheet";
+      link.href = "admin_theme.css";
+      link.setAttribute("data-admin-theme", "true");
+      document.head.appendChild(link);
+    }
+    if (!document.querySelector('link[data-admin-pages="true"]')) {
+      const pages = document.createElement("link");
+      pages.rel = "stylesheet";
+      pages.href = "admin-pages.css";
+      pages.setAttribute("data-admin-pages", "true");
+      document.head.appendChild(pages);
+    }
   }
 
   function injectStyles() {
@@ -237,7 +302,9 @@ document.addEventListener("DOMContentLoaded", () => {
       .brand-badge{display:inline-flex;align-items:center;min-height:26px;padding:0 10px;border-radius:999px;background:rgba(213,177,90,.12);border:1px solid rgba(213,177,90,.24);color:#f0d58f;font-size:11px;font-weight:900}
       .admin-user-card{margin-top:12px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
       .admin-user-label{display:block;color:#9fb0a4;font-size:11px;font-weight:800;margin-bottom:4px}
-      .admin-user-card strong{display:block;color:#fff;font-size:13px;font-weight:900;word-break:break-all;line-height:1.5}
+      .admin-user-card strong{display:block;color:#f0d58f;font-size:15px;font-weight:900;line-height:1.4}
+      .admin-user-email{display:block;margin-top:6px;color:#9fb0a4;font-size:11px;font-weight:700;word-break:break-all;line-height:1.5}
+      .admin-user-email:empty{display:none}
       #admin-sidebar{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
       .admin-pro-menu{display:flex;flex-direction:column;gap:12px;margin:0;overflow-y:auto;overflow-x:hidden;min-height:0;padding:2px 2px 16px;scrollbar-width:thin;scrollbar-color:rgba(213,177,90,.7) rgba(255,255,255,.06)}
       .menu-group{padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.06)}
@@ -316,17 +383,20 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function loadAdminIdentity() {
     const card = document.getElementById("adminUserCard");
+    const nameEl = document.getElementById("adminUserName");
     const emailEl = document.getElementById("adminUserEmail");
-    if (!card || !emailEl || typeof getAdminSession !== "function") return;
+    if (!card || !nameEl || typeof getAdminSession !== "function") return;
     try {
       const session = await getAdminSession();
       const user = session && session.user;
-      const email = user && user.email;
-      if (email) {
-        const role = typeof getAdminRole === "function" ? getAdminRole(user) : "";
-        emailEl.textContent = role ? `${email} · ${role}` : email;
-        card.hidden = false;
-      }
+      if (!user) return;
+      const identity =
+        typeof getAdminDisplayIdentity === "function"
+          ? getAdminDisplayIdentity(user)
+          : { title: "مسؤول", email: user.email || "" };
+      nameEl.textContent = identity.title || "مسؤول";
+      if (emailEl) emailEl.textContent = identity.email || "";
+      card.hidden = false;
       applyAdminNavPolicy(user);
     } catch (e) {}
   }
@@ -398,6 +468,7 @@ document.addEventListener("DOMContentLoaded", () => {
   ensureMobileToggle();
   const sidebarRoot = mountSidebar();
   if (sidebarRoot) bindInteractions(sidebarRoot);
+  bootstrapSidebarBrand();
   loadAdminIdentity();
   loadSidebarBadges();
 });
