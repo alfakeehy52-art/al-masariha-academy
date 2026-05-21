@@ -43,6 +43,18 @@
     .asset-upload-actions{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:12px}
     .asset-url-row{margin-top:10px}
     .asset-url-row input[readonly]{opacity:.85;font-size:13px}
+    .launch-panel{border-color:rgba(213,177,90,.35);background:linear-gradient(135deg,rgba(213,177,90,.08),rgba(13,108,72,.06))}
+    .launch-list{list-style:none;margin:14px 0 0;padding:0;display:grid;gap:10px}
+    .launch-list li{
+      display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:14px;
+      border:1px solid var(--admin-line);background:rgba(255,255,255,.03);font-weight:700
+    }
+    .launch-list li.done{border-color:rgba(13,108,72,.45);background:rgba(13,108,72,.12)}
+    .launch-list li .ico{width:28px;height:28px;border-radius:999px;display:grid;place-items:center;
+      background:rgba(255,255,255,.06);font-size:14px;flex-shrink:0}
+    .launch-list li.done .ico{background:rgba(13,108,72,.35)}
+    .launch-foot{display:flex;flex-wrap:wrap;gap:12px;align-items:center;margin-top:16px}
+    .launch-score{font-weight:900;color:var(--admin-gold-soft)}
     @media (max-width:900px){
       .settings-grid{grid-template-columns:1fr}
       .asset-upload{grid-template-columns:1fr;justify-items:center;text-align:center}
@@ -52,6 +64,7 @@
   <script src="supabase-config.js"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/academy-settings.js"></script>
+  <script src="js/site-seo.js"></script>
   <script src="js/academy-media-upload.js"></script>
   <script src="js/admin-auth.js"></script>
   <script>requireAdmin();</script>
@@ -73,12 +86,30 @@
           <p>إدارة الشعار، النصوص، الألوان، وروابط التواصل. التغييرات تظهر في الصفحات العامة بعد الحفظ.</p>
         </div>
         <div class="header-actions">
+          <a class="btn btn-soft" href="https://al-masariha-academy.pages.dev/" target="_blank" rel="noopener">معاينة الموقع</a>
+          <button type="button" class="btn btn-soft" id="recommendedBtn">تعبئة النصوص الموصى بها</button>
           <button type="button" class="btn btn-soft" id="reloadBtn">إعادة تحميل</button>
           <button type="button" class="btn btn-primary" id="saveBtn">حفظ الإعدادات</button>
         </div>
       </div>
 
       <div id="statusBar" class="status-bar"></div>
+
+      <section class="panel launch-panel" id="launchPanel">
+        <h2 class="page-section-title">قائمة الإطلاق</h2>
+        <p class="page-section-desc">أكمل البنود قبل إعلان الموقع للجمهور — ثم احفظ مرة واحدة.</p>
+        <ul class="launch-list" id="launchList">
+          <li data-key="logo"><span class="ico">1</span><span>رفع شعار الأكاديمية (ليس الافتراضي فقط)</span></li>
+          <li data-key="hero"><span class="ico">2</span><span>صورة خلفية الصفحة الرئيسية</span></li>
+          <li data-key="contact"><span class="ico">3</span><span>بريد تواصل + جوال أو واتساب</span></li>
+          <li data-key="social"><span class="ico">4</span><span>رابط واتساب أو إنستغرام</span></li>
+          <li data-key="copy"><span class="ico">5</span><span>نص الهيرو و«من نحن» بدون مسودات قديمة</span></li>
+        </ul>
+        <div class="launch-foot">
+          <span class="launch-score" id="launchScore">0 / 5</span>
+          <a class="btn btn-soft" href="https://al-masariha-academy.pages.dev/" target="_blank" rel="noopener">فتح الموقع المنشور</a>
+        </div>
+      </section>
 
       <form id="settingsForm" class="content-grid" style="display:grid;gap:18px">
         <section class="panel">
@@ -235,6 +266,81 @@
     const form = document.getElementById("settingsForm");
     const statusBar = document.getElementById("statusBar");
     const BOOL_FIELDS = ["show_store", "show_media", "show_news", "nav_show_track_join", "nav_show_track_store", "nav_show_admin_login"];
+    const PRODUCTION_URL = "https://al-masariha-academy.pages.dev/";
+    const RECOMMENDED_COPY = {
+      tagline: "نطوّر المواهب ونصنع مستقبل اللاعبين",
+      hero_description:
+        "انضم للأكاديمية، تابع اللاعبين والمدربين والمباريات، وقدّم طلبك بخطوات واضحة.",
+      about_snippet:
+        "أكاديمية المسارحة لكرة القدم تهدف إلى تطوير مهارات اللاعبين وصناعة جيل مميز من المواهب الكروية من خلال التدريب المنظم والأنشطة الرياضية المتنوعة.",
+      footer_copyright: "© أكاديمية المسارحة لكرة القدم — جميع الحقوق محفوظة"
+    };
+
+    function readField(name) {
+      const el = form.querySelector(`[name="${name}"]`);
+      return el ? String(el.value || "").trim() : "";
+    }
+
+    function hasCustomLogo(url) {
+      const u = String(url || "").trim();
+      return u && u !== "academy-logo.svg" && !u.endsWith("/academy-logo.svg");
+    }
+
+    function copyLooksReady(text) {
+      const t = String(text || "").trim();
+      if (!t) return false;
+      return !/قاعدة البيانات|Supabase|RLS|\.sql/i.test(t);
+    }
+
+    function updateLaunchChecklist() {
+      const checks = {
+        logo: hasCustomLogo(readField("logo_url")),
+        hero: /^https?:\/\//i.test(readField("hero_image_url")),
+        contact:
+          /@/.test(readField("contact_email")) &&
+          (readField("contact_phone").length >= 9 || /^https?:\/\//i.test(readField("whatsapp_url"))),
+        social:
+          /^https?:\/\//i.test(readField("whatsapp_url")) ||
+          /^https?:\/\//i.test(readField("instagram_url")),
+        copy:
+          copyLooksReady(readField("hero_description")) && copyLooksReady(readField("about_snippet"))
+      };
+      let done = 0;
+      document.querySelectorAll("#launchList li").forEach((li) => {
+        const ok = Boolean(checks[li.dataset.key]);
+        li.classList.toggle("done", ok);
+        if (ok) done += 1;
+      });
+      const score = document.getElementById("launchScore");
+      if (score) score.textContent = `${done} / 5`;
+      return done;
+    }
+
+    function applyRecommendedCopy() {
+      Object.entries(RECOMMENDED_COPY).forEach(([name, value]) => {
+        const el = form.querySelector(`[name="${name}"]`);
+        if (!el) return;
+        const cur = String(el.value || "").trim();
+        if (!cur || /قاعدة البيانات|Supabase/i.test(cur)) el.value = value;
+      });
+      updateLaunchChecklist();
+      showStatus("تم تعبئة النصوص الموصى بها. راجع الشعار وروابط التواصل ثم احفظ.", true);
+    }
+
+    function afterSettingsSaved(saved) {
+      window.ACADEMY_SETTINGS = { ...saved };
+      if (typeof applyAcademySettingsToSite === "function") applyAcademySettingsToSite(saved);
+      if (typeof applySiteSeo === "function") applySiteSeo("academy_settings_dashboard.html");
+      const n = updateLaunchChecklist();
+      const extra =
+        n >= 5
+          ? " الموقع جاهز للإطلاق."
+          : " أكمل البنود الناقصة في قائمة الإطلاق.";
+      showStatus(
+        "تم الحفظ. التغييرات تظهر على الموقع خلال دقيقة." + extra + " " + PRODUCTION_URL,
+        true
+      );
+    }
 
     function showStatus(msg, ok) {
       statusBar.textContent = msg;
@@ -275,6 +381,7 @@
         document.getElementById("heroPreviewPh"),
         s.hero_image_url
       );
+      updateLaunchChecklist();
     }
 
     function wireAssetUpload(fileInput, browseBtn, urlInput, previewImg, previewPh, uploadPrefix, emptyLabel) {
@@ -289,6 +396,7 @@
           urlInput.value = publicUrl;
           setImagePreview(previewImg, previewPh, publicUrl);
           showStatus("تم الرفع. اضغط «حفظ الإعدادات» لتطبيقه على الموقع.", true);
+          updateLaunchChecklist();
         } catch (e) {
           showStatus("فشل الرفع: " + (e.message || e), false);
         } finally {
@@ -341,19 +449,27 @@
       try {
         const s = await loadAcademySettings({ force: true });
         fillForm(s);
-        showStatus("تم تحميل الإعدادات.", true);
+        if (typeof applyAcademySettingsToSite === "function") applyAcademySettingsToSite(s);
+        const n = updateLaunchChecklist();
+        showStatus(
+          n >= 5 ? "الإعدادات محمّلة — قائمة الإطلاق مكتملة." : "تم تحميل الإعدادات — أكمل قائمة الإطلاق ثم احفظ.",
+          true
+        );
       } catch (e) {
         showStatus("تعذر التحميل. تحقق من اتصالك وحاول مرة أخرى.", false);
       }
     }
 
+    form.addEventListener("input", updateLaunchChecklist);
+    form.addEventListener("change", updateLaunchChecklist);
     document.getElementById("reloadBtn").addEventListener("click", loadForm);
+    document.getElementById("recommendedBtn").addEventListener("click", applyRecommendedCopy);
 
     document.getElementById("saveBtn").addEventListener("click", async () => {
       try {
         const saved = await saveAcademySettings(readForm());
         fillForm(saved);
-        showStatus("تم الحفظ بنجاح. حدّث الصفحة العامة لمعاينة التغييرات.", true);
+        afterSettingsSaved(saved);
       } catch (e) {
         showStatus("فشل الحفظ: " + (e.message || e), false);
       }
