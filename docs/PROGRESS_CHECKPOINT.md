@@ -17,7 +17,7 @@
 
 | | |
 |---|---|
-| **آخر إنجاز** | ضبط صفحة المدربين: `coaches.page.css` + sidebar sticky + skeleton + ترتيب نشط |
+| **آخر إنجاز** | ضبط المتجر: `store.page.css` + بحث/فلتر + skeleton + تنظيف نصوص تقنية |
 | **التالي (اختر واحداً)** | ① أكمل **قائمة الإطلاق** واحفظ ② مرحلة 2 جارية (`site-inner.css` + `admin-pages.css`) ③ صلاحيات الموظفين — `docs/RBAC_PLAN.md` |
 | **الإنتاج** | https://al-masariha-academy.pages.dev (ينشر من `main` تلقائياً) |
 | **دخول إدارة** | `admin_login.html` — بريد في `supabase-config.js` |

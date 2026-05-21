@@ -8,6 +8,7 @@
 <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
 <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="shared-layout.css"/>
+<link rel="stylesheet" href="store.page.css"/>
 <style>
 :root{--bg:#05110b;--panel:#081a12;--panel-2:#0b2117;--gold:var(--site-gold,#d5b15a);--gold-soft:var(--site-gold-soft,#f0d58f);--text:#f3f4ef;--muted:#b6c1b8;--green:var(--site-green,#0d6c48);--line:rgba(255,255,255,.08)}
 *{box-sizing:border-box}
@@ -90,9 +91,9 @@ footer{display:none}
   <div class="container hero-box">
     <div class="hero-grid">
       <div class="hero-copy">
-        <div class="eyebrow">بيانات حية من Supabase</div>
+        <div class="eyebrow">متجر رسمي</div>
         <h1>متجر الأكاديمية</h1>
-        <p>منتجات منشورة و«قريبًا» من Supabase. المنتجات <strong>المنشورة</strong> يمكن طلبها مباشرة — الدفع الإلكتروني لاحقًا.</p>
+        <p>منتجات معتمدة من الأكاديمية. المنتجات <strong>المنشورة</strong> يمكن طلبها مباشرة — الدفع الإلكتروني لاحقًا.</p>
         <div class="hero-actions"><a class="hero-btn" href="store_order_status.html">متابعة طلب متجر</a><a class="hero-ghost" href="request_status.html">متابعة انضمام</a><a class="hero-ghost" href="al_masariha_contact_page.html">استفسار عام</a></div>
       </div>
       <div class="hero-side">
@@ -111,8 +112,17 @@ footer{display:none}
     <div class="card store-overview">
       <div class="section-head"><h2>عرض المنتجات</h2><div class="badge gold">بيانات حية</div></div>
       <div class="overview-grid">
-        <div class="lead-card"><h3>من لوحة الإدارة</h3><p>أضف المنتجات من <strong>إدارة المتجر</strong> واختر حالة <strong>منشور</strong> أو <strong>قريبًا</strong> لتظهر هنا. المسودات والمخفية لا تُعرض للزوار.</p><div class="lead-badges"><span class="badge gold">منتجات لاعبين</span><span class="badge green">احتياجات أكاديمية</span><span class="badge">منتجات جمهور</span></div></div>
-        <div class="products-grid" id="storeProductsGrid">
+        <div class="lead-card"><h3>تسوق وطلب</h3><p>تصفّح المنتجات المتاحة. للمنتجات المنشورة اضغط <strong>اطلب الآن</strong>، وللمنتجات «قريبًا» يمكنك إرسال استفسار.</p><div class="lead-badges"><span class="badge gold">ملابس</span><span class="badge green">معدات</span><span class="badge">جمهور</span></div></div>
+        <div>
+        <div class="store-filters" aria-label="بحث وتصفية المنتجات">
+          <input type="search" class="store-search" id="storeSearchInput" placeholder="ابحث باسم المنتج أو الوصف" autocomplete="off" />
+          <div class="store-filter-pills">
+            <button type="button" class="store-pill active" data-store-filter="all">الكل</button>
+            <button type="button" class="store-pill" data-store-filter="published">منشور</button>
+            <button type="button" class="store-pill" data-store-filter="coming_soon">قريبًا</button>
+          </div>
+        </div>
+        <div class="products-grid" id="storeProductsGrid" aria-live="polite">
           <div class="empty-box">جاري تحميل المنتجات…</div>
         </div>
       </div>

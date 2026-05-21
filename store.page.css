@@ -1,0 +1,151 @@
+/**
+ * صفحة المتجر — ضبط مرحلة 2
+ */
+.store-page .hero-copy h1 {
+  background: linear-gradient(90deg, #fff 0%, var(--site-gold-soft, #f0d58f) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+.store-page .eyebrow {
+  border-color: color-mix(in srgb, var(--site-gold, #d5b15a) 22%, transparent);
+  color: var(--site-gold-soft, #f0d58f);
+}
+
+.store-page .mini-panel b {
+  color: var(--site-gold-soft, #f0d58f) !important;
+}
+
+.store-page .store-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border-radius: 20px;
+  border: 1px solid color-mix(in srgb, var(--site-gold, #d5b15a) 16%, transparent);
+  background: linear-gradient(180deg, rgba(8, 24, 16, 0.96), rgba(5, 17, 11, 0.94));
+  position: sticky;
+  top: 78px;
+  z-index: 35;
+}
+
+.store-page .store-search {
+  flex: 1 1 220px;
+  min-height: 50px;
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: #fff;
+  padding: 0 16px;
+  font-family: inherit;
+  font-size: 15px;
+  outline: none;
+}
+
+.store-page .store-search:focus {
+  border-color: color-mix(in srgb, var(--site-gold, #d5b15a) 40%, transparent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--site-gold, #d5b15a) 12%, transparent);
+}
+
+.store-page .store-filter-pills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.store-page .store-pill {
+  padding: 10px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.04);
+  color: #dce2de;
+  font-weight: 800;
+  font-size: 14px;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.store-page .store-pill.active {
+  border-color: color-mix(in srgb, var(--site-gold, #d5b15a) 36%, transparent);
+  background: color-mix(in srgb, var(--site-gold, #d5b15a) 14%, transparent);
+  color: var(--site-gold-soft, #f0d58f);
+}
+
+.store-page .product:hover {
+  transform: translateY(-4px);
+  border-color: color-mix(in srgb, var(--site-gold, #d5b15a) 36%, transparent) !important;
+}
+
+.store-page .buy.primary {
+  background: linear-gradient(180deg, var(--site-gold-soft, #f0d58f), var(--site-gold, #d5b15a)) !important;
+  color: #08110b !important;
+  border: none !important;
+}
+
+.store-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.store-skeleton-card {
+  min-height: 360px;
+  border-radius: 22px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: linear-gradient(110deg, rgba(255, 255, 255, 0.04) 8%, rgba(255, 255, 255, 0.09) 18%, rgba(255, 255, 255, 0.04) 33%);
+  background-size: 200% 100%;
+  animation: storeShimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes storeShimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.store-page .order-dialog {
+  border-color: color-mix(in srgb, var(--site-gold, #d5b15a) 24%, transparent);
+}
+
+@media (max-width: 1180px) {
+  .store-skeleton-grid,
+  .store-page .products-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .store-page .overview-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 780px) {
+  .store-page .store-filters {
+    position: static;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .store-page .store-filter-pills {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .store-page .hero-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .store-page .hero-panels {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .store-skeleton-grid,
+  .store-page .products-grid {
+    grid-template-columns: 1fr;
+  }
+}
