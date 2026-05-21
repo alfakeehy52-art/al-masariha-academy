@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>اللاعبون - أكاديمية المسارحة</title>
   <link rel="stylesheet" href="shared-layout.css">
+  <link rel="stylesheet" href="players.page.css">
   <style id="players-fifa-style">
     :root{
       --fifa-gold:var(--site-gold,#d5b15a);
@@ -500,23 +501,8 @@
         grid-template-columns:1fr 1fr;
       }
       #resetPlayersFiltersBtn{
-        width:160px;
-        justify-self:start;
-      }
-    }
-      #resetPlayersFiltersBtn{
-  width:140px;
-  height:48px;
-  min-height:48px;
+        grid-column:1 / -1;
         width:100%;
-        justify-self:stretch;
-      }
-    }
-      #resetPlayersFiltersBtn{
-  width:140px;
-  height:48px;
-  min-height:48px;
-        max-width:none;
       }
     }
 
@@ -660,27 +646,27 @@ html, body{
     </div>
   </section>
 
-  <section class="players-controls">
-    <button type="button" id="resetPlayersFiltersBtn">إعادة الضبط</button>
-    <select id="sortSelect">
-      <option value="rating-desc">ترتيب: الأعلى تقييمًا</option>
-      <option value="rating-asc">ترتيب: الأقل تقييمًا</option>
-      <option value="name-asc">ترتيب: الاسم</option>
-      <option value="number-asc">ترتيب: الرقم</option>
-    </select>
-    <select id="categorySelect">
+  <section class="players-controls" aria-label="بحث وتصفية اللاعبين">
+    <input type="search" id="playerSearchInput" placeholder="ابحث بالاسم، المركز، أو الرقم" autocomplete="off" />
+    <select id="categorySelect" aria-label="الفئة">
       <option value="all">كل الفئات</option>
       <option value="براعم">براعم</option>
       <option value="ناشئين">ناشئين</option>
       <option value="شباب">شباب</option>
       <option value="فريق أول">فريق أول</option>
     </select>
-    <input type="text" id="playerSearchInput" placeholder="ابحث بالاسم أو الرقم" />
+    <select id="sortSelect" aria-label="الترتيب">
+      <option value="rating-desc">ترتيب: الأعلى تقييمًا</option>
+      <option value="rating-asc">ترتيب: الأقل تقييمًا</option>
+      <option value="name-asc">ترتيب: الاسم</option>
+      <option value="number-asc">ترتيب: الرقم</option>
+    </select>
+    <button type="button" id="resetPlayersFiltersBtn">إعادة الضبط</button>
   </section>
 
   <section class="players-grid" id="playersGrid"></section>
 
-  <div class="players-note" id="playersNote">يتم الآن عرض بيانات اللاعبين من النظام مباشرة، ويمكنك البحث والتصفية بسهولة.</div>
+  <div class="players-note" id="playersNote">ابحث وصفِّ اللاعبين المعتمدين، ثم افتح الملف الكامل لكل لاعب.</div>
 
   <div id="site-footer"></div>
 
@@ -935,10 +921,19 @@ html, body{
       note.textContent = `يتم عرض ${players.length} لاعب/لاعبين.`;
     }
 
-    async function initPlayersPage(){
+    function showPlayersLoading(){
       const grid = document.getElementById("playersGrid");
-      grid.innerHTML = '<div class="players-empty">جاري تحميل اللاعبين...</div>';
+      const n = window.matchMedia("(max-width:640px)").matches ? 2 : window.matchMedia("(max-width:1024px)").matches ? 4 : 8;
+      grid.innerHTML =
+        '<div class="players-skeleton-grid" aria-hidden="true">' +
+        Array.from({ length: n }, () => '<div class="players-skeleton-card"></div>').join("") +
+        "</div>";
+      const note = document.getElementById("playersNote");
+      if (note) note.textContent = "جاري تحميل اللاعبين...";
+    }
 
+    async function initPlayersPage(){
+      showPlayersLoading();
       allPlayers = await readPlayers();
       applyPlayersFilters();
     }

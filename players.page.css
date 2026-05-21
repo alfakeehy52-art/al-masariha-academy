@@ -1,0 +1,124 @@
+/**
+ * صفحة اللاعبون — ضبط مرحلة 2 (بحث، فلاتر، موبايل)
+ */
+.players-page .players-toolbar {
+  margin-bottom: 4px;
+}
+
+.players-page .players-controls {
+  grid-template-columns: minmax(260px, 2.2fr) minmax(170px, 1fr) minmax(170px, 1fr) minmax(130px, 0.7fr);
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 22px;
+  border: 1px solid color-mix(in srgb, var(--site-gold, #d5b15a) 16%, transparent);
+  background: linear-gradient(180deg, rgba(8, 24, 16, 0.96), rgba(5, 17, 11, 0.94));
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.18);
+  position: sticky;
+  top: 78px;
+  z-index: 40;
+}
+
+.players-page .players-controls input,
+.players-page .players-controls select,
+.players-page .players-controls button {
+  min-height: 52px;
+  height: 52px;
+}
+
+.players-page .players-controls button {
+  background: linear-gradient(180deg, var(--site-gold-soft, #f0d58f), var(--site-gold, #d5b15a)) !important;
+}
+
+.players-page .player-btn {
+  background: linear-gradient(180deg, var(--site-gold-soft, #f0d58f), var(--site-gold, #d5b15a)) !important;
+}
+
+.players-page .players-grid {
+  margin-top: 22px;
+}
+
+.players-skeleton-grid {
+  width: min(1420px, calc(100% - 36px));
+  margin: 24px auto 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 22px;
+}
+
+.players-skeleton-card {
+  min-height: 420px;
+  border-radius: 28px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: linear-gradient(110deg, rgba(255, 255, 255, 0.04) 8%, rgba(255, 255, 255, 0.09) 18%, rgba(255, 255, 255, 0.04) 33%);
+  background-size: 200% 100%;
+  animation: playersShimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes playersShimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: -100% 0;
+  }
+}
+
+.players-page .players-note {
+  margin-bottom: 40px;
+}
+
+@media (max-width: 1250px) {
+  .players-skeleton-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 1024px) {
+  .players-page .players-controls {
+    grid-template-columns: 1fr 1fr;
+    top: 72px;
+  }
+
+  .players-page #resetPlayersFiltersBtn {
+    grid-column: 1 / -1;
+  }
+
+  .players-skeleton-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .players-skeleton-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .players-page .players-controls {
+    position: static;
+    grid-template-columns: 1fr;
+    padding: 12px;
+  }
+
+  .players-page .players-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .players-page .toolbar-pills {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .players-page .toolbar-pill {
+    text-align: center;
+    justify-content: center;
+  }
+
+  .players-skeleton-grid {
+    grid-template-columns: 1fr;
+    width: min(100% - 20px, 1420px);
+  }
+}

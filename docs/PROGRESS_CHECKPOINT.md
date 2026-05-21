@@ -17,7 +17,7 @@
 
 | | |
 |---|---|
-| **آخر إنجاز** | مرحلة 2: `site-inner.css` موسّع — لاعبون، مدربون، متجر، فرق، انضمام، تواصل، مباريات |
+| **آخر إنجاز** | ضبط صفحة اللاعبين: `players.page.css` + فلاتر sticky + skeleton + إصلاح CSS مكسور |
 | **التالي (اختر واحداً)** | ① أكمل **قائمة الإطلاق** واحفظ ② مرحلة 2 جارية (`site-inner.css` + `admin-pages.css`) ③ صلاحيات الموظفين — `docs/RBAC_PLAN.md` |
 | **الإنتاج** | https://al-masariha-academy.pages.dev (ينشر من `main` تلقائياً) |
 | **دخول إدارة** | `admin_login.html` — بريد في `supabase-config.js` |
