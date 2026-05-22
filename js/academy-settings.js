@@ -39,6 +39,61 @@
   let _cache = null;
   let _cacheAt = 0;
   const CACHE_MS = 60 * 1000;
+  const BRAND_CACHE_KEY = "academy_brand_cache_v1";
+
+  function readBrandCache() {
+    try {
+      const raw = localStorage.getItem(BRAND_CACHE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  function writeBrandCache(s) {
+    try {
+      const row = s || {};
+      localStorage.setItem(
+        BRAND_CACHE_KEY,
+        JSON.stringify({
+          logo_url: row.logo_url || "",
+          brand_name_ar: row.brand_name_ar || "",
+          brand_subtitle_ar: row.brand_subtitle_ar || "",
+          updated_at: row.updated_at || ""
+        })
+      );
+    } catch (e) {}
+  }
+
+  function applyLogoToImages(logoUrl, markLoaded) {
+    const url = String(logoUrl || "").trim() || "academy-logo.svg";
+    document.querySelectorAll("[data-academy='logo']").forEach((img) => {
+      img.setAttribute("src", url);
+      if (markLoaded) img.classList.add("logo-loaded");
+    });
+    document.querySelectorAll("#adminSidebarLogo").forEach((img) => {
+      img.setAttribute("src", url);
+      if (markLoaded) img.classList.add("logo-loaded");
+    });
+  }
+
+  /** تطبيق فوري من ذاكرة المتصفح لتقليل وميض الشعار القديم */
+  function applyBrandCacheEarly() {
+    const cache = readBrandCache();
+    if (!cache || !cache.logo_url) return false;
+    applyLogoToImages(cache.logo_url, true);
+    if (cache.brand_name_ar) {
+      document.querySelectorAll("[data-academy='brand_name']").forEach((el) => {
+        el.textContent = cache.brand_name_ar;
+      });
+    }
+    if (cache.brand_subtitle_ar) {
+      document.querySelectorAll("[data-academy='brand_subtitle']").forEach((el) => {
+        el.textContent = cache.brand_subtitle_ar;
+      });
+    }
+    return true;
+  }
 
   function mergeSettings(row) {
     const out = { ...DEFAULTS };
@@ -173,11 +228,12 @@
     setText("[data-academy='hero_desc']", s.hero_description);
     setText("[data-academy='about_snippet']", s.about_snippet);
 
-    document.querySelectorAll("[data-academy='logo']").forEach((img) => {
-      if (s.logo_url) img.setAttribute("src", s.logo_url);
+    applyLogoToImages(s.logo_url, true);
+    document.querySelectorAll("[data-academy='logo'], #adminSidebarLogo").forEach((img) => {
       const fullName = `${s.brand_name_ar} ${s.brand_subtitle_ar}`.trim();
       img.setAttribute("alt", `شعار ${fullName}`);
     });
+    writeBrandCache(s);
 
     const heroMedia = document.querySelector("[data-academy='hero_image']");
     if (heroMedia && s.hero_image_url) {
@@ -249,4 +305,6 @@
   window.applyAcademySettingsToSite = applyAcademySettingsToSite;
   window.initAcademySettingsOnSite = initAcademySettingsOnSite;
   window.mergeAcademySettings = mergeSettings;
+  window.applyBrandCacheEarly = applyBrandCacheEarly;
+  window.writeAcademyBrandCache = writeBrandCache;
 })();

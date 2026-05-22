@@ -252,6 +252,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
       };
       logo.style.display = "";
+      logo.classList.add("logo-loaded");
     }
     if (title) title.textContent = name;
     if (desc) {

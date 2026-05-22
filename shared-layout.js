@@ -10,6 +10,27 @@ function ensureSiteInnerCss() {
   document.head.appendChild(link);
 }
 
+function applyBrandCacheEarlyInline() {
+  try {
+    const cache = JSON.parse(localStorage.getItem("academy_brand_cache_v1") || "null");
+    if (!cache || !cache.logo_url) return;
+    document.querySelectorAll('[data-academy="logo"]').forEach((img) => {
+      img.setAttribute("src", cache.logo_url);
+      img.classList.add("logo-loaded");
+    });
+    if (cache.brand_name_ar) {
+      document.querySelectorAll('[data-academy="brand_name"]').forEach((el) => {
+        el.textContent = cache.brand_name_ar;
+      });
+    }
+    if (cache.brand_subtitle_ar) {
+      document.querySelectorAll('[data-academy="brand_subtitle"]').forEach((el) => {
+        el.textContent = cache.brand_subtitle_ar;
+      });
+    }
+  } catch (e) {}
+}
+
 document.addEventListener("DOMContentLoaded", () => {
   const page = window.location.pathname.split("/").pop() || "index.html";
 
@@ -156,6 +177,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   if (headerSlot) headerSlot.innerHTML = headerTemplate;
   if (footerSlot) footerSlot.innerHTML = footerTemplate;
+
+  applyBrandCacheEarlyInline();
+  if (typeof applyBrandCacheEarly === "function") applyBrandCacheEarly();
 
   const morePages = [
     "al_masariha_about_page.html",
@@ -305,6 +329,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       if (!window.SUPABASE_CONFIG) await loadScriptOnce("supabase-config.js");
       if (!window.createSupabaseClient) await loadScriptOnce("js/supabase-client.js");
+      if (!window.applyBrandCacheEarly) await loadScriptOnce("js/academy-settings.js");
+      if (typeof applyBrandCacheEarly === "function") applyBrandCacheEarly();
       if (!window.initAcademySettingsOnSite) await loadScriptOnce("js/academy-settings.js");
       await initAcademySettingsOnSite();
     } catch (err) {

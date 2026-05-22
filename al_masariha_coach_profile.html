@@ -478,13 +478,9 @@
         </div>
 
         <div class="coach-side-info">
-          <h1>الكابتن أحمد علي</h1>
-          <p>المدرب الأول — ملف تجريبي</p>
-          <div class="coach-side-meta">
-            <span class="meta-pill">10+ سنوات خبرة</span>
-            <span class="meta-pill">الفئات السنية</span>
-            <span class="meta-pill">التطوير الفني</span>
-          </div>
+          <h1>جاري التحميل…</h1>
+          <p>—</p>
+          <div class="coach-side-meta"></div>
         </div>
 
         <div class="coach-side-footer">
@@ -643,7 +639,7 @@
     summarySpans[2].textContent = c.certification || '—';
     summarySpans[3].textContent = c.coachStatus || '—';
 
-    const detailSpans = document.querySelectorAll('.detail-item span');
+    const detailSpans = document.querySelectorAll('.coach-main .detail-item span');
     detailSpans[0].textContent = fullName;
     detailSpans[1].textContent = c.jobTitle || '—';
     detailSpans[2].textContent = c.certification || '—';
@@ -660,6 +656,11 @@
     document.getElementById('profileNote').textContent = bio
       ? 'ملف المدرب من بيانات الأكاديمية المعتمدة.'
       : 'لا توجد نبذة تعريفية مضافة لهذا المدرب بعد.';
+
+    document.querySelectorAll(".demo-chip").forEach((chip) => {
+      const section = chip.closest(".profile-section");
+      if (section) section.style.display = "none";
+    });
   }
 
   async function initCoachProfile(){

@@ -50,6 +50,16 @@
   color:inherit;
 }
 
+.site-brand-logo img[data-academy="logo"],
+#adminSidebarLogo.brand-logo{
+  opacity:0;
+  transition:opacity .2s ease;
+}
+.site-brand-logo img[data-academy="logo"].logo-loaded,
+#adminSidebarLogo.brand-logo.logo-loaded{
+  opacity:1;
+}
+
 .site-brand-logo{
   width:56px;
   height:56px;

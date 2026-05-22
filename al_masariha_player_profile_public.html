@@ -73,29 +73,31 @@
     @media (max-width:1180px){.summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.details-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
     @media (max-width:860px){.profile-hero,.stats-bars{grid-template-columns:1fr}}
     @media (max-width:640px){.player-profile-page{width:min(100% - 18px, 1420px)}.profile-hero{padding:18px;border-radius:24px}.summary-grid,.details-grid{grid-template-columns:1fr}.profile-section{padding:18px;border-radius:22px}}
+    body.profile-loading .profile-hero{opacity:0;pointer-events:none}
+    body.profile-ready .profile-hero{opacity:1;transition:opacity .2s ease}
   </style>
 </head>
-<body>
+<body class="profile-loading">
   <div id="site-header"></div>
 
   <main class="player-profile-page">
     <section class="profile-hero">
       <aside class="player-card-xl">
         <div class="card-xl-top">
-          <div class="card-xl-rating"><strong id="ovr">84</strong><span>OVR</span></div>
-          <div class="card-xl-position" id="positionCode">ST</div>
-          <div class="card-xl-number" id="shirtNumber">9</div>
+          <div class="card-xl-rating"><strong id="ovr">—</strong><span>OVR</span></div>
+          <div class="card-xl-position" id="positionCode">—</div>
+          <div class="card-xl-number" id="shirtNumber">—</div>
         </div>
 
         <div class="card-xl-avatar-wrap"><div class="card-xl-avatar">👤</div></div>
 
         <div class="card-xl-info">
-          <h1 id="playerName">سامي الحربي</h1>
-          <p id="playerSubtitle">مهاجم صريح — لاعب مميز</p>
+          <h1 id="playerName">جاري التحميل…</h1>
+          <p id="playerSubtitle">—</p>
           <div class="card-xl-meta">
-            <span class="card-meta-chip" id="chipAge">العمر 17</span>
-            <span class="card-meta-chip" id="chipHeight">178 سم</span>
-            <span class="card-meta-chip" id="chipFoot">القدم اليمنى</span>
+            <span class="card-meta-chip" id="chipAge">—</span>
+            <span class="card-meta-chip" id="chipHeight">—</span>
+            <span class="card-meta-chip" id="chipFoot">—</span>
           </div>
         </div>
 
@@ -113,10 +115,10 @@
         </div>
 
         <div class="summary-grid">
-          <div class="summary-box"><strong>المباريات</strong><span id="matches">26</span></div>
-          <div class="summary-box"><strong>الأهداف</strong><span id="goals">14</span></div>
-          <div class="summary-box"><strong>التمريرات الحاسمة</strong><span id="assists">9</span></div>
-          <div class="summary-box"><strong>متوسط التقييم</strong><span id="avgRating">8.3</span></div>
+          <div class="summary-box"><strong>المباريات</strong><span id="matches">—</span></div>
+          <div class="summary-box"><strong>الأهداف</strong><span id="goals">—</span></div>
+          <div class="summary-box"><strong>التمريرات الحاسمة</strong><span id="assists">—</span></div>
+          <div class="summary-box"><strong>متوسط التقييم</strong><span id="avgRating">—</span></div>
         </div>
 
         <section class="profile-section">
@@ -134,12 +136,12 @@
         <section class="profile-section">
           <h3 class="section-title">بيانات اللاعب</h3>
           <div class="details-grid">
-            <div class="detail-item"><strong>الاسم الكامل</strong><span id="fullName">سامي الحربي</span></div>
-            <div class="detail-item"><strong>المركز</strong><span id="positionName">مهاجم صريح</span></div>
-            <div class="detail-item"><strong>رقم القميص</strong><span id="shirtDetail">9</span></div>
-            <div class="detail-item"><strong>العمر</strong><span id="ageText">17 سنة</span></div>
-            <div class="detail-item"><strong>الطول</strong><span id="heightText">178 سم</span></div>
-            <div class="detail-item"><strong>القدم المفضلة</strong><span id="footText">اليمنى</span></div>
+            <div class="detail-item"><strong>الاسم الكامل</strong><span id="fullName">—</span></div>
+            <div class="detail-item"><strong>المركز</strong><span id="positionName">—</span></div>
+            <div class="detail-item"><strong>رقم القميص</strong><span id="shirtDetail">—</span></div>
+            <div class="detail-item"><strong>العمر</strong><span id="ageText">—</span></div>
+            <div class="detail-item"><strong>الطول</strong><span id="heightText">—</span></div>
+            <div class="detail-item"><strong>القدم المفضلة</strong><span id="footText">—</span></div>
           </div>
         </section>
       </div>
@@ -216,7 +218,13 @@ function overall(stats){
   return Math.round((stats.pac + stats.sho + stats.pas + stats.dri + stats.def + stats.phy) / 6);
 }
 
+function markProfileReady(){
+  document.body.classList.remove('profile-loading');
+  document.body.classList.add('profile-ready');
+}
+
 function renderNotFound(message = 'تعذر العثور على اللاعب المطلوب. ارجع إلى صفحة اللاعبين وحاول مرة أخرى.'){
+  markProfileReady();
   document.querySelector('.profile-main').innerHTML = `
     <section class="profile-section">
       <h3 class="section-title">اللاعب غير موجود</h3>
@@ -289,6 +297,7 @@ function renderPlayer(player){
     const avatar = document.querySelector('.card-xl-avatar');
     if (avatar) avatar.innerHTML = `<img src="${escapeHtml(player.image)}" alt="${escapeHtml(fullName)}">`;
   }
+  markProfileReady();
 }
 
 async function initPlayerProfile(){
