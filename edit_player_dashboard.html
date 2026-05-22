@@ -254,7 +254,7 @@
             </div>
 
             <div class="hint">
-              بعد الحفظ سيتم تحديث بيانات اللاعب مباشرة في قاعدة البيانات، وستظهر التعديلات في قائمة اللاعبين وملف اللاعب.
+              بعد الحفظ سيتم تحديث بيانات اللاعب مباشرة في النظام، وستظهر التعديلات في قائمة اللاعبين وملف اللاعب.
             </div>
               </form>
             </div>
@@ -302,7 +302,7 @@
   <div class="confirm-overlay" id="deleteConfirmOverlay">
     <div class="confirm-box" role="dialog" aria-modal="true" aria-labelledby="deleteConfirmTitle">
       <h3 id="deleteConfirmTitle">تأكيد حذف اللاعب</h3>
-      <p>سيتم حذف اللاعب من قاعدة البيانات. هذا الإجراء لا يمكن التراجع عنه من هذه الصفحة.</p>
+      <p>سيتم حذف اللاعب من النظام. هذا الإجراء لا يمكن التراجع عنه من هذه الصفحة.</p>
       <div class="confirm-actions">
         <button type="button" class="btn btn-danger" id="confirmDeleteBtn">نعم، احذف اللاعب</button>
         <button type="button" class="btn btn-secondary" id="cancelDeleteBtn">إلغاء</button>
@@ -569,7 +569,7 @@
 
       if (error) {
         console.error("Supabase update player error:", error);
-        showToast("تعذر حفظ التعديلات في قاعدة البيانات.", "error");
+        showToast("تعذر حفظ التعديلات في النظام.", "error");
         return;
       }
 
@@ -613,7 +613,7 @@
       if (error) {
         console.error("Supabase delete player error:", error);
         closeDeleteConfirm();
-        showToast("تعذر حذف اللاعب من قاعدة البيانات.", "error");
+        showToast("تعذر حذف اللاعب من النظام.", "error");
         return;
       }
 

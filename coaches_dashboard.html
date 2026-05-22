@@ -66,7 +66,7 @@ function completionLabel(c){return isComplete(c)?'100%':'75%'}
 
 async function loadData(){
   const tbody=document.getElementById('coachesTableBody');
-  tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:32px;color:var(--muted);font-weight:800">جاري تحميل المدربين من قاعدة البيانات...</td></tr>';
+  tbody.innerHTML='<tr><td colspan="11" style="text-align:center;padding:32px;color:var(--muted);font-weight:800">جاري تحميل المدربين ...</td></tr>';
 
   const [coachesRes, playersRes] = await Promise.all([
     supabaseClient.from('coaches').select('*').order('created_at', { ascending:false }),
@@ -141,9 +141,9 @@ function exportCoaches(){
   const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='coaches_list.csv';document.body.appendChild(link);link.click();link.remove();
 }
 async function deleteCoach(id){
-  if(!id || !confirm('هل تريد حذف هذا المدرب من قاعدة البيانات؟'))return;
+  if(!id || !confirm('هل تريد حذف هذا المدرب ؟'))return;
   const { error } = await supabaseClient.from('coaches').delete().eq('id', id);
-  if (error) { console.error('Supabase delete coach error:', error); alert('تعذر حذف المدرب من قاعدة البيانات.'); return; }
+  if (error) { console.error('Supabase delete coach error:', error); alert('تعذر حذف المدرب .'); return; }
   allCoaches = allCoaches.filter(c => String(c.id) !== String(id));
   applyFilters();
 }

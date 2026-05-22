@@ -239,7 +239,7 @@ async function fetchPlayer(){
   });
 
   if (!response.ok) {
-    throw new Error('تعذر الاتصال بقاعدة البيانات');
+    throw new Error('تعذر تحميل البيانات');
   }
 
   const data = await response.json();

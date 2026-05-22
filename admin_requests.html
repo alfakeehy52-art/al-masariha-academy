@@ -137,7 +137,7 @@
             <table>
               <thead><tr><th>رقم المرجع</th><th>الطلب</th><th>النوع</th><th>الحالة</th><th>بيانات التواصل</th><th>تاريخ الإرسال</th><th>الإجراءات</th></tr></thead>
               <tbody id="requestsTableBody">
-                <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px 14px;font-weight:800">جاري تحميل الطلبات من قاعدة البيانات...</td></tr>
+                <tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px 14px;font-weight:800">جاري تحميل الطلبات...</td></tr>
               </tbody>
             </table>
           </div>
@@ -334,7 +334,7 @@
     async function fetchRequests(){
       const tbody = document.getElementById('requestsTableBody');
       if (tbody) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px 14px;font-weight:800">جاري تحميل الطلبات من قاعدة البيانات...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:var(--muted);padding:26px 14px;font-weight:800">جاري تحميل الطلبات...</td></tr>';
       }
 
       const { data, error } = await supabaseClient
@@ -347,7 +347,7 @@
         if (tbody) {
           tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#ffd0d0;padding:26px 14px;font-weight:800">تعذر تحميل الطلبات. حاول إعادة التحميل.</td></tr>';
         }
-        showToast('تعذر تحميل الطلبات من قاعدة البيانات.', 'error');
+        showToast('تعذر تحميل الطلبات حالياً.', 'error');
         return;
       }
 

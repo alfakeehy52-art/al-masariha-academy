@@ -65,7 +65,7 @@
     const emails = getAdminEmailList();
     if (!emails.length) {
       list.innerHTML =
-        '<li class="warn">لا توجد عناوين في <code>adminEmails</code> — أضف البريد في <code>supabase-config.js</code> ثم ارفع الموقع.</li>';
+        '<li class="warn">لا توجد عناوين مسموحة حالياً — تواصل مع مطور الموقع لإضافة بريد المدير.</li>';
       return;
     }
     list.innerHTML = emails.map((e) => `<li><strong>${esc(e)}</strong> — مسموح بدخول لوحة الإدارة</li>`).join("");
@@ -201,7 +201,7 @@
         const msg = String(err.message || "");
         if (/academy_staff_role_check/i.test(msg)) {
           showStatus(
-            "قاعدة البيانات لا تقبل هذا الدور بعد. نفّذ ملف docs/STAFF_PANEL_ROLES.sql في Supabase → SQL Editor ثم أعد المحاولة.",
+            "النظام لا يقبل هذا الدور بعد. اطلب تنفيذ سكربت توسيع الأدوار (STAFF_PANEL_ROLES) ثم أعد المحاولة.",
             "error"
           );
         } else {

@@ -1,6 +1,6 @@
 # نقطة التوقف — ما أُنجز حتى الآن
 
-**آخر تحديث:** 2026-05-21  
+**آخر تحديث:** 2026-05-22  
 **الغرض:** عند فتح محادثة أو صفحة جديدة — اقرأ هذا الملف أولاً لتعرف أين وصلنا.
 
 ---
@@ -18,7 +18,7 @@
 | | |
 |---|---|
 | **آخر إنجاز** | **R2-lite:** `admin_permissions_dashboard.html` + ربط `academy_staff.role` بالقائمة الجانبية |
-| **التالي (اختر واحداً)** | ① نفّذ `docs/STAFF_PANEL_ROLES.sql` في Supabase ② قائمة الإطلاق ③ صفحات داخلية ④ R3 RLS حسب الدور |
+| **التالي** | انظر `docs/LAUNCH_OWNER_SUMMARY.md` — تنظيف SQL · صلاحيات · مرفقات · **جوال** · سوشيال «قريباً» (دومين مؤجل) |
 | **الإنتاج** | https://al-masariha-academy.pages.dev (ينشر من `main` تلقائياً) |
 | **دخول إدارة** | `admin_login.html` — بريد في `supabase-config.js` |
 
@@ -92,6 +92,8 @@
 
 | ملف | محتوى |
 |-----|--------|
+| `docs/OWNER_FEEDBACK_BACKLOG.md` | **ملاحظات المالك (9 بنود) + أولويات تنفيذ** |
+| `docs/LAUNCH_READINESS.md` | **هل الموقع جاهز للإطلاق؟ — قائمة تحقق** |
 | `docs/PROJECT_ROADMAP.md` | خارطة تفصيلية + سجل التحديثات |
 | `docs/RLS_DEPLOY_ORDER.md` | ترتيب SQL |
 | `REFACTOR_PHASE0_REPORT.md` … `PHASE3` | تقارير refactor |
@@ -107,3 +109,4 @@
 | 2026-05-21 | المالك نفّذ SQL إعدادات الأكاديمية — «تم» |
 | 2026-05-21 | توثيق نقطة التوقف (هذا الملف) |
 | 2026-05-21 | نشر E1 — `git push` → `bc6e9f0` على `main` |
+| 2026-05-22 | توثيق ملاحظات المالك: `OWNER_FEEDBACK_BACKLOG.md` + `LAUNCH_READINESS.md` |

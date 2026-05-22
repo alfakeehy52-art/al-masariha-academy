@@ -329,7 +329,7 @@
     }
     const sb = getSupabase();
     if (!sb) {
-      showToast("تعذر الاتصال بقاعدة البيانات.", "error");
+      showToast("تعذر الاتصال بالنظام. حدّث الصفحة وحاول مرة أخرى.", "error");
       return;
     }
     try {
@@ -574,7 +574,7 @@
   async function insertJoinRequest(payload) {
     const sb = getSupabase();
     if (!sb) {
-      showToast("تعذر الاتصال بقاعدة البيانات. حدّث الصفحة وحاول مرة أخرى.", "error");
+      showToast("تعذر الاتصال بالنظام. حدّث الصفحة وحاول مرة أخرى.", "error");
       throw new Error("Supabase unavailable");
     }
     const { error } = await sb.from("join_requests").insert([payload]);

@@ -106,7 +106,7 @@ async function fetchCoaches(){
 
   if (error) {
     console.error("Supabase coaches fetch error:", error);
-    showToast("تعذر تحميل المدربين من قاعدة البيانات.", "error");
+    showToast("تعذر تحميل المدربين .", "error");
     return [];
   }
   return Array.isArray(data) ? data : [];
@@ -234,7 +234,7 @@ async function saveCoach(){
 
     if (error) throw error;
 
-    showToast("تم حفظ المدرب في قاعدة البيانات بنجاح.", "success");
+    showToast("تم حفظ المدرب بنجاح بنجاح.", "success");
     await updateStats();
     await renderRecentCoaches();
 

@@ -291,7 +291,7 @@ async function loadEntities() {
 
   const tbody = $("entityTableBody");
   if (tbody) {
-    tbody.innerHTML = `<tr><td class="empty-cell" colspan="${cfg.columns.length + 2}">جاري تحميل البيانات من قاعدة البيانات...</td></tr>`;
+    tbody.innerHTML = `<tr><td class="empty-cell" colspan="${cfg.columns.length + 2}">جاري تحميل البيانات...</td></tr>`;
   }
 
   const { data, error } = await supabaseClient
@@ -304,7 +304,7 @@ async function loadEntities() {
     if (tbody) {
       tbody.innerHTML = `<tr><td class="empty-cell error-cell" colspan="${cfg.columns.length + 2}">تعذر تحميل البيانات. حاول إعادة التحميل.</td></tr>`;
     }
-    showToast("تعذر تحميل البيانات من قاعدة البيانات.", "error");
+    showToast("تعذر تحميل البيانات حالياً.", "error");
     return;
   }
 

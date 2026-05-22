@@ -65,7 +65,7 @@
     },
     "al_masariha_media_page.html": {
       title: "الإعلام | أكاديمية المسارحة",
-      description: "صور وفيديوهات الأكاديمية من قاعدة البيانات."
+      description: "صور وفيديوهات الأكاديمية."
     },
     "al_masariha_stats_page.html": {
       title: "الإحصائيات | أكاديمية المسارحة",

@@ -653,7 +653,7 @@
 
       if (error) {
         console.error("Supabase players fetch error:", error);
-        showToast("تعذر تحميل اللاعبين من قاعدة البيانات.", "error");
+        showToast("تعذر تحميل اللاعبين حالياً.", "error");
         return [];
       }
 
@@ -842,7 +842,7 @@
 
         if (error) throw error;
 
-        showToast("تم حفظ اللاعب في قاعدة البيانات بنجاح.", "success");
+        showToast("تم حفظ اللاعب بنجاح بنجاح.", "success");
         await updateStats();
         await renderRecentPlayers();
 

@@ -117,7 +117,7 @@ async function loadMembers(){
     console.error(error);
     members=[];
     if(tbody) tbody.innerHTML=`<tr><td colspan="8" class="empty-cell error-cell">تعذر تحميل عضويات الأكاديمية. تأكد من RLS وسياسات القراءة.</td></tr>`;
-    showToast("تعذر تحميل العضويات من قاعدة البيانات.","error");
+    showToast("تعذر تحميل العضويات حالياً.","error");
     renderStats();
     return;
   }

@@ -15,23 +15,20 @@ let requests = [];
 let academyMembers = [];
 let currentRequestId = null;
 let currentCompletion = null;
-const COACH_REVIEW_FILES = [
-  {key:'id_document', title:'الهوية / المستند الرسمي', url:'id_document_url', status:'id_document_status', note:'id_document_note', required:true},
-  {key:'personal_photo', title:'الصورة الشخصية', url:'personal_photo_url', status:'personal_photo_status', note:'personal_photo_note', required:true},
-  {key:'contract_file', title:'عقد المدرب', url:'contract_file_url', status:'contract_file_status', note:'contract_file_note', required:true},
-  {key:'pledge_file', title:'تعهد المدرب', url:'pledge_file_url', status:'pledge_file_status', note:'pledge_file_note', required:true},
-  {key:'certificate_file', title:'الشهادة / المؤهل', url:'certificate_file_url', status:'certificate_file_status', note:'certificate_file_note', required:false}
-];
-const PLAYER_REVIEW_FILES = [
-  {key:'id_document', title:'الهوية / الإقامة', url:'id_document_url', status:'id_document_status', note:'id_document_note', required:true},
-  {key:'personal_photo', title:'صورة اللاعب', url:'personal_photo_url', status:'personal_photo_status', note:'personal_photo_note', required:true},
-  {key:'player_join_file', title:'نموذج انضمام اللاعب', url:'player_join_file_url', status:'player_join_file_status', note:'player_join_file_note', required:true},
-  {key:'guardian_approval_file', title:'موافقة ولي الأمر', url:'guardian_approval_file_url', status:'guardian_approval_file_status', note:'guardian_approval_file_note', required:true},
-  {key:'player_commitment_file', title:'تعهد الالتزام', url:'player_commitment_file_url', status:'player_commitment_file_status', note:'player_commitment_file_note', required:true},
-  {key:'medical_file', title:'الشهادة الطبية', url:'medical_file_url', status:'medical_file_status', note:'medical_file_note', required:true}
-];
-function getReviewFilesByType(type){ return String(type||'')==='player' ? PLAYER_REVIEW_FILES : COACH_REVIEW_FILES; }
-function getCurrentReviewFiles(){ const req=findReq(currentRequestId); return getReviewFilesByType(req?.request_type || currentCompletion?.request_type); }
+function reviewContext(){
+  const req=findReq(currentRequestId);
+  return req || currentCompletion || null;
+}
+function getReviewFilesByType(type, ctx){
+  if(typeof window.getReviewFilesByType==='function' && window.getReviewFilesByType.length>=2){
+    return window.getReviewFilesByType(type, ctx);
+  }
+  return [];
+}
+function getCurrentReviewFiles(){
+  const ctx=reviewContext();
+  return getReviewFilesByType(ctx?.request_type || currentCompletion?.request_type, ctx);
+}
 const FILE_STATUS_LABELS = {pending:'قيد المراجعة', approved:'مقبول', rejected:'مرفوض', reupload:'مطلوب إعادة رفع'};
 
 function $(id){return document.getElementById(id)}
@@ -142,7 +139,7 @@ async function loadRequests(type=null){
     requests=[];
     if($('requestsCards')) renderDashboard();
     if(tbody) tbody.innerHTML=`<tr><td colspan="8" class="empty-cell error-cell">تعذر تحميل الطلبات.</td></tr>`;
-    showToast('تعذر تحميل الطلبات من قاعدة البيانات، لكن بطاقات التنقل ظاهرة ويمكن فتح الصفحات.','error');
+    showToast('تعذر تحميل الطلبات حالياً، لكن بطاقات التنقل ظاهرة ويمكن فتح الصفحات.','error');
     return;
   }
   requests=Array.isArray(data)?data:[];
@@ -167,7 +164,8 @@ function renderTable(type){
   const tbody=$('requestsTableBody'); const cfg=TYPE_CONFIG[type]||null; if(!tbody)return;
   if(cfg){$('pageTitle').textContent=cfg.title; $('pageDesc').textContent=cfg.desc; $('typeIcon').textContent=cfg.icon; const heads=$('typeColumns'); if(heads) heads.innerHTML=cfg.cols.map(c=>`<th>${c}</th>`).join('');}
   const c=countsFor(type); if($('statAll')){$('statAll').textContent=c.all;$('statNew').textContent=c.new;$('statReview').textContent=c.review;$('statApproved').textContent=c.approved;}
-  const rows=filtered().map(r=>{const vals=cfg?cfg.fields(r):[getTypeLabel(r.request_type),getRequestSummary(r),shortText(notes(r),28)];return `<tr><td><span class="tag tag-ref">${escapeHtml(refCode(r))}</span></td><td><b class="request-title">${escapeHtml(r.full_name||'طلب بدون اسم')}</b><span class="subtext">${escapeHtml(r.phone||'-')} • ${escapeHtml(r.city||'-')}</span></td>${vals.map(v=>`<td>${escapeHtml(v)}</td>`).join('')}<td><span class="tag ${statusClass(r.status||'new')}">${escapeHtml(getStatusLabel(r.status||'new'))}</span></td><td><div>${escapeHtml(formatDate(r.created_at))}</div><span class="subtext">${escapeHtml(formatTime(r.created_at))}</span></td><td><div class="row-actions"><button class="mini-btn review" onclick="openRequest('${r.id}')">عرض</button>${getStatusLabel(r.status)==='مقبول'?'':`<button class="mini-btn accept" onclick="updateStatus('${r.id}','approved')">قبول</button>`}${getStatusLabel(r.status)==='مرفوض'?'':`<button class="mini-btn reject" onclick="updateStatus('${r.id}','rejected')">رفض</button>`}<button class="mini-btn more" onclick="updateStatus('${r.id}','pending')">استكمال</button></div></td></tr>`}).join('');
+  const colLabels=cfg?['','',...cfg.cols,'الحالة','تاريخ الإرسال','الإجراءات']:['','النوع','ملخص','الحالة','تاريخ الإرسال','الإجراءات'];
+  const rows=filtered().map(r=>{const vals=cfg?cfg.fields(r):[getTypeLabel(r.request_type),getRequestSummary(r),shortText(notes(r),28)];const cells=[`<td data-label="رقم المرجع"><span class="tag tag-ref">${escapeHtml(refCode(r))}</span></td>`,`<td data-label="صاحب الطلب"><b class="request-title">${escapeHtml(r.full_name||'طلب بدون اسم')}</b><span class="subtext">${escapeHtml(r.phone||'-')} • ${escapeHtml(r.city||'-')}</span></td>`,...vals.map((v,i)=>`<td data-label="${escapeHtml(colLabels[i+2]||'تفصيل')}">${escapeHtml(v)}</td>`),`<td data-label="الحالة"><span class="tag ${statusClass(r.status||'new')}">${escapeHtml(getStatusLabel(r.status||'new'))}</span></td>`,`<td data-label="تاريخ الإرسال"><div>${escapeHtml(formatDate(r.created_at))}</div><span class="subtext">${escapeHtml(formatTime(r.created_at))}</span></td>`,`<td data-label="الإجراءات"><div class="row-actions"><button class="mini-btn review" onclick="openRequest('${r.id}')">عرض</button>${getStatusLabel(r.status)==='مقبول'?'':`<button class="mini-btn accept" onclick="updateStatus('${r.id}','approved')">قبول</button>`}${getStatusLabel(r.status)==='مرفوض'?'':`<button class="mini-btn reject" onclick="updateStatus('${r.id}','rejected')">رفض</button>`}<button class="mini-btn more" onclick="updateStatus('${r.id}','pending')">استكمال</button></div></td>`];return `<tr>${cells.join('')}</tr>`}).join('');
   const colspan=cfg?cfg.cols.length+5:8; tbody.innerHTML=rows||`<tr><td colspan="${colspan}" class="empty-cell">لا توجد طلبات مطابقة حاليًا.</td></tr>`;
 }
 function getRequestSummary(r){if(r.request_type==='player')return r.position||r.age_category||'-'; if(r.request_type==='guardian')return goalLabel(r.guardian_goal); if(r.request_type==='staff'){const m=staffMeta(r);return m.roleLabel||'-'} if(r.request_type==='academy_member')return r.guardian_goal?goalLabel(r.guardian_goal):(parseInterestsLine(r.notes||r.guardian_notes)||'-'); if(r.request_type==='coach')return r.coach_specialty||r.coach_job_title||'-'; if(r.request_type==='supporter')return r.support_method||r.support_level||'-'; if(r.request_type==='volunteer')return r.volunteer_field||r.availability||'-'; return '-'}
@@ -180,11 +178,21 @@ function isImageUrl(url){return /\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/i.test(S
 function isPdfUrl(url){return /\.pdf(\?.*)?$/i.test(String(url||''))}
 function completionIsFullyApproved(completion){
   if(!completion) return false;
-  const files=getReviewFilesByType(findReq(currentRequestId)?.request_type || completion.request_type); return files.filter(f=>f.required).every(f=>String(completion[f.status]||'pending')==='approved' && String(completion[f.url]||'').trim());
+  const ctx=reviewContext();
+  if(typeof window.completionIsFullyApproved==='function'){
+    return window.completionIsFullyApproved(completion, ctx?.request_type || completion.request_type, ctx);
+  }
+  const files=getCurrentReviewFiles();
+  return files.filter(f=>f.required).every(f=>String(completion[f.status]||'pending')==='approved' && String(completion[f.url]||'').trim());
 }
 function reviewMissingItems(completion){
   if(!completion) return ['لم يتم استكمال المرفقات لهذا الطلب حتى الآن.'];
-  const files=getReviewFilesByType(findReq(currentRequestId)?.request_type || completion.request_type); return files.filter(f=>f.required).filter(f=>!String(completion[f.url]||'').trim() || String(completion[f.status]||'pending')!=='approved').map(f=>f.title);
+  const ctx=reviewContext();
+  if(typeof window.reviewMissingItems==='function'){
+    return window.reviewMissingItems(completion, ctx?.request_type || completion.request_type, ctx);
+  }
+  const files=getCurrentReviewFiles();
+  return files.filter(f=>f.required).filter(f=>!String(completion[f.url]||'').trim() || String(completion[f.status]||'pending')!=='approved').map(f=>f.title);
 }
 
 function ensureFileReviewUi(){

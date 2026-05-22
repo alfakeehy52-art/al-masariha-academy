@@ -127,7 +127,7 @@
   <div class="confirm-overlay" id="confirmOverlay" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
     <div class="confirm-box">
       <h3 id="confirmTitle">تأكيد الحذف</h3>
-      <p id="confirmMessage">هل تريد حذف هذا اللاعب من قاعدة البيانات؟ لا يمكن التراجع عن هذه العملية.</p>
+      <p id="confirmMessage">هل تريد حذف هذا اللاعب من النظام؟ لا يمكن التراجع عن هذه العملية.</p>
       <div class="confirm-actions">
         <button class="btn btn-danger" type="button" id="confirmYesBtn">نعم، حذف اللاعب</button>
         <button class="btn btn-dark" type="button" id="confirmNoBtn">إلغاء</button>
@@ -293,7 +293,7 @@
     function renderLoading(){
       document.getElementById("playerViewRoot").innerHTML = `
         <section class="panel">
-          <div class="empty-state">جاري تحميل بيانات اللاعب من قاعدة البيانات...</div>
+          <div class="empty-state">جاري تحميل بيانات اللاعب من النظام...</div>
         </section>
       `;
     }
@@ -314,7 +314,7 @@
 
       if (error) {
         console.error("Supabase player fetch error:", error);
-        renderEmpty("تعذر تحميل اللاعب من قاعدة البيانات.", true);
+        renderEmpty("تعذر تحميل اللاعب من النظام.", true);
         return;
       }
 
@@ -450,7 +450,7 @@
 
     async function deleteCurrentPlayer(){
       if (!currentPlayer?.id) return;
-      const ok = await askConfirm("هل تريد حذف هذا اللاعب من قاعدة البيانات؟ لا يمكن التراجع عن هذه العملية.");
+      const ok = await askConfirm("هل تريد حذف هذا اللاعب من النظام؟ لا يمكن التراجع عن هذه العملية.");
       if (!ok) return;
 
       const deleteBtn = document.getElementById("deletePlayerBtn");
@@ -466,7 +466,7 @@
 
       if (error) {
         console.error("Supabase delete player error:", error);
-        showToast("تعذر حذف اللاعب. تحقق من صلاحيات قاعدة البيانات أو الاتصال.", "error");
+        showToast("تعذر حذف اللاعب. تحقق من صلاحيات الحذف أو الاتصال.", "error");
         if (deleteBtn){
           deleteBtn.disabled = false;
           deleteBtn.textContent = "حذف اللاعب";

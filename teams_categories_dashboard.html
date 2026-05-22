@@ -210,7 +210,7 @@
       teams = teamsData;
       players = playersData;
       renderTeams();
-      if (showMessage) showToast("تم تحديث بيانات الفرق والفئات من قاعدة البيانات.", "success");
+      if (showMessage) showToast("تم تحديث بيانات الفرق والفئات .", "success");
     }
 
     function updateStats(){
@@ -376,7 +376,7 @@
 
       if (error){
         console.error("Supabase team delete error:", error);
-        showToast("تعذر حذف الفريق من قاعدة البيانات.", "error");
+        showToast("تعذر حذف الفريق .", "error");
         return;
       }
 

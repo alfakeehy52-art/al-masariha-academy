@@ -23,13 +23,13 @@ function escAttr(v) {
 }
 
 function progressClass(completion, type) {
-  return completionIsFullyApproved(completion, type) ? "progress-ok" : "progress-warn";
+  return completionIsFullyApproved(completion, type, completion) ? "progress-ok" : "progress-warn";
 }
 
 function renderRow(r) {
-  const ready = completionIsFullyApproved(r, r.request_type);
-  const progress = reviewProgressLabel(r, r.request_type);
-  const extraUrl = primaryExtraFileUrl(r, r.request_type);
+  const ready = completionIsFullyApproved(r, r.request_type, r);
+  const progress = reviewProgressLabel(r, r.request_type, r);
+  const extraUrl = primaryExtraFileUrl(r, r.request_type, r);
   const approveDisabled = ready ? "" : " disabled title=\"يجب قبول كل المرفقات الإجبارية أولاً\"";
   return `<tr>
     <td>${escAttr(r.full_name || "-")}</td>
@@ -49,13 +49,21 @@ function renderRow(r) {
 }
 
 async function load() {
-  const { data, error } = await sb.from("request_completions").select("*").order("created_at", { ascending: false });
+  const { data, error } = await sb
+    .from("request_completions")
+    .select("*, join_requests(guardian_goal)")
+    .order("created_at", { ascending: false });
   if (error) {
     console.error(error);
     $("tbody").innerHTML = '<tr><td colspan="9">تعذر تحميل البيانات.</td></tr>';
     return;
   }
-  completions = Array.isArray(data) ? data : [];
+  completions = (Array.isArray(data) ? data : []).map((row) => {
+    const jr = row.join_requests;
+    const goal = (jr && (Array.isArray(jr) ? jr[0] : jr).guardian_goal) || row.guardian_goal;
+    const { join_requests, ...rest } = row;
+    return goal ? { ...rest, guardian_goal: goal } : rest;
+  });
   if (!completions.length) {
     $("tbody").innerHTML = '<tr><td colspan="9">لا توجد استكمالات حالياً.</td></tr>';
     return;
@@ -77,7 +85,7 @@ async function approve(id, requestId) {
   const row = completions.find(c => String(c.id) === String(id));
   if (!row) { toast("لم يُعثر على السجل.", "error"); return; }
 
-  const missing = reviewMissingItems(row, row.request_type);
+  const missing = reviewMissingItems(row, row.request_type, row);
   if (missing.length) {
     toast("لا يمكن الاعتماد النهائي قبل قبول: " + missing.join("، "), "error");
     return;

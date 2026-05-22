@@ -131,6 +131,18 @@ document.addEventListener("DOMContentLoaded", () => {
       <p class="site-footer-text"><a data-academy="contact_email_link" href="mailto:info@masariha-academy.com">info@masariha-academy.com</a></p>
     </div>
 
+    <div class="site-footer-social-block">
+      <div class="site-footer-title">تابعنا</div>
+      <div class="site-social-icons" role="group" aria-label="شبكات التواصل">
+        <button type="button" class="site-social-btn" data-social="whatsapp" aria-label="واتساب" title="واتساب">💬</button>
+        <button type="button" class="site-social-btn" data-social="instagram" aria-label="إنستغرام" title="إنستغرام">📷</button>
+        <button type="button" class="site-social-btn" data-social="twitter" aria-label="X" title="X">𝕏</button>
+        <button type="button" class="site-social-btn" data-social="tiktok" aria-label="تيك توك" title="تيك توك">🎵</button>
+        <button type="button" class="site-social-btn" data-social="snapchat" aria-label="سناب شات" title="سناب شات">👻</button>
+      </div>
+      <p class="site-social-hint">الروابط الرسمية قريباً بعد اعتماد الشراكة</p>
+    </div>
+
   </div>
 
   <div class="site-wrap site-copy" data-academy="footer_copyright">
@@ -220,7 +232,50 @@ document.addEventListener("DOMContentLoaded", () => {
       menuShell.classList.toggle("is-open");
       toggle.setAttribute("aria-expanded", isOpen ? "true" : "false");
     });
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape" && menuShell.classList.contains("is-open")) {
+        toggle.classList.remove("is-open");
+        menuShell.classList.remove("is-open");
+        toggle.setAttribute("aria-expanded", "false");
+      }
+    });
+    document.addEventListener("click", (e) => {
+      if (!menuShell.classList.contains("is-open")) return;
+      if (e.target.closest(".site-menu-shell") || e.target.closest(".site-menu-toggle")) return;
+      toggle.classList.remove("is-open");
+      menuShell.classList.remove("is-open");
+      toggle.setAttribute("aria-expanded", "false");
+    });
+    menuShell.querySelectorAll("a").forEach((link) => {
+      link.addEventListener("click", () => {
+        toggle.classList.remove("is-open");
+        menuShell.classList.remove("is-open");
+        toggle.setAttribute("aria-expanded", "false");
+      });
+    });
   }
+
+  function initSocialComingSoon() {
+    let toastEl = document.getElementById("siteSocialToast");
+    if (!toastEl) {
+      toastEl = document.createElement("div");
+      toastEl.id = "siteSocialToast";
+      toastEl.className = "site-social-toast";
+      toastEl.setAttribute("role", "status");
+      toastEl.setAttribute("aria-live", "polite");
+      document.body.appendChild(toastEl);
+    }
+    document.querySelectorAll(".site-social-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        toastEl.textContent = "قريباً — سنربط حسابات التواصل الرسمية بعد اعتماد الشراكة.";
+        toastEl.classList.add("show");
+        clearTimeout(initSocialComingSoon._t);
+        initSocialComingSoon._t = setTimeout(() => toastEl.classList.remove("show"), 3200);
+      });
+    });
+  }
+  initSocialComingSoon();
 
   function loadScriptOnce(src) {
     return new Promise((resolve, reject) => {

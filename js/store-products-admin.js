@@ -354,7 +354,7 @@
   }
 
   async function deleteProduct(id) {
-    if (!confirm("هل تريد حذف هذا المنتج من قاعدة البيانات؟")) return;
+    if (!confirm("هل تريد حذف هذا المنتج نهائياً؟")) return;
     const { error } = await supabaseClient.from("store_products").delete().eq("id", id);
     if (error) {
       alert("تعذر الحذف: " + (error.message || error));
@@ -392,7 +392,7 @@
   }
 
   async function clearAllProducts() {
-    if (!confirm("سيتم حذف جميع منتجات المتجر من قاعدة البيانات. هل أنت متأكد؟")) return;
+    if (!confirm("سيتم حذف جميع منتجات المتجر. هل أنت متأكد؟")) return;
     const { error } = await supabaseClient
       .from("store_products")
       .delete()

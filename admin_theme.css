@@ -243,3 +243,32 @@ tr:hover td{background:rgba(255,255,255,.02)}
 @media (max-width:1200px){.stats,.cards{grid-template-columns:repeat(2,minmax(0,1fr))}.grid,.content-grid{grid-template-columns:1fr}.filters{grid-template-columns:1fr 1fr}}
 @media (max-width:1100px){.layout{grid-template-columns:1fr!important}.sidebar:not(.admin-sidebar-unified){position:relative;height:auto;border-left:none;border-bottom:1px solid var(--admin-line)}}
 @media (max-width:780px){.main{padding:18px}.stats,.cards,.form-grid,.categories-grid,.quick-links{grid-template-columns:1fr}.team-item{grid-template-columns:1fr}}
+
+/* جداول الإدارة → بطاقات على الشاشات الضيقة */
+@media (max-width: 768px) {
+  .table-wrap{overflow:visible;border:none;background:transparent;box-shadow:none}
+  .table-wrap table{min-width:0!important;display:block;width:100%}
+  .table-wrap thead{display:none}
+  .table-wrap tbody{display:grid;gap:14px}
+  .table-wrap tr{
+    display:grid;gap:10px;padding:16px;
+    border:1px solid var(--admin-line);border-radius:20px;
+    background:linear-gradient(180deg,rgba(9,28,19,.96),rgba(5,17,11,.98));
+    box-shadow:var(--admin-shadow-soft);
+  }
+  .table-wrap td{
+    display:flex;justify-content:space-between;align-items:flex-start;gap:12px;
+    padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);
+  }
+  .table-wrap td:last-child{border-bottom:none}
+  .table-wrap td::before{
+    content:attr(data-label);
+    color:var(--admin-muted);font-size:12px;font-weight:800;flex-shrink:0;
+  }
+  .table-wrap td.empty-cell{display:block;text-align:center!important}
+  .table-wrap td.empty-cell::before{display:none}
+  .row-actions,.table-actions{justify-content:flex-start;width:100%}
+  .mini-btn,.icon-btn{min-height:44px;min-width:44px;padding:10px 14px}
+  .btn,.button{min-height:44px}
+  .input,.select,.textarea,.field input,.field select{min-height:48px}
+}

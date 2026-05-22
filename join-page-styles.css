@@ -740,3 +740,11 @@ textarea { min-height: 110px; resize: vertical; }
   .domain-tiles { grid-template-columns: repeat(2, 1fr); }
   .guardian-goals { grid-template-columns: 1fr; }
 }
+
+.join-page button,
+.join-page .btn,
+.join-page input,
+.join-page select,
+.join-page textarea {
+  min-height: 48px;
+}

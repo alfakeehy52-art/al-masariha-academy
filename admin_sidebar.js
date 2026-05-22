@@ -379,6 +379,18 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function closeAdminSidebar() {
+    document.body.classList.remove("admin-sidebar-open");
+    const toggle = document.getElementById("adminMobileToggle");
+    if (toggle) toggle.setAttribute("aria-label", "فتح القائمة");
+  }
+
+  function openAdminSidebar() {
+    document.body.classList.add("admin-sidebar-open");
+    const toggle = document.getElementById("adminMobileToggle");
+    if (toggle) toggle.setAttribute("aria-label", "إغلاق القائمة");
+  }
+
   function ensureMobileToggle() {
     if (document.getElementById("adminMobileToggle")) return;
     const btn = document.createElement("button");
@@ -387,8 +399,30 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.className = "admin-mobile-toggle";
     btn.setAttribute("aria-label", "فتح القائمة");
     btn.textContent = "☰";
-    btn.addEventListener("click", () => document.body.classList.toggle("admin-sidebar-open"));
+    btn.addEventListener("click", () => {
+      if (document.body.classList.contains("admin-sidebar-open")) closeAdminSidebar();
+      else openAdminSidebar();
+    });
     document.body.appendChild(btn);
+
+    document.addEventListener("click", (e) => {
+      if (!document.body.classList.contains("admin-sidebar-open")) return;
+      if (window.innerWidth > 1100) return;
+      const sidebar = document.querySelector(".sidebar, .admin-sidebar-unified, .admin-sidebar-fallback");
+      if (e.target === btn || btn.contains(e.target)) return;
+      if (sidebar && sidebar.contains(e.target)) return;
+      closeAdminSidebar();
+    });
+
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") closeAdminSidebar();
+    });
+
+    document.addEventListener("click", (e) => {
+      if (window.innerWidth > 1100) return;
+      const link = e.target.closest(".admin-pro-menu a.nav-link");
+      if (link) closeAdminSidebar();
+    });
   }
 
   async function loadAdminIdentity() {
@@ -484,8 +518,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   ensureThemeLink();
   injectStyles();
-  ensureMobileToggle();
   const sidebarRoot = mountSidebar();
+  ensureMobileToggle();
   if (sidebarRoot) bindInteractions(sidebarRoot);
   bootstrapSidebarBrand();
   loadAdminIdentity();
