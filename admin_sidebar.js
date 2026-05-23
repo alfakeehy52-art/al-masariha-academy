@@ -71,8 +71,8 @@ document.addEventListener("DOMContentLoaded", () => {
             { href: "staff_requests.html", label: "طلبات الكوادر", icon: "coach", match: ["staff_requests.html"] },
             { href: "academy_members_requests.html", label: "طلبات عضوية الأكاديمية", icon: "star", match: ["academy_members_requests.html"] },
             { href: "admin_completion_dashboard.html", label: "استكمال الطلبات", icon: "clip", match: ["admin_completion_dashboard.html"] },
-            { href: "communications_dashboard.html", label: "مركز التواصل", icon: "inbox", match: ["communications_dashboard.html"] },
-            { href: "contact_messages_dashboard.html", label: "رسائل التواصل", icon: "bell", match: ["contact_messages_dashboard.html"] }
+            { href: "communications_dashboard.html", label: "محادثات الطلبات", icon: "inbox", match: ["communications_dashboard.html"] },
+            { href: "contact_messages_dashboard.html", label: "رسائل نموذج التواصل", icon: "bell", match: ["contact_messages_dashboard.html"] }
           ]
         }
       ]

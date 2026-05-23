@@ -183,11 +183,60 @@ function renderTable(type){
   if(cfg){$('pageTitle').textContent=cfg.title; $('pageDesc').textContent=cfg.desc; $('typeIcon').textContent=cfg.icon; const heads=$('typeColumns'); if(heads) heads.innerHTML=cfg.cols.map(c=>`<th>${c}</th>`).join('');}
   const c=countsFor(type); if($('statAll')){$('statAll').textContent=c.all;$('statNew').textContent=c.new;$('statReview').textContent=c.review;$('statApproved').textContent=c.approved;}
   const colLabels=cfg?['','',...cfg.cols,'الحالة','تاريخ الإرسال','الإجراءات']:['','النوع','ملخص','الحالة','تاريخ الإرسال','الإجراءات'];
-  const rows=filtered().map(r=>{const vals=cfg?cfg.fields(r):[getTypeLabel(r.request_type),getRequestSummary(r),shortText(notes(r),28)];const cells=[`<td data-label="رقم المرجع"><span class="tag tag-ref">${escapeHtml(refCode(r))}</span></td>`,`<td data-label="صاحب الطلب"><b class="request-title">${escapeHtml(r.full_name||'طلب بدون اسم')}</b><span class="subtext">${escapeHtml(r.phone||'-')} • ${escapeHtml(r.city||'-')}</span></td>`,...vals.map((v,i)=>`<td data-label="${escapeHtml(colLabels[i+2]||'تفصيل')}">${escapeHtml(v)}</td>`),`<td data-label="الحالة"><span class="tag ${statusClass(r.status||'new')}">${escapeHtml(getStatusLabel(r.status||'new'))}</span></td>`,`<td data-label="تاريخ الإرسال"><div>${escapeHtml(formatDate(r.created_at))}</div><span class="subtext">${escapeHtml(formatTime(r.created_at))}</span></td>`,`<td data-label="الإجراءات"><div class="row-actions"><button class="mini-btn review" onclick="openRequest('${r.id}')">عرض</button>${getStatusLabel(r.status)==='مقبول'?'':`<button class="mini-btn accept" onclick="updateStatus('${r.id}','approved')">قبول</button>`}${getStatusLabel(r.status)==='مرفوض'?'':`<button class="mini-btn reject" onclick="updateStatus('${r.id}','rejected')">رفض</button>`}<button class="mini-btn more" onclick="updateStatus('${r.id}','pending')">استكمال</button></div></td>`];return `<tr>${cells.join('')}</tr>`}).join('');
+  const rows=filtered().map(r=>{const vals=cfg?cfg.fields(r):[getTypeLabel(r.request_type),getRequestSummary(r),shortText(notes(r),28)];const cells=[`<td data-label="رقم المرجع"><span class="tag tag-ref">${escapeHtml(refCode(r))}</span></td>`,`<td data-label="صاحب الطلب"><b class="request-title">${escapeHtml(r.full_name||'طلب بدون اسم')}</b><span class="subtext">${escapeHtml(r.phone||'-')} • ${escapeHtml(r.city||'-')}</span></td>`,...vals.map((v,i)=>`<td data-label="${escapeHtml(colLabels[i+2]||'تفصيل')}">${escapeHtml(v)}</td>`),`<td data-label="الحالة"><span class="tag ${statusClass(r.status||'new')}">${escapeHtml(getStatusLabel(r.status||'new'))}</span></td>`,`<td data-label="تاريخ الإرسال"><div>${escapeHtml(formatDate(r.created_at))}</div><span class="subtext">${escapeHtml(formatTime(r.created_at))}</span></td>`,`<td data-label="الإجراءات"><div class="row-actions"><button class="mini-btn review" onclick="openRequest('${r.id}')">عرض</button><button class="mini-btn chat" type="button" onclick="openChatForRequest('${r.id}')">تواصل</button>${getStatusLabel(r.status)==='مقبول'?'':`<button class="mini-btn accept" onclick="updateStatus('${r.id}','approved')">قبول</button>`}${getStatusLabel(r.status)==='مرفوض'?'':`<button class="mini-btn reject" onclick="updateStatus('${r.id}','rejected')">رفض</button>`}<button class="mini-btn more" onclick="updateStatus('${r.id}','pending')">استكمال</button></div></td>`];return `<tr>${cells.join('')}</tr>`}).join('');
   const colspan=cfg?cfg.cols.length+5:8; tbody.innerHTML=rows||`<tr><td colspan="${colspan}" class="empty-cell">لا توجد طلبات مطابقة حاليًا.</td></tr>`;
 }
 function getRequestSummary(r){if(r.request_type==='player')return r.position||r.age_category||'-'; if(r.request_type==='guardian')return goalLabel(r.guardian_goal); if(r.request_type==='staff'){const m=staffMeta(r);return m.roleLabel||'-'} if(r.request_type==='academy_member'){const m=memberMeta(r);return m.hasLegacyGoal?(m.legacyGoalLabel||'طلب قديم'):shortText(m.interestsLabel,32);} if(r.request_type==='coach')return r.coach_specialty||r.coach_job_title||'-'; if(r.request_type==='supporter'){const m=supporterMeta(r);return m.methodLabel||'-'} return '-'}
 function findReq(id){return requests.find(r=>String(r.id)===String(id))}
+
+function ensureChatUi(){
+  if(!document.getElementById('chat-mini-style')){
+    const st=document.createElement('style');
+    st.id='chat-mini-style';
+    st.textContent=`.mini-btn.chat,.btn.chat{color:#c8e4ff;border-color:rgba(106,200,255,.35)}`;
+    document.head.appendChild(st);
+  }
+  const actions=document.querySelector('#requestModal .modal-actions');
+  if(actions&&!document.getElementById('modalChatBtn')){
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.className='btn chat';
+    btn.id='modalChatBtn';
+    btn.textContent='تواصل';
+    btn.addEventListener('click',()=>{if(currentRequestId)openChatForRequest(currentRequestId)});
+    actions.insertBefore(btn,actions.firstChild);
+  }
+}
+function ensureChatDrawerScript(){
+  if(window.ChatDrawer)return Promise.resolve();
+  return new Promise((resolve,reject)=>{
+    if(document.querySelector('script[data-chat-drawer]')){document.querySelector('script[data-chat-drawer]').addEventListener('load',()=>resolve());return;}
+    const s=document.createElement('script');
+    s.src='js/chat-drawer.js';
+    s.dataset.chatDrawer='1';
+    s.onload=()=>resolve();
+    s.onerror=()=>reject(new Error('chat-drawer load failed'));
+    document.body.appendChild(s);
+  });
+}
+async function openChatForRequest(id){
+  const r=findReq(id);
+  if(!r){showToast('الطلب غير موجود.','warn');return;}
+  try{
+    await ensureChatDrawerScript();
+    if(!window.ChatDrawer){showToast('وحدة التواصل غير متوفرة.','error');return;}
+    await ChatDrawer.openForJoinRequest({
+      joinRequestId:r.id,
+      referenceCode:refCode(r),
+      phone:r.phone||'',
+      fullName:r.full_name||''
+    });
+  }catch(e){
+    console.error(e);
+    showToast('تعذر فتح المحادثة.','error');
+  }
+}
+window.openChatForRequest=openChatForRequest;
 
 function getFileStatusLabel(status){return FILE_STATUS_LABELS[String(status||'pending')]||status||'قيد المراجعة'}
 function fileStatusClass(status){const s=String(status||'pending'); if(s==='approved')return 'status-approved'; if(s==='rejected')return 'status-rejected'; if(s==='reupload')return 'status-pending'; return 'status-review'}
@@ -810,6 +859,7 @@ function exportCsv(){const rows=[['رقم المرجع','الاسم','النوع
 
 document.addEventListener('DOMContentLoaded',()=>{
   ensureFileReviewUi();
+  ensureChatUi();
   if($('requestsCards')) renderDashboard();
   $('closeModal')?.addEventListener('click',closeRequest); $('closeModal2')?.addEventListener('click',closeRequest); $('requestModal')?.addEventListener('click',e=>{if(e.target===$('requestModal'))closeRequest()}); $('closeFilePreview')?.addEventListener('click',closeFilePreview); $('filePreviewModal')?.addEventListener('click',e=>{if(e.target===$('filePreviewModal'))closeFilePreview()}); document.addEventListener('keydown',e=>{if(e.key==='Escape'){ if($('filePreviewModal')?.classList.contains('show')) closeFilePreview(); else closeRequest(); }});
   $('modalAcceptBtn')?.addEventListener('click',()=>currentRequestId&&updateStatus(currentRequestId,'approved')); $('modalRejectBtn')?.addEventListener('click',()=>currentRequestId&&updateStatus(currentRequestId,'rejected')); $('modalCompleteBtn')?.addEventListener('click',()=>currentRequestId&&updateStatus(currentRequestId,'pending'));

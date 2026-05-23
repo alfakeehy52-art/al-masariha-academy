@@ -32,8 +32,8 @@
       <div id="admin-sidebar"></div>
     </aside>
     <main class="main">
-      <h2>مركز التواصل</h2>
-      <p>غرف مرتبطة بطلبات التسجيل — اضغط «فتح» للمحادثة. Realtime يعمل داخل الدرج فقط.</p>
+      <h2>محادثات الطلبات</h2>
+      <p>غرف المحادثة مع مقدّمي الطلبات (ليست رسائل البريد من نموذج «تواصل معنا»). من جدول الطلبات استخدم زر <strong>تواصل</strong>، أو اضغط «فتح المحادثة» هنا.</p>
       <div class="card">
         <table>
           <thead>
@@ -71,7 +71,7 @@
         <td><span class="tag">${esc(r.room_type)}</span></td>
         <td>${esc(r.status)}</td>
         <td>${esc(fmt(r.last_message_at))}</td>
-        <td><button type="button" class="btn btn-gold open-room" data-table="${esc(r.related_entity_table||'')}" data-entity="${esc(r.related_entity_id||'')}">فتح</button></td>
+        <td><button type="button" class="btn btn-gold open-room" data-table="${esc(r.related_entity_table||'')}" data-entity="${esc(r.related_entity_id||'')}">فتح المحادثة</button></td>
       </tr>`).join('');
       body.querySelectorAll('.open-room').forEach(btn=>{
         btn.addEventListener('click',()=>{
