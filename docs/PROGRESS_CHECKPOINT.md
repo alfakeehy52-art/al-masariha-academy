@@ -17,8 +17,8 @@
 
 | | |
 |---|---|
-| **آخر إنجاز** | **انضمام — أقسام 1–5 محلياً** (آخرها `academy_member` + `academy_members_requests.html`) |
-| **التالي** | بنود العرض: جوال · صلاحيات · سوشيال «قريباً» · تنظيف واجهة — ثم **رفع Pages** بعد ملاحظات المالك |
+| **آخر إنجاز** | **تواصل MVP** — Drawer (`js/chat-drawer.js`) + SQL chat + `communications_dashboard.html` |
+| **التالي** | بنود العرض: جوال · صلاحيات · سوشيال «قريباً» · تنظيف واجهة · **قبل العرض:** Badge إشعارات + Realtime `chat_notifications` |
 | **الإنتاج** | https://al-masariha-academy.pages.dev (ينشر من `main` تلقائياً) |
 | **دخول إدارة** | `admin_login.html` — بريد في `supabase-config.js` |
 
@@ -78,6 +78,8 @@
 | D5 دفع إلكتروني للمتجر | لاحقاً |
 | رفع شعار من اللوحة (Storage) | تحسين E1 |
 | لوحة كادر — ربط بيانات كامل | PARTIAL |
+| **تواصل — Badge + `chat_notifications` + Realtime للجدول** | قبل العرض — انظر `docs/CHAT_SYSTEM_DISCUSSION.md` |
+| **تواصل — غرف فئات / كادر / دعوات PIN من الواجهة** | مرحلة 2 |
 
 ---
 

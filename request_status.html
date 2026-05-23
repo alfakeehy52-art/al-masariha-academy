@@ -72,6 +72,7 @@
   <script src="js/join-attachments-catalog.js"></script>
   <script src="js/request-completion-review.js"></script>
   <script src="js/supabase-public-lookup.js"></script>
+  <script src="js/chat-drawer.js"></script>
   <script>
     const sb = createSupabaseClient();
     const $=id=>document.getElementById(id);
@@ -99,6 +100,9 @@
         <div class="detail"><strong>المدينة</strong><span>${esc(row.city||'-')}</span></div>
         <div class="detail"><strong>تاريخ الإرسال</strong><span>${esc(dateFmt(row.created_at))}</span></div>`;
       const actions=[];
+      if(!isRejectedStatus(row.status)){
+        actions.push(`<button class="btn" type="button" id="openChatWithAdminBtn">تواصل مع الإدارة</button>`);
+      }
       if(!isApprovedStatus(row.status)){
         if(shouldComplete(row.status)) actions.push(`<a class="btn gold" href="${completionUrl(row)}">استكمال البيانات والمرفقات</a>`);
         else if(canPrepareAttachments(row.status)) actions.push(`<a class="btn" href="${completionUrl(row)}">تحضير المرفقات مسبقًا</a>`);
@@ -106,6 +110,16 @@
         actions.push(`<a class="btn" href="al_masariha_join_page.html">تقديم طلب جديد</a>`);
       }
       $('resultActions').innerHTML=actions.join('');
+      const chatBtn=document.getElementById('openChatWithAdminBtn');
+      if(chatBtn&&window.ChatDrawer){
+        chatBtn.addEventListener('click',()=>{
+          ChatDrawer.openAsGuest({
+            referenceCode:row.reference_code||'',
+            phone:row.phone||'',
+            fullName:row.full_name||''
+          });
+        });
+      }
       const oldReview=document.getElementById('completionReviewBox');
       if(oldReview) oldReview.remove();
       const review=document.createElement('div');

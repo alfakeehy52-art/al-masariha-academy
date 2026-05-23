@@ -52,7 +52,7 @@
     .status-pending{background:rgba(212,175,55,.13);border-color:rgba(212,175,55,.22);color:#ffe79c}
     .row-actions{display:flex;gap:8px;flex-wrap:wrap}
     .mini-btn{background:rgba(255,255,255,.04);color:#fff;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:10px 12px;font-family:inherit;font-weight:900;cursor:pointer;font-size:13px}
-    .mini-btn.accept{border-color:rgba(39,174,96,.26);color:#bdf3d1}.mini-btn.reject{border-color:rgba(224,91,91,.26);color:#ffd0d0}.mini-btn.review{border-color:rgba(55,125,255,.26);color:#bdd0ff}.mini-btn.more{border-color:rgba(212,175,55,.26);color:#ffe79c}
+    .mini-btn.accept{border-color:rgba(39,174,96,.26);color:#bdf3d1}.mini-btn.reject{border-color:rgba(224,91,91,.26);color:#ffd0d0}.mini-btn.review{border-color:rgba(55,125,255,.26);color:#bdd0ff}.mini-btn.chat{border-color:rgba(106,200,255,.30);color:#c8e4ff}.mini-btn.more{border-color:rgba(212,175,55,.26);color:#ffe79c}
     .note-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:22px}
     .note-box{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid var(--line);border-radius:22px;padding:20px;box-shadow:var(--shadow)}
     .note-box h4{margin:0 0 10px;font-size:20px;font-weight:900}.note-box p{margin:0;color:var(--muted);line-height:1.9;font-size:14px}
@@ -185,6 +185,7 @@
         </div>
         <div class="request-note" id="d_notes">-</div>
         <div class="modal-actions">
+          <button class="action-btn action-secondary" type="button" id="modalChatBtn">تواصل</button>
           <button class="action-btn action-accept" type="button" id="modalAcceptBtn">قبول الطلب</button>
           <button class="action-btn action-reject" type="button" id="modalRejectBtn">رفض الطلب</button>
           <button class="action-btn action-pending" type="button" id="modalCompleteBtn">طلب استكمال</button>
@@ -200,6 +201,7 @@
   <script src="supabase-config.js"></script>
   <script src="js/supabase-client.js"></script>
   <script src="admin_sidebar.js"></script>
+  <script src="js/chat-drawer.js"></script>
   <script>
     const supabaseClient = createSupabaseClient();
 
@@ -424,6 +426,7 @@
             <td>
               <div class="row-actions">
                 <button class="mini-btn review open-request" data-id="${request.id}">عرض</button>
+                <button class="mini-btn chat open-chat" data-id="${request.id}" type="button">تواصل</button>
                 ${acceptBtn}
                 ${rejectBtn}
                 <button class="mini-btn more request-action" data-action="pending" data-id="${request.id}">${pendingLabel}</button>
@@ -817,9 +820,34 @@
       }
     }
 
+    function openChatForRequest(id){
+      const data = findRequest(id);
+      if(!data){
+        showToast('الطلب غير موجود.', 'warn');
+        return;
+      }
+      if(!window.ChatDrawer){
+        showToast('وحدة التواصل غير محمّلة.', 'error');
+        return;
+      }
+      ChatDrawer.openForJoinRequest({
+        joinRequestId: data.id,
+        referenceCode: getReferenceCode(data),
+        phone: data.phone || '',
+        fullName: data.full_name || ''
+      });
+    }
+
     function bindRowEvents(){
       document.querySelectorAll('.open-request').forEach(btn => {
         btn.addEventListener('click', () => openRequest(btn.dataset.id));
+      });
+
+      document.querySelectorAll('.open-chat').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          openChatForRequest(btn.dataset.id);
+        });
       });
 
       document.querySelectorAll('.request-action').forEach(btn => {
@@ -840,6 +868,9 @@
     });
     modalCompleteBtn.addEventListener('click', () => {
       if (currentRequestId) updateRequestStatus(currentRequestId, 'pending');
+    });
+    document.getElementById('modalChatBtn')?.addEventListener('click', () => {
+      if (currentRequestId) openChatForRequest(currentRequestId);
     });
 
     document.getElementById('applyFiltersBtn')?.addEventListener('click', renderRequestsTable);

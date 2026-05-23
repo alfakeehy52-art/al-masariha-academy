@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>مركز التواصل | أكاديمية المسارحة</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root{--bg:#09111f;--line:rgba(255,255,255,.08);--text:#ecf2ff;--muted:#9fb0d1;--gold:#d4af37;--gold2:#f5d46b;--radius:20px}
+    *{box-sizing:border-box}html,body{margin:0;font-family:'Cairo',sans-serif;background:linear-gradient(180deg,var(--bg),#0d1628);color:var(--text);min-height:100vh}
+    .layout{display:grid;grid-template-columns:290px 1fr;min-height:100vh}
+    .sidebar{padding:26px 18px;border-left:1px solid var(--line);background:rgba(212,175,55,.08)}
+    .brand h1{margin:0;font-size:22px;color:var(--gold2)}.brand p{margin:8px 0 0;color:var(--muted);font-size:14px;line-height:1.8}
+    .main{padding:26px}.main h2{margin:0 0 8px;font-size:30px}.main>p{color:var(--muted);line-height:1.8}
+    .card{margin-top:22px;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:rgba(255,255,255,.03)}
+    table{width:100%;border-collapse:collapse}th,td{padding:14px;text-align:right;border-bottom:1px solid var(--line);font-size:14px}
+    th{color:var(--muted);font-weight:800}.btn{display:inline-flex;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:#fff;font-weight:900;cursor:pointer;font-family:inherit;text-decoration:none}
+    .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a1a1a;border:none}
+    .tag{padding:6px 10px;border-radius:999px;font-size:12px;font-weight:900;background:rgba(55,125,255,.12);color:#bdd0ff}
+    @media(max-width:1000px){.layout{grid-template-columns:1fr}.sidebar{border-left:none;border-bottom:1px solid var(--line)}}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/admin-auth.js"></script>
+  <script>requireAdmin();</script>
+</head>
+<body>
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><h1>أكاديمية المسارحة</h1><p>مركز التواصل التشغيلي</p></div>
+      <div id="admin-sidebar"></div>
+    </aside>
+    <main class="main">
+      <h2>مركز التواصل</h2>
+      <p>غرف مرتبطة بطلبات التسجيل — اضغط «فتح» للمحادثة. Realtime يعمل داخل الدرج فقط.</p>
+      <div class="card">
+        <table>
+          <thead>
+            <tr><th>الغرفة</th><th>النوع</th><th>الحالة</th><th>آخر رسالة</th><th></th></tr>
+          </thead>
+          <tbody id="roomsBody">
+            <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">جاري التحميل...</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p style="margin-top:16px"><a class="btn" href="admin_requests.html">← إدارة الطلبات</a></p>
+    </main>
+  </div>
+  <script src="admin_sidebar.js"></script>
+  <script src="js/chat-drawer.js"></script>
+  <script>
+    const sb = createSupabaseClient();
+    const body = document.getElementById('roomsBody');
+
+    function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
+    function fmt(v){if(!v)return '—';const d=new Date(v);return Number.isNaN(d.getTime())?'—':d.toLocaleString('ar-SA')}
+
+    async function loadRooms(){
+      const { data, error } = await sb.from('chat_rooms').select('id,title_ar,room_type,status,last_message_at,related_entity_table,related_entity_id').order('last_message_at',{ascending:false,nullsFirst:false}).limit(80);
+      if(error){
+        body.innerHTML = `<tr><td colspan="5" style="color:#ffd0d0;padding:20px">${esc(error.message)}</td></tr>`;
+        return;
+      }
+      if(!data||!data.length){
+        body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">لا توجد غرف بعد. أنشئها من زر «تواصل» في إدارة الطلبات.</td></tr>';
+        return;
+      }
+      body.innerHTML = data.map(r=>`<tr>
+        <td><strong>${esc(r.title_ar)}</strong></td>
+        <td><span class="tag">${esc(r.room_type)}</span></td>
+        <td>${esc(r.status)}</td>
+        <td>${esc(fmt(r.last_message_at))}</td>
+        <td><button type="button" class="btn btn-gold open-room" data-table="${esc(r.related_entity_table||'')}" data-entity="${esc(r.related_entity_id||'')}">فتح</button></td>
+      </tr>`).join('');
+      body.querySelectorAll('.open-room').forEach(btn=>{
+        btn.addEventListener('click',()=>{
+          if(btn.dataset.table!=='join_requests'||!btn.dataset.entity){
+            alert('فتح من إدارة الطلبات لهذا النوع حالياً.');
+            return;
+          }
+          ChatDrawer.openForJoinRequest({ joinRequestId: btn.dataset.entity, fullName: btn.closest('tr')?.querySelector('strong')?.textContent||'طلب' });
+        });
+      });
+    }
+    loadRooms();
+  </script>
+</body>
+</html>
