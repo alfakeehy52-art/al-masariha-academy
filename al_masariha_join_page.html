@@ -37,6 +37,8 @@
       </div>
     </section>
 
+    <div id="joinClosedBanner" class="join-closed-banner" role="alert"></div>
+
     <section class="path-section" id="pathSection">
       <div class="path-section-head">
         <h2>اختر مسارك</h2>
@@ -97,7 +99,6 @@
               <div class="guardian-goals" id="guardianGoals">
                 <button type="button" class="goal-btn" data-goal="register_new_player">تسجيل لاعب جديد</button>
                 <button type="button" class="goal-btn" data-goal="link_existing_player">ربط بلاعب مسجل مسبقًا</button>
-                <button type="button" class="goal-btn" data-goal="guardian_member_only">ولي أمر / متابع فقط</button>
               </div>
               <input type="hidden" id="guardianGoal" name="guardianGoal" />
             </div>
@@ -126,14 +127,7 @@
           <div class="grid">
             <div class="field full">
               <label>اهتماماتك <span style="color:#f5d46b">*</span></label>
-              <div class="member-interests">
-                <label class="interest-chip"><input type="checkbox" name="memberInterests" value="news" /> أخبار الأكاديمية</label>
-                <label class="interest-chip"><input type="checkbox" name="memberInterests" value="events" /> حضور الفعاليات</label>
-                <label class="interest-chip"><input type="checkbox" name="memberInterests" value="store" /> عروض المتجر</label>
-                <label class="interest-chip"><input type="checkbox" name="memberInterests" value="future_player" /> تسجيل لاعب مستقبلاً</label>
-                <label class="interest-chip"><input type="checkbox" name="memberInterests" value="volunteer" /> التطوع</label>
-                <label class="interest-chip"><input type="checkbox" name="memberInterests" value="support" /> الرعاية والدعم</label>
-              </div>
+              <div class="member-interests" id="memberInterestsWrap"></div>
             </div>
             <div class="field full"><label for="memberNotes">ملاحظات (اختياري)</label><textarea id="memberNotes" name="memberNotes" placeholder="ما الذي يهمك في الأكاديمية؟"></textarea></div>
           </div>
@@ -142,10 +136,10 @@
         <section class="section type-panel" data-panel="supporter">
           <h3 class="section-title">بيانات طلب الداعم</h3>
           <div class="grid">
-            <div class="field"><label for="supportType">نوع الداعم</label><select id="supportType" name="supportType"><option value="">اختر النوع</option><option>فرد</option><option>مؤسسة</option><option>راعٍ محتمل</option></select></div>
-            <div class="field"><label for="supportLevel">المستوى المطلوب</label><select id="supportLevel" name="supportLevel"><option value="">اختر المستوى</option><option>داعم أساسي</option><option>داعم فضي</option><option>داعم ذهبي</option><option>راعٍ رسمي</option></select></div>
-            <div class="field"><label for="entityName">اسم الجهة / النشاط</label><input id="entityName" name="entityName" type="text" placeholder="إن وجد" /></div>
-            <div class="field"><label for="supportMethod">نوع الدعم</label><select id="supportMethod" name="supportMethod"><option value="">اختر نوع الدعم</option><option>مالي</option><option>لوجستي</option><option>رعاية إعلامية</option><option>شراكة</option></select></div>
+            <div class="field"><label for="supportType">نوع الداعم <span style="color:#f5d46b">*</span></label><select id="supportType" name="supportType" required><option value="">اختر النوع</option></select></div>
+            <div class="field"><label for="supportLevel">المستوى المطلوب <span style="color:#f5d46b">*</span></label><select id="supportLevel" name="supportLevel" required><option value="">اختر المستوى</option></select></div>
+            <div class="field"><label for="entityName">اسم الجهة / النشاط</label><input id="entityName" name="entityName" type="text" placeholder="مطلوب للمؤسسة والراعي المحتمل" /></div>
+            <div class="field"><label for="supportMethod">طريقة الدعم <span style="color:#f5d46b">*</span></label><select id="supportMethod" name="supportMethod" required><option value="">اختر طريقة الدعم</option></select></div>
             <div class="field full"><label for="supportNotes">تفاصيل الدعم أو المقترح</label><textarea id="supportNotes" name="supportNotes" placeholder="اكتب تفاصيل مختصرة"></textarea></div>
           </div>
         </section>
@@ -187,11 +181,12 @@
           </div>
         </section>
 
-        <section class="section">
-          <h3 class="section-title">الإقرار</h3>
+        <section class="section submit-zone">
+          <h3 class="section-title">الإقرار والإرسال</h3>
           <div class="policy-box"><div class="policy-row">أقر بأن البيانات المدخلة صحيحة وأن الطلب يخضع للمراجعة والاعتماد من إدارة الأكاديمية.</div></div>
-          <div class="field full" style="margin-top:16px"><label class="field-inline"><input type="checkbox" id="confirmPolicy" required /><span>أوافق على إرسال الطلب للمراجعة.</span></label></div>
-          <div class="action-row"><button type="submit" class="submit-btn">إرسال الطلب</button><a href="request_status.html" class="ghost-btn">متابعة انضمام (REQ)</a><a href="store_order_status.html" class="ghost-btn">متابعة متجر (ORD)</a><a href="index.html" class="ghost-btn">العودة للرئيسية</a></div>
+          <label class="consent-card field-inline"><input type="checkbox" id="confirmPolicy" required /><span>أوافق على إرسال الطلب للمراجعة.</span></label>
+          <div class="submit-center"><button type="submit" class="submit-btn submit-btn-hero" id="joinSubmitBtn">إرسال الطلب للمراجعة</button></div>
+          <div class="action-row action-row-secondary"><a href="request_status.html" class="ghost-btn">متابعة انضمام (REQ)</a><a href="store_order_status.html" class="ghost-btn">متابعة متجر (ORD)</a><a href="index.html" class="ghost-btn">العودة للرئيسية</a></div>
           <div id="statusFollowBox" class="policy-box" style="display:none;margin-top:16px;border-color:rgba(46,204,113,.34);background:rgba(46,204,113,.08)">
             <div class="policy-row">تم حفظ طلبك. احتفظ برقم المرجع، ويمكنك متابعة حالة الطلب من زر المتابعة.</div>
             <a id="statusFollowLink" href="request_status.html" class="submit-btn" style="width:fit-content;min-width:190px">متابعة حالة الطلب</a>
@@ -206,10 +201,14 @@
   <script src="js/site-seo.js"></script>
 <script src="shared-layout.js"></script>
   <script src="supabase-config.js"></script>
+  <script src="js/academy-settings.js"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/supabase-public-lookup.js"></script>
   <script src="js/academy-policy.js"></script>
   <script src="js/academy-roles.js"></script>
+  <script src="js/supporter-profile.js"></script>
+  <script src="js/academy-member-profile.js"></script>
+  <script src="js/join-intake-policy.js"></script>
   <script src="js/join-page-app.js"></script>
 </body>
 </html>

@@ -127,7 +127,7 @@
         <div class="card-body">
           <div class="filters">
             <input type="text" id="searchInput" placeholder="ابحث بالاسم أو الجوال أو البريد..." />
-            <select id="typeFilter"><option>كل أنواع الطلبات</option><option>لاعب</option><option>ولي أمر</option><option>مدرب</option><option>داعم</option><option>متطوع</option></select>
+            <select id="typeFilter"><option>كل أنواع الطلبات</option><option>لاعب</option><option>ولي أمر</option><option>مدرب</option><option>داعم</option><option>كادر</option><option>عضو أكاديمية</option></select>
             <select id="statusFilter"><option>الطلبات النشطة</option><option>كل الحالات</option><option>جديد</option><option>جاهز للمراجعة</option><option>مقبول</option><option>مرفوض</option><option>بانتظار استكمال</option></select>
             <select id="dateFilter"><option>الكل</option><option>اليوم</option><option>آخر 7 أيام</option><option>هذا الشهر</option></select>
             <select id="sortFilter"><option>ترتيب: الأحدث أولاً</option><option>الأقدم أولاً</option><option>الأعلى أولوية</option></select>
@@ -216,9 +216,10 @@
     const TYPE_LABELS = {
       player:'لاعب',
       guardian:'ولي أمر',
+      staff:'كادر',
       coach:'مدرب',
       supporter:'داعم',
-      volunteer:'متطوع'
+      academy_member:'عضو أكاديمية'
     };
 
     const STATUS_LABELS = {
@@ -301,7 +302,6 @@
       if (request.request_type === 'guardian') return request.guardian_goal || 'ولي أمر';
       if (request.request_type === 'coach') return request.coach_specialty || request.specialty || request.coach_category || request.category || 'مدرب';
       if (request.request_type === 'supporter') return request.support_level || request.support_type || 'داعم';
-      if (request.request_type === 'volunteer') return request.volunteer_field || 'متطوع';
       return '-';
     }
 
@@ -310,7 +310,6 @@
       if (request.request_type === 'guardian') return request.relationship || request.child_name || '-';
       if (request.request_type === 'coach') return request.coach_job_title || request.job_title || request.coach_certification || request.certification || '-';
       if (request.request_type === 'supporter') return request.support_method || request.entity_name || '-';
-      if (request.request_type === 'volunteer') return request.availability || '-';
       return '-';
     }
 
@@ -319,7 +318,6 @@
       if (request.request_type === 'guardian') return request.children_count ? `عدد الأبناء: ${request.children_count}` : 'ولي أمر';
       if (request.request_type === 'coach') { const y = request.coach_experience_years || request.experience_years; return y ? `${y} سنة خبرة` : 'مدرب'; }
       if (request.request_type === 'supporter') return request.support_type || 'داعم';
-      if (request.request_type === 'volunteer') return 'تطوع';
       return '-';
     }
 
@@ -575,10 +573,9 @@
       const normalized = raw.toLowerCase();
       if (["register_new_player", "new_player", "تسجيل لاعب جديد", "طلب تسجيل لاعب", "تسجيل لاعب", "تسجيل ولد جديد", "إضافة لاعب جديد"].includes(raw) || normalized.includes('new_player') || normalized.includes('register')) return 'new_player';
       if (["link_existing_player", "existing_player", "ربط بلاعب موجود", "متابعة لاعب", "ولي أمر لاعب مسجل مسبقًا", "لاعب موجود"].includes(raw) || normalized.includes('existing') || normalized.includes('link')) return 'existing_player';
-      if (["guardian_member_only", "member_only", "عضوية فقط", "عضوية ولي أمر", "متابع فقط", "مشجع", "عضو"].includes(raw) || normalized.includes('member')) return 'member_only';
       if (request.child_name || request.childName) return 'new_player';
       if (request.existing_player_id || request.player_id || request.linked_player_id || request.existing_player_name) return 'existing_player';
-      return 'member_only';
+      return '';
     }
 
     function buildGuardianPayloadFromRequest(request){

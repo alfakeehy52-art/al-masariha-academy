@@ -46,7 +46,6 @@ document.addEventListener("DOMContentLoaded", () => {
             { href: "coaches_dashboard.html", label: "المدربون", icon: "coach", match: ["coaches_dashboard.html", "coaches_add_dashboard.html", "coach_view_dashboard.html"] },
             { href: "guardians_dashboard.html", label: "أولياء الأمور", icon: "family", match: ["guardians_dashboard.html"] },
             { href: "supporters_dashboard.html", label: "الداعمون", icon: "heart", match: ["supporters_dashboard.html"] },
-            { href: "volunteers_dashboard.html", label: "المتطوعون", icon: "hand", match: ["volunteers_dashboard.html"] },
             { href: "admin_staff_dashboard.html", label: "الكوادر (موحّد)", icon: "coach", match: ["admin_staff_dashboard.html"] },
             { href: "academy_members_dashboard.html", label: "عضوية الأكاديمية", icon: "star", match: ["academy_members_dashboard.html"] }
           ]
@@ -69,8 +68,8 @@ document.addEventListener("DOMContentLoaded", () => {
             { href: "coaches_requests.html", label: "طلبات المدربين", icon: "coach", match: ["coaches_requests.html"] },
             { href: "guardians_requests.html", label: "طلبات أولياء الأمور", icon: "family", match: ["guardians_requests.html"] },
             { href: "supporters_requests.html", label: "طلبات الداعمين", icon: "heart", match: ["supporters_requests.html"] },
-            { href: "volunteers_requests.html", label: "طلبات المتطوعين", icon: "hand", match: ["volunteers_requests.html"] },
             { href: "staff_requests.html", label: "طلبات الكوادر", icon: "coach", match: ["staff_requests.html"] },
+            { href: "academy_members_requests.html", label: "طلبات عضوية الأكاديمية", icon: "star", match: ["academy_members_requests.html"] },
             { href: "admin_completion_dashboard.html", label: "استكمال الطلبات", icon: "clip", match: ["admin_completion_dashboard.html"] },
             { href: "contact_messages_dashboard.html", label: "رسائل التواصل", icon: "bell", match: ["contact_messages_dashboard.html"] }
           ]

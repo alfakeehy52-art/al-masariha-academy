@@ -246,6 +246,48 @@
         </section>
 
         <section class="panel">
+          <h2 class="page-section-title">التقديم والطلبات (انضم إلينا)</h2>
+          <p class="page-section-desc">إيقاف استقبال طلبات جديدة كلياً أو لمسارات محددة. الطلبات القديمة تبقى قابلة للمتابعة.</p>
+          <div class="settings-grid" style="margin-top:18px">
+            <div class="field full">
+              <label class="toggle-pill" style="display:inline-flex"><input type="checkbox" name="join_closed_all" id="joinClosedAll" /> إيقاف كل التقديمات (جميع المسارات)</label>
+            </div>
+            <div class="field full">
+              <label for="join_closed_message_ar">رسالة الزائر عند الإغلاق</label>
+              <textarea id="join_closed_message_ar" name="join_closed_message_ar" rows="3" placeholder="التقديم متوقف مؤقتاً..."></textarea>
+            </div>
+            <div class="field full">
+              <label>إيقاف مسارات محددة (عند عدم تفعيل الإيقاف الكامل)</label>
+              <div class="toggle-row" id="joinTypeClosedRow">
+                <label class="toggle-pill"><input type="checkbox" data-join-type="player" /> لاعب</label>
+                <label class="toggle-pill"><input type="checkbox" data-join-type="guardian" /> ولي أمر</label>
+                <label class="toggle-pill"><input type="checkbox" data-join-type="staff" /> كادر</label>
+                <label class="toggle-pill"><input type="checkbox" data-join-type="supporter" /> داعم</label>
+                <label class="toggle-pill"><input type="checkbox" data-join-type="academy_member" /> عضو الأكاديمية</label>
+              </div>
+              <input type="hidden" name="join_closed_types" id="joinClosedTypesField" value="[]" />
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2 class="page-section-title">أدوار كادر إضافية (من الإدارة)</h2>
+          <p class="page-section-desc">تظهر في صفحة «انضم إلينا» ضمن مجال الكادر بعد الحفظ. مثال: سائق فريق — معرّف إنجليزي بدون مسافات.</p>
+          <div class="settings-grid" style="margin-top:12px">
+            <div class="field"><label for="newRoleId">معرّف الدور</label><input id="newRoleId" type="text" placeholder="team_driver" /></div>
+            <div class="field"><label for="newRoleDomain">المجال</label><select id="newRoleDomain"><option value="sports">رياضي</option><option value="medical">طبي</option><option value="admin">إداري</option><option value="operations">تشغيلي</option><option value="media_tech">إعلامي وتقني</option></select></div>
+            <div class="field"><label for="newRoleLabel">المسمى بالعربية</label><input id="newRoleLabel" type="text" placeholder="سائق فريق" /></div>
+            <div class="field full" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
+              <button type="button" class="btn btn-soft" id="addCustomRoleBtn">إضافة للقائمة</button>
+            </div>
+            <div class="field full">
+              <div id="customRolesList" class="hint" style="line-height:2"></div>
+              <input type="hidden" name="custom_staff_roles_json" id="customStaffRolesField" value="[]" />
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
           <h2 class="page-section-title">إظهار الأقسام والتنقل</h2>
           <p class="page-section-desc">إخفاء قسم يعطّل الرابط في القائمة والبطاقات ذات الصلة في الرئيسية.</p>
           <div class="toggle-row" style="margin-top:16px">
@@ -265,7 +307,9 @@
   <script>
     const form = document.getElementById("settingsForm");
     const statusBar = document.getElementById("statusBar");
-    const BOOL_FIELDS = ["show_store", "show_media", "show_news", "nav_show_track_join", "nav_show_track_store", "nav_show_admin_login"];
+    const BOOL_FIELDS = ["show_store", "show_media", "show_news", "nav_show_track_join", "nav_show_track_store", "nav_show_admin_login", "join_closed_all"];
+    const JOIN_TYPE_IDS = ["player", "guardian", "staff", "supporter", "academy_member"];
+    let customStaffRoles = [];
     const PRODUCTION_URL = "https://al-masariha-academy.pages.dev/";
     const RECOMMENDED_COPY = {
       tagline: "نطوّر المواهب ونصنع مستقبل اللاعبين",
@@ -360,6 +404,51 @@
       }
     }
 
+    function renderCustomRoles() {
+      const box = document.getElementById("customRolesList");
+      const hidden = document.getElementById("customStaffRolesField");
+      if (hidden) hidden.value = JSON.stringify(customStaffRoles);
+      if (!box) return;
+      if (!customStaffRoles.length) {
+        box.textContent = "لا توجد أدوار إضافية — الأدوار الافتراضية (٢٣ دوراً) تبقى كما هي.";
+        return;
+      }
+      box.innerHTML = customStaffRoles
+        .map(
+          (r, i) =>
+            `<div style="display:flex;justify-content:space-between;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--admin-line);border-radius:12px;margin-bottom:8px">
+              <span><strong>${r.label}</strong> <span style="color:var(--admin-muted)">(${r.id} · ${r.domain})</span></span>
+              <button type="button" class="btn btn-soft" data-remove-role="${i}">حذف</button>
+            </div>`
+        )
+        .join("");
+      box.querySelectorAll("[data-remove-role]").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          customStaffRoles.splice(Number(btn.dataset.removeRole), 1);
+          renderCustomRoles();
+        });
+      });
+    }
+
+    function syncJoinClosedTypesField() {
+      const closed = [];
+      JOIN_TYPE_IDS.forEach((id) => {
+        const cb = document.querySelector(`[data-join-type="${id}"]`);
+        if (cb && cb.checked) closed.push(id);
+      });
+      const field = document.getElementById("joinClosedTypesField");
+      if (field) field.value = JSON.stringify(closed);
+    }
+
+    function fillJoinClosedTypes(closedArr) {
+      const set = new Set(Array.isArray(closedArr) ? closedArr : []);
+      JOIN_TYPE_IDS.forEach((id) => {
+        const cb = document.querySelector(`[data-join-type="${id}"]`);
+        if (cb) cb.checked = set.has(id);
+      });
+      syncJoinClosedTypesField();
+    }
+
     function fillForm(s) {
       form.querySelectorAll("input:not([type=checkbox]):not([readonly]), textarea").forEach((el) => {
         if (el.name && s[el.name] != null) el.value = s[el.name];
@@ -371,6 +460,20 @@
         const cb = form.querySelector(`input[name="${name}"]`);
         if (cb) cb.checked = Boolean(s[name]);
       });
+      try {
+        customStaffRoles = JSON.parse(s.custom_staff_roles_json || "[]");
+        if (!Array.isArray(customStaffRoles)) customStaffRoles = [];
+      } catch (e) {
+        customStaffRoles = [];
+      }
+      renderCustomRoles();
+      let closedTypes = [];
+      try {
+        closedTypes = JSON.parse(s.join_closed_types || "[]");
+      } catch (e) {
+        closedTypes = [];
+      }
+      fillJoinClosedTypes(closedTypes);
       setImagePreview(
         document.getElementById("logoPreviewImg"),
         document.getElementById("logoPreviewPh"),
@@ -434,6 +537,7 @@
     );
 
     function readForm() {
+      syncJoinClosedTypesField();
       const payload = {};
       form.querySelectorAll("input:not([type=checkbox]), textarea").forEach((el) => {
         if (el.name) payload[el.name] = el.value;
@@ -442,8 +546,35 @@
         const cb = form.querySelector(`input[name="${name}"]`);
         payload[name] = cb ? cb.checked : false;
       });
+      payload.custom_staff_roles_json = JSON.stringify(customStaffRoles);
       return payload;
     }
+
+    document.getElementById("addCustomRoleBtn")?.addEventListener("click", () => {
+      const id = String(document.getElementById("newRoleId")?.value || "")
+        .trim()
+        .replace(/\s+/g, "_")
+        .replace(/[^a-zA-Z0-9_]/g, "");
+      const domain = document.getElementById("newRoleDomain")?.value || "";
+      const label = String(document.getElementById("newRoleLabel")?.value || "").trim();
+      if (!id || !domain || !label) {
+        showStatus("أكمل معرّف الدور والمجال والمسمى.", false);
+        return;
+      }
+      if (customStaffRoles.some((r) => r.id === id)) {
+        showStatus("المعرّف مستخدم مسبقاً.", false);
+        return;
+      }
+      customStaffRoles.push({ id, domain, label });
+      document.getElementById("newRoleId").value = "";
+      document.getElementById("newRoleLabel").value = "";
+      renderCustomRoles();
+      showStatus("أُضيف الدور — اضغط «حفظ الإعدادات» لتطبيقه على صفحة الانضمام.", true);
+    });
+
+    JOIN_TYPE_IDS.forEach((id) => {
+      document.querySelector(`[data-join-type="${id}"]`)?.addEventListener("change", syncJoinClosedTypesField);
+    });
 
     async function loadForm() {
       try {

@@ -10,14 +10,19 @@ const STATUS_LABELS = {
   suspended: "موقوف"
 };
 
-const INTEREST_LABELS = {
-  news: "أخبار الأكاديمية",
-  store: "عروض المتجر",
-  future_player: "تسجيل لاعب مستقبلًا",
-  volunteer: "التطوع",
-  support: "الرعاية والدعم",
-  events: "حضور الفعاليات"
-};
+function interestLabelsMap() {
+  const AMP = window.ACADEMY_MEMBER_PROFILE;
+  if (AMP && AMP.INTERESTS) {
+    return Object.fromEntries(Object.values(AMP.INTERESTS).map((o) => [o.id, o.label]));
+  }
+  return {
+    news: "أخبار الأكاديمية",
+    store: "عروض المتجر",
+    future_player: "تسجيل لاعب مستقبلًا",
+    support: "الرعاية والدعم",
+    events: "حضور الفعاليات"
+  };
+}
 
 function $(id){ return document.getElementById(id); }
 function escapeHtml(value){ return String(value ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;").replace(/'/g,"&#039;"); }
@@ -44,7 +49,8 @@ function formatTime(value){
 }
 function interestsText(arr){
   if(!Array.isArray(arr) || !arr.length) return "-";
-  return arr.map(x=>INTEREST_LABELS[x]||x).join("، ");
+  const labels = interestLabelsMap();
+  return arr.map((x) => labels[x] || (window.ACADEMY_MEMBER_PROFILE?.interestLabel?.(x) || x)).join("، ");
 }
 function memberCode(m){
   if(m.member_code) return m.member_code;
@@ -187,7 +193,7 @@ function openMember(id){
   $("d_verified").textContent=m.email_verified?"نعم":"لا";
   $("d_date").textContent=`${formatDate(m.created_at)} ${formatTime(m.created_at)}`;
   $("d_interests").innerHTML=Array.isArray(m.interests)&&m.interests.length
-    ? m.interests.map(x=>`<span class="tag tag-ref">${escapeHtml(INTEREST_LABELS[x]||x)}</span>`).join(" ")
+    ? m.interests.map((x) => `<span class="tag tag-ref">${escapeHtml((window.ACADEMY_MEMBER_PROFILE?.interestLabel?.(x)) || interestLabelsMap()[x] || x)}</span>`).join(" ")
     : `<span class="subtext">لا توجد اهتمامات محددة.</span>`;
   $("d_notes").textContent=m.notes||"-";
   $("memberModal").classList.add("show");

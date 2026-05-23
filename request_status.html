@@ -68,11 +68,14 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="js/supabase-client.js"></script>
+  <script src="js/academy-roles.js"></script>
+  <script src="js/join-attachments-catalog.js"></script>
+  <script src="js/request-completion-review.js"></script>
   <script src="js/supabase-public-lookup.js"></script>
   <script>
     const sb = createSupabaseClient();
     const $=id=>document.getElementById(id);
-    const TYPE={player:'لاعب',guardian:'ولي أمر',coach:'مدرب',supporter:'داعم',volunteer:'متطوع'};
+    const TYPE={player:'لاعب',guardian:'ولي أمر',staff:'كادر',coach:'كادر (قديم)',supporter:'داعم',academy_member:'عضو أكاديمية'};
     const STATUS={new:'جديد',review:'تحت المراجعة',reviewing:'تحت المراجعة',approved:'مقبول',rejected:'مرفوض',pending:'بانتظار استكمال',needs_completion:'بانتظار استكمال'};
     function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
     function toast(msg,type='success'){const t=document.createElement('div');t.className='toast '+type;t.textContent=msg;$('toastWrap').appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transition='.2s';setTimeout(()=>t.remove(),230)},3000)}
@@ -113,13 +116,12 @@
       loadCompletionReview(row);
     }
 
-    const FILE_REVIEW_FIELDS=[
-      {label:'الهوية / الإقامة',status:'id_document_status',note:'id_document_note'},
-      {label:'الصورة الشخصية',status:'personal_photo_status',note:'personal_photo_note'},
-      {label:'العقد الموقّع',status:'contract_file_status',note:'contract_file_note'},
-      {label:'التعهد الموقّع',status:'pledge_file_status',note:'pledge_file_note'},
-      {label:'الشهادة / المؤهل',status:'certificate_file_status',note:'certificate_file_note'}
-    ];
+    function fileReviewFields(row){
+      if(typeof getReviewFilesByType==='function'){
+        return getReviewFilesByType(row.request_type,row).map(f=>({label:f.title,status:f.status,note:f.note}));
+      }
+      return [];
+    }
     function isRejected(v){return ['rejected','رفض','مرفوض'].includes(String(v||'').trim().toLowerCase())}
     function isAccepted(v){return ['accepted','approved','قبول','مقبول'].includes(String(v||'').trim().toLowerCase())}
     function reviewStatusText(v){if(isRejected(v))return 'مرفوض'; if(isAccepted(v))return 'مقبول'; return 'قيد المراجعة'}
@@ -149,8 +151,17 @@
         box.innerHTML=`<h3>مراجعة المرفقات</h3><div class="review-list"><div class="review-item warn">${hint}</div></div>`;
         return;
       }
-      const rejected=FILE_REVIEW_FIELDS.filter(f=>isRejected(data[f.status]));
-      const items=(rejected.length?rejected:FILE_REVIEW_FIELDS).map(f=>{
+      const fields=fileReviewFields(row);
+      if(!fields.length){
+        const cat=window.JOIN_ATTACHMENT_CATALOG;
+        const prof=cat&&cat.completionProfile?cat.completionProfile(row):{};
+        if(prof.blocked||prof.noAttachments){
+          box.innerHTML=`<h3>مراجعة المرفقات</h3><div class="review-list"><div class="review-item warn">${esc(prof.message||'لا مرفقات لهذا النوع.')}</div></div>`;
+          return;
+        }
+      }
+      const rejected=fields.filter(f=>isRejected(data[f.status]));
+      const items=(rejected.length?rejected:fields).map(f=>{
         const cls=isRejected(data[f.status])?'bad':(isAccepted(data[f.status])?'good':'warn');
         const note=data[f.note] ? `<br><span>ملاحظة الإدارة: ${esc(data[f.note])}</span>` : '';
         return `<div class="review-item ${cls}"><b>${esc(f.label)}: ${esc(reviewStatusText(data[f.status]))}</b>${note}</div>`;

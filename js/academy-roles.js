@@ -24,53 +24,55 @@
 
 
 
+  let CUSTOM_ROLES = [];
+
   const ROLES = [
 
-    { id: "coach", domain: "sports", label: "مدرب", approveAs: "coach" },
+    { id: "coach", domain: "sports", label: "مدرب", approveAs: "staff" },
 
-    { id: "team_admin", domain: "sports", label: "إداري فريق", approveAs: "coach" },
+    { id: "team_admin", domain: "sports", label: "إداري فريق", approveAs: "staff" },
 
-    { id: "performance_analyst", domain: "sports", label: "محلل أداء", approveAs: "coach" },
+    { id: "performance_analyst", domain: "sports", label: "محلل أداء", approveAs: "staff" },
 
-    { id: "doctor", domain: "medical", label: "طبيب", approveAs: "volunteer" },
+    { id: "doctor", domain: "medical", label: "طبيب", approveAs: "staff" },
 
-    { id: "physiotherapist", domain: "medical", label: "أخصائي علاج طبيعي", approveAs: "volunteer" },
+    { id: "physiotherapist", domain: "medical", label: "أخصائي علاج طبيعي", approveAs: "staff" },
 
-    { id: "nurse", domain: "medical", label: "ممرض", approveAs: "volunteer" },
+    { id: "nurse", domain: "medical", label: "ممرض", approveAs: "staff" },
 
-    { id: "first_aid", domain: "medical", label: "إسعافات أولية", approveAs: "volunteer" },
+    { id: "first_aid", domain: "medical", label: "إسعافات أولية", approveAs: "staff" },
 
-    { id: "supervisor", domain: "admin", label: "مشرف", approveAs: "volunteer" },
+    { id: "supervisor", domain: "admin", label: "مشرف", approveAs: "staff" },
 
-    { id: "admin_writer", domain: "admin", label: "كاتب إداري", approveAs: "volunteer" },
+    { id: "admin_writer", domain: "admin", label: "كاتب إداري", approveAs: "staff" },
 
-    { id: "accountant", domain: "admin", label: "محاسب", approveAs: "volunteer" },
+    { id: "accountant", domain: "admin", label: "محاسب", approveAs: "staff" },
 
-    { id: "registration_officer", domain: "admin", label: "مسؤول تسجيل", approveAs: "volunteer" },
+    { id: "registration_officer", domain: "admin", label: "مسؤول تسجيل", approveAs: "staff" },
 
-    { id: "customer_service", domain: "admin", label: "خدمة عملاء", approveAs: "volunteer" },
+    { id: "customer_service", domain: "admin", label: "خدمة عملاء", approveAs: "staff" },
 
-    { id: "bus_driver", domain: "operations", label: "سائق باص", approveAs: "volunteer" },
+    { id: "bus_driver", domain: "operations", label: "سائق باص", approveAs: "staff" },
 
-    { id: "field_manager", domain: "operations", label: "مسؤول ملاعب", approveAs: "volunteer" },
+    { id: "field_manager", domain: "operations", label: "مسؤول ملاعب", approveAs: "staff" },
 
-    { id: "warehouse_manager", domain: "operations", label: "مسؤول مستودع", approveAs: "volunteer" },
+    { id: "warehouse_manager", domain: "operations", label: "مسؤول مستودع", approveAs: "staff" },
 
-    { id: "store_manager", domain: "operations", label: "مسؤول متجر", approveAs: "volunteer" },
+    { id: "store_manager", domain: "operations", label: "مسؤول متجر", approveAs: "staff" },
 
-    { id: "security", domain: "operations", label: "أمن", approveAs: "volunteer" },
+    { id: "security", domain: "operations", label: "أمن", approveAs: "staff" },
 
-    { id: "event_organizer", domain: "operations", label: "منظم فعاليات", approveAs: "volunteer" },
+    { id: "event_organizer", domain: "operations", label: "منظم فعاليات", approveAs: "staff" },
 
-    { id: "photographer", domain: "media_tech", label: "مصور", approveAs: "volunteer" },
+    { id: "photographer", domain: "media_tech", label: "مصور", approveAs: "staff" },
 
-    { id: "designer", domain: "media_tech", label: "مصمم", approveAs: "volunteer" },
+    { id: "designer", domain: "media_tech", label: "مصمم", approveAs: "staff" },
 
-    { id: "video_editor", domain: "media_tech", label: "مونتير", approveAs: "volunteer" },
+    { id: "video_editor", domain: "media_tech", label: "مونتير", approveAs: "staff" },
 
-    { id: "social_media", domain: "media_tech", label: "مسؤول سوشيال ميديا", approveAs: "volunteer" },
+    { id: "social_media", domain: "media_tech", label: "مسؤول سوشيال ميديا", approveAs: "staff" },
 
-    { id: "web_developer", domain: "media_tech", label: "مطور الموقع", approveAs: "volunteer" }
+    { id: "web_developer", domain: "media_tech", label: "مطور الموقع", approveAs: "staff" }
 
   ];
 
@@ -102,13 +104,28 @@
 
   }
 
+  function allRoles() {
+    return ROLES.concat(CUSTOM_ROLES);
+  }
+
+  function registerCustomRoles(list) {
+    CUSTOM_ROLES = (Array.isArray(list) ? list : [])
+      .map((r) => ({
+        id: String(r.id || "").trim(),
+        domain: String(r.domain || "").trim(),
+        label: String(r.label || "").trim(),
+        approveAs: "staff"
+      }))
+      .filter((r) => r.id && r.domain && r.label);
+  }
+
 
 
   function getRoles(domainId) {
 
-    if (!domainId) return ROLES.slice();
+    if (!domainId) return allRoles().slice();
 
-    return ROLES.filter((r) => r.domain === domainId);
+    return allRoles().filter((r) => r.domain === domainId);
 
   }
 
@@ -116,7 +133,7 @@
 
   function getRole(roleId) {
 
-    return ROLES.find((r) => r.id === roleId) || null;
+    return allRoles().find((r) => r.id === roleId) || null;
 
   }
 
@@ -164,7 +181,7 @@
 
   function getApproveRoute(roleId) {
 
-    return getRole(roleId)?.approveAs || "volunteer";
+    return getRole(roleId)?.approveAs || "staff";
 
   }
 
@@ -200,7 +217,7 @@
 
       const label = dr[1].trim();
 
-      const role = ROLES.find((x) => x.label === label || x.id === label);
+      const role = allRoles().find((x) => x.label === label || x.id === label);
 
       if (role) roleId = role.id;
 
@@ -210,7 +227,7 @@
 
       const spec = String(r.coach_specialty).trim();
 
-      const role = ROLES.find((x) => x.label === spec || x.id === spec);
+      const role = allRoles().find((x) => x.label === spec || x.id === spec);
 
       if (role) roleId = role.id;
 
@@ -261,6 +278,8 @@
     DOMAINS,
 
     ROLES,
+    allRoles,
+    registerCustomRoles,
 
     COACH_SPECIALTIES,
 

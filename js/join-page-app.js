@@ -15,6 +15,10 @@
   }
   const policy = () => window.ACADEMY_POLICY || {};
   const roles = () => window.ACADEMY_ROLES || {};
+  const supporterProfile = () => window.SUPPORTER_PROFILE || {};
+  const memberProfile = () => window.ACADEMY_MEMBER_PROFILE || {};
+  const intakePolicy = () => window.JOIN_INTAKE_POLICY || {};
+  let joinIntakeState = { closedAll: false, closedTypes: [], message: "" };
 
   const PATH_META = {
     player: { group: "members", label: "لاعب", step: "تسجيل لاعب" },
@@ -178,6 +182,44 @@
     renderStaffRoleChips();
   }
 
+  function fillSelectOptions(selectId, options, placeholder) {
+    const sel = $(selectId);
+    if (!sel || !Array.isArray(options)) return;
+    sel.innerHTML =
+      `<option value="">${placeholder}</option>` +
+      options.map((o) => `<option value="${escapeHtml(o.id)}">${escapeHtml(o.label)}</option>`).join("");
+  }
+
+  function initMemberInterests() {
+    const wrap = $("memberInterestsWrap");
+    const MP = memberProfile();
+    if (!wrap || !MP.allInterestOptions) return;
+    wrap.innerHTML = MP.allInterestOptions()
+      .map(
+        (o) =>
+          `<label class="interest-chip"><input type="checkbox" name="memberInterests" value="${escapeHtml(o.id)}" /> ${escapeHtml(o.label)}</label>`
+      )
+      .join("");
+  }
+
+  function initSupporterForm() {
+    const SP = supporterProfile();
+    if (!SP.allTypeOptions) return;
+    fillSelectOptions("supportType", SP.allTypeOptions(), "اختر النوع");
+    fillSelectOptions("supportLevel", SP.allLevelOptions(), "اختر المستوى");
+    fillSelectOptions("supportMethod", SP.allMethodOptions(), "اختر طريقة الدعم");
+    $("supportType")?.addEventListener("change", () => {
+      const typeId = $("supportType")?.value || "";
+      const entity = $("entityName");
+      if (entity) {
+        entity.required = !!SP.needsEntityName?.(typeId);
+        entity.placeholder = SP.needsEntityName?.(typeId)
+          ? "اسم الجهة أو النشاط (مطلوب)"
+          : "اختياري للأفراد";
+      }
+    });
+  }
+
   function updateStaffSportsFields() {
     const show =
       roles().isSportsDomain &&
@@ -215,12 +257,75 @@
     if (emailMark) emailMark.style.display = activeType === "staff" ? "inline" : "none";
   }
 
+  function isTypeOpen(type) {
+    if (joinIntakeState.closedAll) return false;
+    return !joinIntakeState.closedTypes.includes(String(type || ""));
+  }
+
+  function applyJoinIntakeUI() {
+    const banner = $("joinClosedBanner");
+    const submitBtn = $("joinSubmitBtn");
+    document.querySelectorAll(".path-card").forEach((card) => {
+      const t = card.dataset.type;
+      const open = isTypeOpen(t);
+      card.classList.toggle("is-closed", !open);
+      if (!open) card.setAttribute("aria-disabled", "true");
+      else card.removeAttribute("aria-disabled");
+    });
+    if (banner) {
+      if (joinIntakeState.closedAll) {
+        banner.textContent = joinIntakeState.message;
+        banner.classList.add("show");
+      } else if (joinIntakeState.closedTypes.length) {
+        const labels = joinIntakeState.closedTypes
+          .map((id) => intakePolicy().labelForType?.(id) || id)
+          .join("، ");
+        banner.textContent = `${joinIntakeState.message} (المغلق: ${labels})`;
+        banner.classList.add("show");
+      } else {
+        banner.classList.remove("show");
+      }
+    }
+    if (submitBtn) {
+      submitBtn.disabled = !isTypeOpen(activeType);
+      submitBtn.title = submitBtn.disabled ? joinIntakeState.message : "";
+    }
+    if (!isTypeOpen(activeType)) {
+      const fallback = ["player", "guardian", "academy_member", "staff", "supporter"].find(isTypeOpen);
+      if (fallback) {
+        activeType = fallback;
+        updateMinorGuardianVisibility();
+        syncFormValidation();
+        updatePathUI();
+      }
+    }
+  }
+
+  async function loadJoinIntakeSettings() {
+    if (typeof loadAcademySettings !== "function") return;
+    try {
+      const s = await loadAcademySettings();
+      joinIntakeState = intakePolicy().fromSettings
+        ? intakePolicy().fromSettings(s)
+        : { closedAll: false, closedTypes: [], message: "" };
+      applyJoinIntakeUI();
+    } catch (e) {
+      console.warn("join intake settings", e);
+    }
+  }
+
   function activateType(type) {
+    if (!isTypeOpen(type)) {
+      showToast(joinIntakeState.message || "هذا المسار مغلق حالياً.", "warn");
+      return;
+    }
     activeType = type;
     if (type !== "guardian") clearGuardianTransient();
     updateMinorGuardianVisibility();
     syncFormValidation();
     updatePathUI();
+    const submitBtn = $("joinSubmitBtn");
+    if (submitBtn) submitBtn.disabled = false;
   }
 
   function clearGuardianTransient() {
@@ -394,8 +499,8 @@
     }
     if (activeType === "guardian") {
       const goal = formData.guardianGoal;
-      if (!goal) {
-        showToast("اختر الغرض من التسجيل.", "warn");
+      if (!goal || !["register_new_player", "link_existing_player"].includes(goal)) {
+        showToast("اختر: تسجيل لاعب جديد أو ربط بلاعب مسجّل.", "warn");
         return false;
       }
       if (!formData.academyRelationship) {
@@ -428,8 +533,39 @@
         return false;
       }
     }
-    if (activeType === "academy_member" && !getSelectedMemberInterests().length) {
-      showToast("اختر اهتماماً واحداً على الأقل.", "warn");
+    if (activeType === "academy_member") {
+      const ids = getSelectedMemberInterests();
+      const MP = memberProfile();
+      if (!ids.length || !MP.hasValidInterests?.(ids)) {
+        showToast("اختر اهتماماً واحداً على الأقل.", "warn");
+        return false;
+      }
+    }
+    if (activeType === "supporter") {
+      const SP = supporterProfile();
+      const typeId = cleanText(data.supportType);
+      const levelId = cleanText(data.supportLevel);
+      const methodId = cleanText(data.supportMethod);
+      if (!typeId || !SP.isValidType?.(typeId)) {
+        showToast("اختر نوع الداعم.", "warn");
+        return false;
+      }
+      if (!levelId || !SP.isValidLevel?.(levelId)) {
+        showToast("اختر مستوى الدعم.", "warn");
+        return false;
+      }
+      if (!methodId || !SP.isValidMethod?.(methodId)) {
+        showToast("اختر طريقة الدعم.", "warn");
+        return false;
+      }
+      if (SP.needsEntityName?.(typeId) && !data.entityName?.trim()) {
+        showToast("اسم الجهة / النشاط مطلوب للمؤسسة والراعي المحتمل.", "warn");
+        $("entityName")?.focus();
+        return false;
+      }
+    }
+    if (!isTypeOpen(activeType)) {
+      showToast(joinIntakeState.message || "التقديم مغلق لهذا المسار.", "warn");
       return false;
     }
     return true;
@@ -443,7 +579,7 @@
     "volunteer_field", "availability", "volunteer_notes", "created_at", "status", "admin_notes",
     "reviewed_at", "updated_at", "reference_code", "notes", "guardian_relation", "guardian_name",
     "guardian_phone", "guardian_national_id", "child_age", "child_category", "child_position",
-    "linked_player_id", "linked_player_ids", "coach_specialty", "coach_experience", "supporter_type"
+    "linked_player_id", "linked_player_ids", "coach_job_title", "coach_specialty", "coach_experience", "supporter_type"
   ]);
 
   function cleanText(value) {
@@ -481,10 +617,25 @@
     }
     if (activeType === "academy_member") {
       const ints = getSelectedMemberInterests();
-      if (ints.length) lines.push("الاهتمامات: " + ints.join("، "));
-      if (cleanText(data.memberNotes)) lines.push(cleanText(data.memberNotes));
+      const extra = [];
+      if (cleanText(data.memberNotes)) extra.push(cleanText(data.memberNotes));
+      if (memberProfile().formatMemberNotes) lines.push(memberProfile().formatMemberNotes(ints, extra));
     }
-    if (activeType === "supporter" && cleanText(data.supportNotes)) lines.push(cleanText(data.supportNotes));
+    if (activeType === "supporter") {
+      const extra = [];
+      if (cleanText(data.entityName)) extra.push(`الجهة: ${cleanText(data.entityName)}`);
+      if (cleanText(data.supportNotes)) extra.push(cleanText(data.supportNotes));
+      if (supporterProfile().formatSupporterNotes) {
+        lines.push(
+          supporterProfile().formatSupporterNotes(
+            data.supportType,
+            data.supportLevel,
+            data.supportMethod,
+            extra
+          )
+        );
+      }
+    }
     return lines.filter(Boolean).join("\n") || null;
   }
 
@@ -551,6 +702,7 @@
       const roleLabel = roles().getRoleLabel ? roles().getRoleLabel(staffRoleId) : staffRoleId;
       Object.assign(base, {
         volunteer_field: staffDomainId,
+        coach_job_title: staffRoleId,
         coach_specialty: roleLabel,
         coach_experience: cleanText(data.staffExperienceYears),
         availability: cleanText(data.staffAvailability),
@@ -559,12 +711,15 @@
       });
     }
     if (activeType === "supporter") {
+      const typeId = cleanText(data.supportType);
+      const levelId = cleanText(data.supportLevel);
+      const methodId = cleanText(data.supportMethod);
       Object.assign(base, {
-        supporter_type: cleanText(data.supportType),
-        support_type: cleanText(data.supportType),
-        support_level: cleanText(data.supportLevel),
+        supporter_type: typeId,
+        support_type: typeId,
+        support_level: levelId,
         entity_name: cleanText(data.entityName),
-        support_method: cleanText(data.supportMethod),
+        support_method: methodId,
         support_notes: cleanText(data.supportNotes)
       });
     }
@@ -628,6 +783,9 @@
       if (!e.target.closest(".guardian-existing-player")) renderSuggestions([]);
     });
     initStaffForm();
+    initSupporterForm();
+    initMemberInterests();
+    loadJoinIntakeSettings();
     refreshHijriTodayHint();
     applyTypeFromUrl();
     updatePathUI();

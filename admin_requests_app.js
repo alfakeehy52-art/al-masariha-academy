@@ -1,15 +1,14 @@
 const supabaseClient = createSupabaseClient();
 
-const TYPE_LABELS = { player:'لاعب', guardian:'ولي أمر', staff:'كادر', coach:'مدرب', supporter:'داعم', volunteer:'متطوع', academy_member:'عضو أكاديمي' };
+const TYPE_LABELS = { player:'لاعب', guardian:'ولي أمر', staff:'كادر', coach:'مدرب', supporter:'داعم', academy_member:'عضو أكاديمي' };
 const STATUS_LABELS = { new:'جديد', review:'جاهز للمراجعة', reviewing:'جاهز للمراجعة', approved:'مقبول', rejected:'مرفوض', pending:'بانتظار استكمال', needs_completion:'بانتظار استكمال' };
 const TYPE_CONFIG = {
   player:{title:'طلبات اللاعبين',desc:'مراجعة طلبات انضمام اللاعبين وتحويل المقبول مباشرة إلى قائمة اللاعبين.',icon:'👤',href:'players_requests.html',cols:['الفئة','المركز','العمر'],fields:r=>[r.age_category||'-',r.position||'-',r.player_age||'-']},
-  guardian:{title:'طلبات أولياء الأمور',desc:'تسجيل ولي أمر، إنشاء لاعب جديد، أو ربط ولي الأمر بلاعب موجود.',icon:'👨‍👦',href:'guardians_requests.html',cols:['الغرض','صلة القرابة','الأبناء'],fields:r=>[goalLabel(r.guardian_goal),r.relationship||'-',r.children_count||r.child_name||r.existing_player_names||'-']},
+  guardian:{title:'طلبات أولياء الأمور',desc:'تسجيل ولي أمر، إنشاء لاعب جديد، أو ربط ولي الأمر بلاعب موجود.',icon:'👨‍👦',href:'guardians_requests.html',cols:['الغرض','صلة القرابة','اللاعب / الأبناء'],fields:r=>{const mode=guardianMode(r);const linkNames=window.GUARDIAN_GOALS?.linkedPlayerNames?window.GUARDIAN_GOALS.linkedPlayerNames(r):'';return [goalLabel(r.guardian_goal),r.relationship||'-',mode==='existing_player'?(r.children_count?`${r.children_count} — ${linkNames||'-'}`:linkNames||'-'):mode==='new_player'?(r.child_name||'-'):(r.children_count||'-')];}},
   staff:{title:'طلبات الكوادر',desc:'رياضي، طبي، إداري، تشغيلي، إعلامي وتقني — مراجعة واعتماد الكوادر.',icon:'👥',href:'staff_requests.html',cols:['المجال','الدور','الخبرة'],fields:r=>staffRequestFields(r)},
   coach:{title:'طلبات المدربين (قديم)',desc:'طلبات مدربين قبل توحيد تبويب الكادر.',icon:'🧑‍🏫',href:'coaches_requests.html',cols:['المسمى','التخصص','الخبرة'],fields:r=>[r.coach_job_title||r.coach_specialty||'-',r.coach_specialty||'-',r.coach_experience||r.coach_experience_years?`${r.coach_experience||r.coach_experience_years} سنوات`:'-']},
-  supporter:{title:'طلبات الداعمين',desc:'متابعة الجهات والأفراد الراغبين بالدعم والرعاية والشراكات.',icon:'💰',href:'supporters_requests.html',cols:['نوع الداعم','المستوى','طريقة الدعم'],fields:r=>[r.support_type||'-',r.support_level||'-',r.support_method||r.entity_name||'-']},
-  volunteer:{title:'طلبات المتطوعين',desc:'إدارة طلبات التطوع حسب المجال والوقت المتاح.',icon:'🤝',href:'volunteers_requests.html',cols:['مجال التطوع','الوقت المتاح','ملاحظات'],fields:r=>[r.volunteer_field||'-',r.availability||'-',shortText(r.volunteer_notes||'-',28)]},
-  academy_member:{title:'عضوية الأكاديمية',desc:'متابعة الأخبار والفعاليات والعروض — دون عضوية رياضية أو دعم.',icon:'⭐',href:'academy_members_dashboard.html',cols:['البريد','المدينة','الاهتمامات'],fields:r=>[r.email||'-',r.city||'-',shortText(parseInterestsLine(r.notes||r.guardian_notes)||'-',40)]}
+  supporter:{title:'طلبات الداعمين',desc:'متابعة الجهات والأفراد الراغبين بالدعم والرعاية والشراكات.',icon:'💰',href:'supporters_requests.html',cols:['نوع الداعم','المستوى','طريقة الدعم'],fields:r=>{const m=supporterMeta(r);return [m.typeLabel,m.levelLabel,m.methodLabel];}},
+  academy_member:{title:'طلبات عضوية الأكاديمية',desc:'متابعة الأخبار والفعاليات والعروض — بدون مرفقات. بعد القبول تُدار العضويات من لوحة الأعضاء.',icon:'⭐',href:'academy_members_requests.html',cols:['البريد','الاهتمامات','المدينة'],fields:r=>{const m=memberMeta(r);return [r.email||'-',shortText(m.interestsLabel,36),r.city||'-'];}}
 };
 let requests = [];
 let academyMembers = [];
@@ -36,21 +35,35 @@ function escapeHtml(value){return String(value ?? '').replace(/&/g,'&amp;').repl
 function shortText(v,n=70){const s=String(v||'');return s.length>n?s.slice(0,n)+'…':s}
 function getTypeLabel(type){return TYPE_LABELS[type]||type||'-'}
 function getStatusLabel(status){return STATUS_LABELS[status]||status||'جديد'}
-function goalLabel(v){return {register_new_player:'تسجيل لاعب جديد',link_existing_player:'ربط بلاعب موجود',guardian_member_only:'ولي أمر / متابع فقط'}[v] || v || '-'}
+function goalLabel(v){return window.GUARDIAN_GOALS?.goalLabel?window.GUARDIAN_GOALS.goalLabel(v):v||'-'}
 function parseInterestsLine(notes){
   const m=String(notes||'').match(/الاهتمامات:\s*([^\n]+)/);
   return m?m[1].trim():'';
 }
 function parseInterestsArray(notes){
+  const AMP=window.ACADEMY_MEMBER_PROFILE;
+  if(AMP&&AMP.parseInterestIdsFromNotes) return AMP.parseInterestIdsFromNotes(notes);
   const line=parseInterestsLine(notes);
   if(!line) return [];
   return line.split(/[،,]/).map(s=>s.trim()).filter(Boolean);
+}
+function memberMeta(r){
+  const AMP=window.ACADEMY_MEMBER_PROFILE;
+  if(AMP&&AMP.parseFromRequest) return AMP.parseFromRequest(r);
+  const ids=parseInterestsArray(r.notes||r.guardian_notes||'');
+  return {interestIds:ids,interestsLabel:ids.join('، ')||'-'};
 }
 function staffMeta(r){
   const AR=window.ACADEMY_ROLES;
   if(AR&&AR.parseStaffFromRequest) return AR.parseStaffFromRequest(r);
   return {domain:r.volunteer_field||'',roleId:'',roleLabel:r.coach_specialty||'-'};
 }
+function supporterMeta(r){
+  const SP=window.SUPPORTER_PROFILE;
+  if(SP&&SP.parseFromRequest) return SP.parseFromRequest(r);
+  return {typeId:r.support_type||'',levelId:r.support_level||'',methodId:r.support_method||'',typeLabel:r.support_type||'-',levelLabel:r.support_level||'-',methodLabel:r.support_method||'-'};
+}
+function supportTypeLabel(id){return window.SUPPORTER_PROFILE?.typeLabel?window.SUPPORTER_PROFILE.typeLabel(id):id||'-';}
 function staffRequestFields(r){
   const m=staffMeta(r);
   const domain=AR_DOMAIN_LABEL(m.domain);
@@ -142,22 +155,27 @@ async function loadRequests(type=null){
     showToast('تعذر تحميل الطلبات حالياً، لكن بطاقات التنقل ظاهرة ويمكن فتح الصفحات.','error');
     return;
   }
-  requests=Array.isArray(data)?data:[];
+  requests=(Array.isArray(data)?data:[]).filter((r)=>String(r.request_type||"")!=="volunteer");
   if($('requestsCards')) await loadAcademyMembers();
   if($('requestsTableBody')) renderTable(type);
   if($('requestsCards')) renderDashboard();
 }
-function countsFor(type){if(type==='academy_member'){const arr=academyMembers;return {all:arr.length,new:arr.filter(r=>String(r.status||'pending')==='pending').length,review:0,approved:arr.filter(r=>String(r.status||'')==='approved').length,pending:arr.filter(r=>String(r.status||'pending')==='pending').length,active:arr.filter(r=>['pending','approved'].includes(String(r.status||'pending'))).length}}const arr=requests.filter(r=>!type||r.request_type===type);return {all:arr.length,new:arr.filter(r=>getStatusLabel(r.status||'new')==='جديد').length,review:arr.filter(r=>getStatusLabel(r.status)==='جاهز للمراجعة').length,approved:arr.filter(r=>getStatusLabel(r.status)==='مقبول').length,pending:arr.filter(r=>getStatusLabel(r.status)==='بانتظار استكمال').length,active:arr.filter(isActive).length}}
+function countsFor(type){const arr=requests.filter(r=>!type||r.request_type===type);return {all:arr.length,new:arr.filter(r=>getStatusLabel(r.status||'new')==='جديد').length,review:arr.filter(r=>getStatusLabel(r.status)==='جاهز للمراجعة').length,approved:arr.filter(r=>getStatusLabel(r.status)==='مقبول').length,pending:arr.filter(r=>getStatusLabel(r.status)==='بانتظار استكمال').length,active:arr.filter(isActive).length}}
 function renderDashboard(){
   const cards=$('requestsCards'); if(!cards)return;
-  const total=countsFor(null); const memberTotal=countsFor('academy_member'); const grandTotal={all:total.all+memberTotal.all,new:total.new+memberTotal.new,review:total.review,approved:total.approved+memberTotal.approved};
+  const total=countsFor(null); const grandTotal={all:total.all,new:total.new,review:total.review,approved:total.approved};
   $('totalAll').textContent=grandTotal.all; $('totalNew').textContent=grandTotal.new; $('totalReview').textContent=grandTotal.review; $('totalApproved').textContent=grandTotal.approved;
   cards.innerHTML=Object.entries(TYPE_CONFIG).map(([type,cfg])=>{const c=countsFor(type);return `<a class="request-card" href="${cfg.href}"><div class="card-icon">${cfg.icon}</div><div class="card-main"><h3>${cfg.title}</h3><p>${cfg.desc}</p><div class="mini-stats"><span>الإجمالي <b>${c.all}</b></span><span>الجديد <b>${c.new}</b></span><span>نشطة <b>${c.active}</b></span></div></div><div class="open-arrow">←</div></a>`}).join('')+`<a class="request-card all-card" href="admin_requests.html"><div class="card-icon">📋</div><div class="card-main"><h3>كل الطلبات</h3><p>عرض متقدم لكل الأنواع عند الحاجة للبحث العام والتصدير الشامل.</p><div class="mini-stats"><span>الإجمالي <b>${grandTotal.all}</b></span><span>المقبولة <b>${grandTotal.approved}</b></span></div></div><div class="open-arrow">←</div></a>`;
 }
 function filtered(){
   const search=($('searchInput')?.value||'').trim().toLowerCase(); const status=$('statusFilter')?.value||(window.REQUEST_TYPE?'all':'active'); const sort=$('sortFilter')?.value||'newest';
+  const goalFilter=$('guardianGoalFilter')?.value||'';
+  const staffDomainFilter=$('staffDomainFilter')?.value||'';
+  const supporterTypeFilter=$('supporterTypeFilter')?.value||'';
+  const supporterMethodFilter=$('supporterMethodFilter')?.value||'';
+  const memberInterestFilter=$('memberInterestFilter')?.value||'';
   let data=[...requests];
-  data=data.filter(r=>{const blob=[refCode(r),r.full_name,r.phone,r.email,r.city,notes(r),JSON.stringify(r)].join(' ').toLowerCase(); const s=!search||blob.includes(search); const st=status==='active'?isActive(r):(status==='all'||String(r.status||'new')===status); return s&&st;});
+  data=data.filter(r=>{const blob=[refCode(r),r.full_name,r.phone,r.email,r.city,notes(r),JSON.stringify(r)].join(' ').toLowerCase(); const s=!search||blob.includes(search); const st=status==='active'?isActive(r):(status==='all'||String(r.status||'new')===status); const g=!goalFilter||String(r.guardian_goal||'')===goalFilter; const staffDomain=!staffDomainFilter||staffMeta(r).domain===staffDomainFilter; const sm=supporterMeta(r); const supType=!supporterTypeFilter||sm.typeId===supporterTypeFilter; const supMethod=!supporterMethodFilter||sm.methodId===supporterMethodFilter; const mm=memberMeta(r); const memInt=!memberInterestFilter||mm.interestIds.includes(memberInterestFilter); return s&&st&&g&&staffDomain&&supType&&supMethod&&memInt;});
   data.sort((a,b)=>{const da=new Date(a.created_at||0).getTime();const db=new Date(b.created_at||0).getTime();return sort==='oldest'?da-db:db-da}); return data;
 }
 function renderTable(type){
@@ -168,7 +186,7 @@ function renderTable(type){
   const rows=filtered().map(r=>{const vals=cfg?cfg.fields(r):[getTypeLabel(r.request_type),getRequestSummary(r),shortText(notes(r),28)];const cells=[`<td data-label="رقم المرجع"><span class="tag tag-ref">${escapeHtml(refCode(r))}</span></td>`,`<td data-label="صاحب الطلب"><b class="request-title">${escapeHtml(r.full_name||'طلب بدون اسم')}</b><span class="subtext">${escapeHtml(r.phone||'-')} • ${escapeHtml(r.city||'-')}</span></td>`,...vals.map((v,i)=>`<td data-label="${escapeHtml(colLabels[i+2]||'تفصيل')}">${escapeHtml(v)}</td>`),`<td data-label="الحالة"><span class="tag ${statusClass(r.status||'new')}">${escapeHtml(getStatusLabel(r.status||'new'))}</span></td>`,`<td data-label="تاريخ الإرسال"><div>${escapeHtml(formatDate(r.created_at))}</div><span class="subtext">${escapeHtml(formatTime(r.created_at))}</span></td>`,`<td data-label="الإجراءات"><div class="row-actions"><button class="mini-btn review" onclick="openRequest('${r.id}')">عرض</button>${getStatusLabel(r.status)==='مقبول'?'':`<button class="mini-btn accept" onclick="updateStatus('${r.id}','approved')">قبول</button>`}${getStatusLabel(r.status)==='مرفوض'?'':`<button class="mini-btn reject" onclick="updateStatus('${r.id}','rejected')">رفض</button>`}<button class="mini-btn more" onclick="updateStatus('${r.id}','pending')">استكمال</button></div></td>`];return `<tr>${cells.join('')}</tr>`}).join('');
   const colspan=cfg?cfg.cols.length+5:8; tbody.innerHTML=rows||`<tr><td colspan="${colspan}" class="empty-cell">لا توجد طلبات مطابقة حاليًا.</td></tr>`;
 }
-function getRequestSummary(r){if(r.request_type==='player')return r.position||r.age_category||'-'; if(r.request_type==='guardian')return goalLabel(r.guardian_goal); if(r.request_type==='staff'){const m=staffMeta(r);return m.roleLabel||'-'} if(r.request_type==='academy_member')return r.guardian_goal?goalLabel(r.guardian_goal):(parseInterestsLine(r.notes||r.guardian_notes)||'-'); if(r.request_type==='coach')return r.coach_specialty||r.coach_job_title||'-'; if(r.request_type==='supporter')return r.support_method||r.support_level||'-'; if(r.request_type==='volunteer')return r.volunteer_field||r.availability||'-'; return '-'}
+function getRequestSummary(r){if(r.request_type==='player')return r.position||r.age_category||'-'; if(r.request_type==='guardian')return goalLabel(r.guardian_goal); if(r.request_type==='staff'){const m=staffMeta(r);return m.roleLabel||'-'} if(r.request_type==='academy_member'){const m=memberMeta(r);return m.hasLegacyGoal?(m.legacyGoalLabel||'طلب قديم'):shortText(m.interestsLabel,32);} if(r.request_type==='coach')return r.coach_specialty||r.coach_job_title||'-'; if(r.request_type==='supporter'){const m=supporterMeta(r);return m.methodLabel||'-'} return '-'}
 function findReq(id){return requests.find(r=>String(r.id)===String(id))}
 
 function getFileStatusLabel(status){return FILE_STATUS_LABELS[String(status||'pending')]||status||'قيد المراجعة'}
@@ -315,21 +333,56 @@ function buildExtraDetails(r){const pairs=[]; const add=(k,v)=>{if(v!==undefined
     add('الفئة',r.age_category);add('المركز',r.position);
   }
   if(r.request_type==='academy_member'){
-    if(r.guardian_goal){add('الغرض',goalLabel(r.guardian_goal));add('صلة القرابة',r.relationship||r.guardian_relation);add('اسم اللاعب',r.child_name);add('عدد الأبناء',r.children_count);}
-    else{add('الاهتمامات',parseInterestsLine(r.notes||r.guardian_notes));}
+    const m=memberMeta(r);
+    if(m.hasLegacyGoal){add('تنبيه',m.legacyGoalLabel||'طلب قديم — لا يُعتمد تلقائياً');}
+    add('الاهتمامات',m.interestsLabel);
+    add('معرّفات الاهتمام',m.interestIds.length?m.interestIds.join('، '):'-');
+    add('البريد (للتواصل)',r.email);
+    add('ملاحظة','لا مرفقات — عضوية متابعة فقط');
   }
   if(r.request_type==='staff'){
     const m=staffMeta(r);
     add('المجال',AR_DOMAIN_LABEL(m.domain));
     add('الدور',m.roleLabel);
+    add('معرّف المجال',m.domain||'-');
+    add('معرّف الدور',m.roleId||'-');
     add('سنوات الخبرة',r.coach_experience);
     add('الوقت المتاح',r.availability);
-    add('المؤهل',r.coach_certification);
+    add('البريد (تفعيل حساب)',r.email);
+    const AR=window.ACADEMY_ROLES;
+    if(AR&&AR.needsSportsDetail&&AR.needsSportsDetail(m.roleId)){
+      add('تخصص رياضي',r.coach_specialty);
+    }
   }
-  if(r.request_type==='guardian'){add('الغرض',goalLabel(r.guardian_goal));add('صلة القرابة',r.relationship);add('اسم اللاعب الجديد',r.child_name);add('أسماء اللاعبين للربط',r.existing_player_names);add('عدد الأبناء',r.children_count);}
+  if(r.request_type==='guardian'){
+    const mode=window.GUARDIAN_GOALS?.resolveMode?window.GUARDIAN_GOALS.resolveMode(r):'';
+    add('الغرض',goalLabel(r.guardian_goal));
+    add('صلة القرابة',r.relationship||r.guardian_relation);
+    if(mode==='new_player'){
+      add('اسم اللاعب الجديد',r.child_name);
+      add('عمر اللاعب',r.child_age||r.guardian_player_age);
+      add('فئة اللاعب',r.child_category||r.guardian_player_category);
+      add('مركز اللاعب',r.child_position||r.guardian_player_position);
+    }
+    if(mode==='existing_player'){
+      add('عدد الأبناء',r.children_count);
+      add('اللاعبون للربط',window.GUARDIAN_GOALS?.linkedPlayerNames?window.GUARDIAN_GOALS.linkedPlayerNames(r):(r.existing_player_names||r.child_name));
+      add('معرّفات اللاعبين',Array.isArray(r.linked_player_ids)?r.linked_player_ids.join('، '):(r.linked_player_id||''));
+    }
+    if(!mode){add('تنبيه','غرض الطلب غير واضح — راجع البيانات قبل الاعتماد');}
+  }
   if(r.request_type==='coach'){add('المسمى الفني',r.coach_job_title);add('التخصص',r.coach_specialty);add('الفئة',r.coach_category);add('سنوات الخبرة',r.coach_experience_years);add('الشهادة',r.coach_certification);}
-  if(r.request_type==='supporter'){add('نوع الداعم',r.support_type);add('مستوى الدعم',r.support_level);add('اسم الجهة',r.entity_name);add('طريقة الدعم',r.support_method);}
-  if(r.request_type==='volunteer'){add('مجال التطوع',r.volunteer_field);add('الوقت المتاح',r.availability);}
+  if(r.request_type==='supporter'){
+    const m=supporterMeta(r);
+    add('نوع الداعم',m.typeLabel);
+    add('معرّف النوع',m.typeId||'-');
+    add('مستوى الدعم',m.levelLabel);
+    add('معرّف المستوى',m.levelId||'-');
+    add('طريقة الدعم',m.methodLabel);
+    add('معرّف الطريقة',m.methodId||'-');
+    add('اسم الجهة / النشاط',m.entityName||r.entity_name);
+    add('البريد',r.email);
+  }
   return pairs.map(([k,v])=>`<div class="detail-item"><strong>${escapeHtml(k)}</strong><span>${escapeHtml(v)}</span></div>`).join('')||'<div class="subtext">لا توجد تفاصيل إضافية.</div>'
 }
 
@@ -441,13 +494,11 @@ async function createCoach(r){const payload={source_request_id:r.id,reference_co
 async function createGuardian(r){const payload={source_request_id:r.id,reference_code:refCode(r),full_name:r.full_name||null,phone:r.phone||null,email:r.email||null,city:r.city||null,relationship:r.relationship||null,status:'active',notes:r.guardian_notes||null}; const {data:ex,error:e1}=await supabaseClient.from('guardians').select('id').eq('source_request_id',r.id).maybeSingle(); if(e1)throw e1;if(ex)return ex; const {data,error}=await supabaseClient.from('guardians').insert([payload]).select('id').single(); if(error)throw error; return data;}
 
 function guardianMode(r){
+  if(window.GUARDIAN_GOALS?.resolveMode) return window.GUARDIAN_GOALS.resolveMode(r)||'';
   const raw=String(r.guardian_goal||'').trim();
   if(raw==='register_new_player') return 'new_player';
   if(raw==='link_existing_player') return 'existing_player';
-  if(raw==='guardian_member_only') return 'member_only';
-  if(r.child_name||r.guardian_player_age||r.guardian_player_category) return 'new_player';
-  if(r.existing_player_ids||r.existing_player_names||r.existing_player_search||r.linked_player_id||r.linked_player_ids) return 'existing_player';
-  return 'member_only';
+  return '';
 }
 function parsePlayerIds(value){
   if(!value) return [];
@@ -469,7 +520,7 @@ async function findPlayersForGuardian(r){
     if(error) throw error;
     return Array.isArray(data)?data:[];
   }
-  const names=String(r.existing_player_names||r.existing_player_search||r.child_name||'').trim();
+  const names=String((window.GUARDIAN_GOALS?.linkedPlayerNames&&window.GUARDIAN_GOALS.linkedPlayerNames(r))||r.existing_player_names||r.existing_player_search||r.child_name||'').trim();
   if(!names) return [];
   const term=names.split(/[،,]/)[0].trim().replace(/[%_]/g,'');
   if(!term) return [];
@@ -530,7 +581,29 @@ async function createPlayerAndLinkGuardian(r){
   if(guardian?.id) await linkGuardian(player,guardian,r);
   return {player,guardian,linked:!!guardian?.id};
 }
-async function createSupporter(r){const payload={source_request_id:r.id,reference_code:refCode(r),full_name:r.full_name||null,phone:r.phone||null,email:r.email||null,city:r.city||null,support_type:r.support_type||null,support_level:r.support_level||null,entity_name:r.entity_name||null,support_method:r.support_method||null,status:'active',notes:r.support_notes||null}; const {data:ex,error:e1}=await supabaseClient.from('supporters').select('id').eq('source_request_id',r.id).maybeSingle(); if(e1)throw e1;if(ex)return ex; const {data,error}=await supabaseClient.from('supporters').insert([payload]).select('id').single(); if(error)throw error; return data;}
+async function approveSupporterRequest(r){
+  const m=supporterMeta(r);
+  const SP=window.SUPPORTER_PROFILE;
+  if(!SP?.isValidType?.(m.typeId)||!SP?.isValidLevel?.(m.levelId)||!SP?.isValidMethod?.(m.methodId)){
+    showToast('لا يمكن الاعتماد: نوع الداعم أو المستوى أو طريقة الدعم غير صالحة.','warn');
+    return { table:'supporters', error:'invalid_profile' };
+  }
+  if(SP.needsEntityName(m.typeId)&&!String(m.entityName||r.entity_name||'').trim()){
+    showToast('اسم الجهة مطلوب قبل اعتماد طلب المؤسسة أو الراعي المحتمل.','warn');
+    return { table:'supporters', error:'missing_entity' };
+  }
+  return await createSupporter(r,m);
+}
+async function createSupporter(r,m){
+  const meta=m||supporterMeta(r);
+  const payload={source_request_id:r.id,reference_code:refCode(r),full_name:r.full_name||null,phone:r.phone||null,email:r.email||null,city:r.city||null,support_type:meta.typeId||null,support_level:meta.levelId||null,entity_name:meta.entityName||r.entity_name||null,support_method:meta.methodId||null,status:'active',notes:[r.support_notes,r.notes].filter(Boolean).join('\n')||null};
+  const {data:ex,error:e1}=await supabaseClient.from('supporters').select('id').eq('source_request_id',r.id).maybeSingle();
+  if(e1)throw e1;
+  if(ex)return ex;
+  const {data,error}=await supabaseClient.from('supporters').insert([payload]).select('id').single();
+  if(error)throw error;
+  return data;
+}
 async function createVolunteer(r){const payload={source_request_id:r.id,reference_code:refCode(r),full_name:r.full_name||null,phone:r.phone||null,email:r.email||null,city:r.city||null,volunteer_field:r.volunteer_field||null,availability:r.availability||null,status:'active',notes:r.volunteer_notes||null}; const {data:ex,error:e1}=await supabaseClient.from('volunteers').select('id').eq('source_request_id',r.id).maybeSingle(); if(e1)throw e1;if(ex)return ex; const {data,error}=await supabaseClient.from('volunteers').insert([payload]).select('id').single(); if(error)throw error; return data;}
 function resolveStaffCategory(domainRaw){
   const AR=window.ACADEMY_ROLES;
@@ -546,7 +619,7 @@ function resolveStaffType(roleIdRaw, roleLabelRaw){
   if(id&&AR?.getRole?.(id)) return id;
   const label=String(roleLabelRaw||'').trim();
   if(!label) return 'staff';
-  const byLabel=AR?.ROLES?.find((r)=>r.label===label||r.id===label);
+  const byLabel=AR?.getRole?.(label)||(AR?.allRoles?AR.allRoles():AR?.ROLES||[]).find((r)=>r.label===label||r.id===label);
   return byLabel?.id||id||'staff';
 }
 function buildAcademyStaffNotes(r, categoryLabel, roleLabel){
@@ -615,40 +688,24 @@ function staffApprovalToastExtra(staffResult){
   if(!email) return ' تنبيه: أضف بريداً إلكترونياً للكادر لتفعيل حساب الدخول.';
   return ` فعّل الحساب من: ${buildStaffActivationUrl(email)} (نفس البريد: ${email})`;
 }
-async function approveStaffRequestLegacy(r){
-  const m=staffMeta(r);
-  const roleId=m.roleId;
-  const AR=window.ACADEMY_ROLES;
-  const route=AR&&AR.getApproveRoute?AR.getApproveRoute(roleId):'volunteer';
-  const synthetic={
-    ...r,
-    coach_job_title:m.roleLabel,
-    coach_specialty:r.coach_specialty||m.roleLabel,
-    coach_category:null,
-    coach_certification:null,
-    coach_bio:r.volunteer_notes||null,
-    coach_notes:r.notes||null,
-    coach_experience_years:r.coach_experience,
-    volunteer_field:m.roleLabel||m.domain
-  };
-  if(route==='coach') return await createCoach(synthetic);
-  return await createVolunteer({...r,volunteer_field:m.roleLabel||AR_DOMAIN_LABEL(m.domain),volunteer_notes:r.volunteer_notes||r.notes});
-}
 async function approveStaffRequest(r){
-  try{
-    return await createAcademyStaff(r);
-  }catch(err){
-    const code=String(err?.code||'');
-    const msg=String(err?.message||'').toLowerCase();
-    const missingTable=code==='42P01'||msg.includes('academy_staff')&&(msg.includes('does not exist')||msg.includes('schema cache'));
-    if(!missingTable) throw err;
-    console.warn('academy_staff غير متوفر — fallback إلى coaches/volunteers', err);
-    return await approveStaffRequestLegacy(r);
+  const m=staffMeta(r);
+  if(!m.domain||!m.roleId){
+    showToast('لا يمكن الاعتماد: المجال والدور غير واضحين في الطلب.','warn');
+    return { table:'academy_staff', error:'missing_role' };
   }
+  if(!String(r.email||'').trim()){
+    showToast('يُفضّل إضافة بريد إلكتروني قبل الاعتماد لتفعيل دخول الكادر.','warn');
+  }
+  return await createAcademyStaff(r);
 }
 async function approveGuardianRequest(r){
   const guardian=await createGuardian(r);
   const mode=guardianMode(r);
+  if(!mode){
+    showToast('لا يمكن اعتماد الطلب: الغرض يجب أن يكون تسجيل لاعب جديد أو ربط بلاعب موجود.','warn');
+    return { guardian, mode: 'invalid' };
+  }
   if(mode==='new_player'){
     const player=await createPlayerFromGuardianChild(r,guardian);
     await linkGuardian(player,guardian,r);
@@ -660,26 +717,51 @@ async function approveGuardianRequest(r){
     if(!players.length) showToast('تم إنشاء ولي الأمر، لكن لم يتم العثور على لاعب مطابق للربط.','warn');
     return {guardian,linked:players.length,mode};
   }
-  return {guardian,mode};
 }
-async function createAcademyMemberFromRequest(r){
-  const interests=parseInterestsArray(r.notes||r.guardian_notes||'');
+function memberCodeFromRequest(r){
+  const shortId=String(r.id||'').replace(/-/g,'').slice(0,6).toUpperCase()||'000000';
+  return `MEM-${shortId}`;
+}
+async function approveAcademyMemberRequest(r){
+  const m=memberMeta(r);
+  const AMP=window.ACADEMY_MEMBER_PROFILE;
+  if(m.hasLegacyGoal){
+    showToast('لا يمكن الاعتماد: هذا الطلب من مسار قديم غير مدعوم.','warn');
+    return { table:'academy_members', error:'legacy_goal' };
+  }
+  if(!AMP?.hasValidInterests?.(m.interestIds)){
+    showToast('لا يمكن الاعتماد: يجب أن يحتوي الطلب على اهتمام واحد صالح على الأقل.','warn');
+    return { table:'academy_members', error:'missing_interests' };
+  }
+  if(!String(r.phone||'').trim()){
+    showToast('جوال العضو مطلوب قبل الاعتماد.','warn');
+    return { table:'academy_members', error:'missing_phone' };
+  }
+  if(!String(r.email||'').trim()){
+    showToast('يُفضّل إضافة بريد للتواصل بعد قبول العضوية.','warn');
+  }
+  return await createAcademyMemberFromRequest(r,m);
+}
+async function createAcademyMemberFromRequest(r,m){
+  const meta=m||memberMeta(r);
+  const interestIds=(meta.interestIds||[]).map(id=>window.ACADEMY_MEMBER_PROFILE?.normalizeInterestId?window.ACADEMY_MEMBER_PROFILE.normalizeInterestId(id):id).filter(Boolean);
   const payload={
     source_request_id:r.id,
+    member_code:memberCodeFromRequest(r),
     full_name:r.full_name||null,
     phone:r.phone||null,
     email:r.email||null,
     city:r.city||null,
     national_id:r.national_id||null,
-    interests:interests.length?interests:null,
+    interests:interestIds.length?interestIds:null,
     status:'approved',
-    notes:r.notes||null,
+    notes:r.notes||r.guardian_notes||null,
     approved_at:new Date().toISOString()
   };
   const {data:ex,error:e1}=await supabaseClient.from('academy_members').select('id').eq('source_request_id',r.id).maybeSingle();
   if(e1)throw e1;
   if(ex)return ex;
-  const {data,error}=await supabaseClient.from('academy_members').insert([payload]).select('id').single();
+  const {data,error}=await supabaseClient.from('academy_members').insert([payload]).select('id,member_code').single();
   if(error)throw error;
   return data;
 }
@@ -687,13 +769,9 @@ async function approveSideEffect(r){
   if(r.request_type==='player') return await createPlayerAndLinkGuardian(r);
   if(r.request_type==='staff') return await approveStaffRequest(r);
   if(r.request_type==='coach') return await createCoach(r);
-  if(r.request_type==='supporter') return await createSupporter(r);
-  if(r.request_type==='volunteer') return await createVolunteer(r);
+  if(r.request_type==='supporter') return await approveSupporterRequest(r);
   if(r.request_type==='guardian') return await approveGuardianRequest(r);
-  if(r.request_type==='academy_member'){
-    if(r.guardian_goal) return await approveGuardianRequest(r);
-    return await createAcademyMemberFromRequest(r);
-  }
+  if(r.request_type==='academy_member') return await approveAcademyMemberRequest(r);
 }
 async function updateStatus(id,status){
   const r=findReq(id); if(!r)return;
@@ -737,6 +815,6 @@ document.addEventListener('DOMContentLoaded',()=>{
   $('modalAcceptBtn')?.addEventListener('click',()=>currentRequestId&&updateStatus(currentRequestId,'approved')); $('modalRejectBtn')?.addEventListener('click',()=>currentRequestId&&updateStatus(currentRequestId,'rejected')); $('modalCompleteBtn')?.addEventListener('click',()=>currentRequestId&&updateStatus(currentRequestId,'pending'));
   const statusFilterEl = $('statusFilter');
   if (window.REQUEST_TYPE && statusFilterEl) statusFilterEl.value = 'all';
-  ['searchInput','statusFilter','sortFilter'].forEach(id=>$(id)?.addEventListener(id==='searchInput'?'input':'change',()=>renderTable(window.REQUEST_TYPE||null))); $('exportBtn')?.addEventListener('click',exportCsv);
+  ['searchInput','statusFilter','sortFilter','guardianGoalFilter','staffDomainFilter','supporterTypeFilter','supporterMethodFilter','memberInterestFilter'].forEach(id=>$(id)?.addEventListener(id==='searchInput'?'input':'change',()=>renderTable(window.REQUEST_TYPE||null))); $('exportBtn')?.addEventListener('click',exportCsv);
   loadRequests(window.REQUEST_TYPE||null);
 });

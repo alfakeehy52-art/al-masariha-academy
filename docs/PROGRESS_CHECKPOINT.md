@@ -17,8 +17,8 @@
 
 | | |
 |---|---|
-| **آخر إنجاز** | **R2-lite:** `admin_permissions_dashboard.html` + ربط `academy_staff.role` بالقائمة الجانبية |
-| **التالي** | انظر `docs/LAUNCH_OWNER_SUMMARY.md` — تنظيف SQL · صلاحيات · مرفقات · **جوال** · سوشيال «قريباً» (دومين مؤجل) |
+| **آخر إنجاز** | **انضمام — أقسام 1–5 محلياً** (آخرها `academy_member` + `academy_members_requests.html`) |
+| **التالي** | بنود العرض: جوال · صلاحيات · سوشيال «قريباً» · تنظيف واجهة — ثم **رفع Pages** بعد ملاحظات المالك |
 | **الإنتاج** | https://al-masariha-academy.pages.dev (ينشر من `main` تلقائياً) |
 | **دخول إدارة** | `admin_login.html` — بريد في `supabase-config.js` |
 
@@ -92,6 +92,11 @@
 
 | ملف | محتوى |
 |-----|--------|
+| `docs/JOIN_SECTION1_LOCKED.md` | قسم 1 — أنواع الطلب والمرفقات |
+| `docs/JOIN_SECTION2_GUARDIAN_GOALS.md` | قسم 2 — ولي الأمر (مقفول) |
+| `docs/JOIN_SECTION3_STAFF.md` | قسم 3 — الكادر (مقفول) |
+| `docs/JOIN_SECTION4_SUPPORTER.md` | قسم 4 — الداعم (مقفول) |
+| `docs/JOIN_SECTION5_ACADEMY_MEMBER.md` | قسم 5 — عضو الأكاديمية (مقفول) |
 | `docs/OWNER_FEEDBACK_BACKLOG.md` | **ملاحظات المالك (9 بنود) + أولويات تنفيذ** |
 | `docs/LAUNCH_READINESS.md` | **هل الموقع جاهز للإطلاق؟ — قائمة تحقق** |
 | `docs/PROJECT_ROADMAP.md` | خارطة تفصيلية + سجل التحديثات |
@@ -110,3 +115,6 @@
 | 2026-05-21 | توثيق نقطة التوقف (هذا الملف) |
 | 2026-05-21 | نشر E1 — `git push` → `bc6e9f0` على `main` |
 | 2026-05-22 | توثيق ملاحظات المالك: `OWNER_FEEDBACK_BACKLOG.md` + `LAUNCH_READINESS.md` |
+| 2026-05-22 | انضمام: قفل قسم 2؛ قسم 3 كادر — `approveAs: staff`، فلتر مجال، اعتماد `academy_staff` فقط |
+| 2026-05-22 | قسم 4 داعم — `supporter-profile.js`، فلاتر إدارة، مرفقات حسب النوع، اعتماد `supporters` |
+| 2026-05-22 | قسم 5 عضوية — `academy-member-profile.js`، `academy_members_requests.html`، بدون مرفقات، اعتماد `academy_members` |

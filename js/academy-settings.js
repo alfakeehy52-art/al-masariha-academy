@@ -33,7 +33,12 @@
     show_news: true,
     nav_show_track_join: true,
     nav_show_track_store: true,
-    nav_show_admin_login: true
+    nav_show_admin_login: true,
+    join_closed_all: false,
+    join_closed_types: "[]",
+    join_closed_message_ar:
+      "التقديم متوقف مؤقتاً. يمكنك متابعة حالة طلبك السابق أو التواصل مع إدارة الأكاديمية.",
+    custom_staff_roles_json: "[]"
   };
 
   let _cache = null;
@@ -145,6 +150,13 @@
     }
     _cacheAt = now;
     window.ACADEMY_SETTINGS = { ..._cache };
+    if (window.ACADEMY_ROLES && typeof window.ACADEMY_ROLES.registerCustomRoles === "function") {
+      const list =
+        window.JOIN_INTAKE_POLICY && window.JOIN_INTAKE_POLICY.parseCustomRoles
+          ? window.JOIN_INTAKE_POLICY.parseCustomRoles(_cache.custom_staff_roles_json)
+          : [];
+      window.ACADEMY_ROLES.registerCustomRoles(list);
+    }
     return { ..._cache };
   }
 
@@ -176,6 +188,13 @@
     _cache = mergeSettings(data);
     _cacheAt = Date.now();
     window.ACADEMY_SETTINGS = { ..._cache };
+    if (window.ACADEMY_ROLES && typeof window.ACADEMY_ROLES.registerCustomRoles === "function") {
+      const list =
+        window.JOIN_INTAKE_POLICY && window.JOIN_INTAKE_POLICY.parseCustomRoles
+          ? window.JOIN_INTAKE_POLICY.parseCustomRoles(_cache.custom_staff_roles_json)
+          : [];
+      window.ACADEMY_ROLES.registerCustomRoles(list);
+    }
     return { ..._cache };
   }
 
