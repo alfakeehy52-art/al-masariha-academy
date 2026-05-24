@@ -87,6 +87,8 @@ td{color:var(--admin-text)}
   width:100%;min-height:52px;padding:12px 16px;border-radius:16px;
   background:rgba(255,255,255,.04);color:var(--admin-text);border:1px solid rgba(255,255,255,.09);outline:none;
 }
+.select{color-scheme:dark}
+.select option{background-color:#0a1811;color:var(--admin-text,#f3f4ef)}
 .textarea{min-height:120px;resize:vertical}
 .input:focus,.select:focus,.textarea:focus{
   border-color:rgba(213,177,90,.48);
@@ -152,6 +154,11 @@ body.has-unified-admin-sidebar .layout{grid-template-columns:332px minmax(0,1fr)
 .field input,.field select,.field textarea,.input,.select,.textarea{
   width:100%;background:rgba(255,255,255,.04);color:var(--admin-text);border:1px solid rgba(255,255,255,.09);
   border-radius:14px;padding:13px 14px;font-family:inherit;font-size:14px;outline:none;
+}
+.field select,.select{color-scheme:dark}
+.field select option,.select option{
+  background-color:#0a1811;
+  color:var(--admin-text,#f3f4ef);
 }
 .field textarea,.textarea{min-height:100px;resize:vertical}
 .field input:focus,.field select:focus,.field textarea:focus{border-color:rgba(213,177,90,.45);box-shadow:0 0 0 3px rgba(213,177,90,.1)}
