@@ -1,7 +1,9 @@
 -- =====================================================
--- توسيع صلاحية النظام في academy_staff (مرحلة R2)
--- نفّذ في Supabase → SQL Editor
+-- المرحلة C — توسيع أدوار لوحة الإدارة في academy_staff
+-- نفّذ في Supabase → SQL Editor (مرة واحدة)
 -- =====================================================
+
+alter table public.academy_staff add column if not exists role text not null default 'staff';
 
 alter table public.academy_staff drop constraint if exists academy_staff_role_check;
 
@@ -17,4 +19,4 @@ alter table public.academy_staff
   ));
 
 -- تحقق:
--- select distinct role from public.academy_staff;
+-- select distinct role from public.academy_staff order by 1;

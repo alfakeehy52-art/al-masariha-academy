@@ -941,8 +941,8 @@ body.home-page a {
   }
 
   .hero-media {
-    min-height: 280px;
-    order: -1;
+    min-height: 160px;
+    order: 1;
   }
 
   .players-grid,

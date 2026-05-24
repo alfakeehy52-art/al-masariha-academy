@@ -281,6 +281,12 @@
     return toReviewFiles(getAttachments(merged));
   }
 
+  /** هل يتطلب هذا الطلب مراجعة مرفقات قبل الاعتماد النهائي؟ */
+  function requiresAttachments(ctx) {
+    const p = completionProfile(ctx || {});
+    return !p.blocked && !p.noAttachments;
+  }
+
   function labelForType(type) {
     return TYPE_LABELS[String(type || "").toLowerCase()] || type || "الطلب";
   }
@@ -291,6 +297,7 @@
     getFormDocs,
     getAttachments,
     getReviewFilesByType,
+    requiresAttachments,
     toReviewFiles,
     labelForType,
     guardianGoal,

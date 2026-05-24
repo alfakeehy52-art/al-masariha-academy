@@ -350,8 +350,10 @@ document.addEventListener("DOMContentLoaded", () => {
       @media(max-width:1100px){
         body.has-unified-admin-sidebar{padding-right:0}
         .layout{grid-template-columns:1fr!important}
+        .layout > .main{padding-top:64px}
+        body.admin-sidebar-open{overflow:hidden}
         .admin-mobile-toggle{display:inline-flex;align-items:center;justify-content:center;position:fixed;top:14px;right:14px;z-index:1001;width:48px;height:48px;border-radius:14px;border:1px solid rgba(213,177,90,.28);background:rgba(8,22,14,.95);color:#f0d58f;font-weight:900;cursor:pointer;box-shadow:0 12px 30px rgba(0,0,0,.25)}
-        .sidebar,.admin-sidebar-unified,.admin-sidebar-fallback{position:fixed!important;top:0;right:0;width:min(332px,92vw)!important;min-width:0!important;height:100vh!important;transform:translateX(110%);transition:transform .24s ease;z-index:1000}
+        .sidebar,.admin-sidebar-unified,.admin-sidebar-fallback{position:fixed!important;top:0;right:0;width:min(332px,92vw)!important;min-width:0!important;height:100vh!important;transform:translateX(110%);transition:transform .24s ease;z-index:1000;overflow-y:auto!important;-webkit-overflow-scrolling:touch}
         body.admin-sidebar-open .sidebar,body.admin-sidebar-open .admin-sidebar-unified,body.admin-sidebar-open .admin-sidebar-fallback{transform:translateX(0)}
         body.admin-sidebar-open::before{content:"";position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:999}
       }

@@ -12,8 +12,8 @@
 <script src="js/academy-member-profile.js"></script>
 <script src="js/join-attachments-catalog.js"></script>
 <script src="js/image-crop-dialog.js"></script>
-<script src="js/supabase-public-lookup.js"></script><script>
-const sb = createSupabaseClient();const CAT=()=>window.JOIN_ATTACHMENT_CATALOG;let currentRequest=null;let currentCompletion=null;const $=id=>document.getElementById(id);function toast(msg){$('toast').textContent=msg;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),3500)}function normPhone(v){return String(v||'').replace(/\s/g,'').trim()}function ext(name){return String(name||'file').split('.').pop().toLowerCase()||'file'}function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}function isApprovedStatus(s){return ['approved','accepted','معتمد','مقبول'].includes(String(s||''))}
+<script src="js/supabase-public-lookup.js"></script><script src="js/visitor-message.js"></script><script>
+const sb = createSupabaseClient();const CAT=()=>window.JOIN_ATTACHMENT_CATALOG;let currentRequest=null;let currentCompletion=null;const $=id=>document.getElementById(id);function toast(msg){const safe=typeof sanitizeVisitorMessage==='function'?sanitizeVisitorMessage(msg,msg):msg;$('toast').textContent=safe;$('toast').classList.add('show');setTimeout(()=>$('toast').classList.remove('show'),3500)}function normPhone(v){return String(v||'').replace(/\s/g,'').trim()}function ext(name){return String(name||'file').split('.').pop().toLowerCase()||'file'}function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}function isApprovedStatus(s){return ['approved','accepted','معتمد','مقبول'].includes(String(s||''))}
 function profile(){return CAT()?CAT().completionProfile(currentRequest):{blocked:false}}
 function docsFor(){return CAT()?CAT().getFormDocs(currentRequest):[]}
 function attachmentsFor(){return CAT()?CAT().getAttachments(currentRequest):[]}

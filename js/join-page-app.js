@@ -41,7 +41,16 @@
     const wrap = $("toastWrap");
     const t = document.createElement("div");
     t.className = "toast " + type;
-    t.textContent = message;
+    const safe =
+      typeof sanitizeVisitorMessage === "function"
+        ? sanitizeVisitorMessage(
+            message,
+            type === "error"
+              ? "تعذر إتمام العملية. حاول لاحقاً أو تواصل مع الأكاديمية."
+              : message
+          )
+        : message;
+    t.textContent = safe;
     wrap.appendChild(t);
     setTimeout(() => {
       t.style.opacity = "0";

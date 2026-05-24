@@ -28,6 +28,25 @@ function getCurrentReviewFiles(){
   const ctx=reviewContext();
   return getReviewFilesByType(ctx?.request_type || currentCompletion?.request_type, ctx);
 }
+function approvalRequiresAttachments(r){
+  if(!r)return false;
+  const cat=window.JOIN_ATTACHMENT_CATALOG;
+  if(cat&&typeof cat.requiresAttachments==='function')return cat.requiresAttachments(r);
+  return ['player','guardian','staff','coach','supporter'].includes(String(r.request_type||'').toLowerCase());
+}
+function normalizeStatusFilterValue(val){
+  const v=String(val||'').trim();
+  if(!v||v==='active'||v==='الطلبات النشطة')return 'active';
+  if(v==='all'||v==='كل الحالات')return 'all';
+  const map={جديد:'new','جاهز للمراجعة':'review',مقبول:'approved',مرفوض:'rejected','بانتظار استكمال':'pending'};
+  return map[v]||v;
+}
+function normalizeTypeFilterValue(val){
+  const v=String(val||'').trim();
+  if(!v||v==='كل أنواع الطلبات')return '';
+  const map={لاعب:'player','ولي أمر':'guardian',مدرب:'coach',داعم:'supporter',كادر:'staff','عضو أكاديمية':'academy_member'};
+  return map[v]||v;
+}
 const FILE_STATUS_LABELS = {pending:'قيد المراجعة', approved:'مقبول', rejected:'مرفوض', reupload:'مطلوب إعادة رفع'};
 
 function $(id){return document.getElementById(id)}
@@ -168,14 +187,40 @@ function renderDashboard(){
   cards.innerHTML=Object.entries(TYPE_CONFIG).map(([type,cfg])=>{const c=countsFor(type);return `<a class="request-card" href="${cfg.href}"><div class="card-icon">${cfg.icon}</div><div class="card-main"><h3>${cfg.title}</h3><p>${cfg.desc}</p><div class="mini-stats"><span>الإجمالي <b>${c.all}</b></span><span>الجديد <b>${c.new}</b></span><span>نشطة <b>${c.active}</b></span></div></div><div class="open-arrow">←</div></a>`}).join('')+`<a class="request-card all-card" href="admin_requests.html"><div class="card-icon">📋</div><div class="card-main"><h3>كل الطلبات</h3><p>عرض متقدم لكل الأنواع عند الحاجة للبحث العام والتصدير الشامل.</p><div class="mini-stats"><span>الإجمالي <b>${grandTotal.all}</b></span><span>المقبولة <b>${grandTotal.approved}</b></span></div></div><div class="open-arrow">←</div></a>`;
 }
 function filtered(){
-  const search=($('searchInput')?.value||'').trim().toLowerCase(); const status=$('statusFilter')?.value||(window.REQUEST_TYPE?'all':'active'); const sort=$('sortFilter')?.value||'newest';
+  const search=($('searchInput')?.value||'').trim().toLowerCase();
+  const status=normalizeStatusFilterValue($('statusFilter')?.value||(window.REQUEST_TYPE?'all':'active'));
+  const sortRaw=$('sortFilter')?.value||'newest';
+  const sort=sortRaw==='الأقدم أولاً'||sortRaw==='oldest'?'oldest':'newest';
+  const typeWant=normalizeTypeFilterValue($('typeFilter')?.value||'');
+  const dateFilter=$('dateFilter')?.value||'الكل';
+  const now=new Date();
   const goalFilter=$('guardianGoalFilter')?.value||'';
   const staffDomainFilter=$('staffDomainFilter')?.value||'';
   const supporterTypeFilter=$('supporterTypeFilter')?.value||'';
   const supporterMethodFilter=$('supporterMethodFilter')?.value||'';
   const memberInterestFilter=$('memberInterestFilter')?.value||'';
   let data=[...requests];
-  data=data.filter(r=>{const blob=[refCode(r),r.full_name,r.phone,r.email,r.city,notes(r),JSON.stringify(r)].join(' ').toLowerCase(); const s=!search||blob.includes(search); const st=status==='active'?isActive(r):(status==='all'||String(r.status||'new')===status); const g=!goalFilter||String(r.guardian_goal||'')===goalFilter; const staffDomain=!staffDomainFilter||staffMeta(r).domain===staffDomainFilter; const sm=supporterMeta(r); const supType=!supporterTypeFilter||sm.typeId===supporterTypeFilter; const supMethod=!supporterMethodFilter||sm.methodId===supporterMethodFilter; const mm=memberMeta(r); const memInt=!memberInterestFilter||mm.interestIds.includes(memberInterestFilter); return s&&st&&g&&staffDomain&&supType&&supMethod&&memInt;});
+  data=data.filter(r=>{
+    const blob=[refCode(r),r.full_name,r.phone,r.email,r.city,notes(r),JSON.stringify(r)].join(' ').toLowerCase();
+    const s=!search||blob.includes(search);
+    const st=status==='active'?isActive(r):(status==='all'||String(r.status||'new')===status);
+    const matchesType=!typeWant||String(r.request_type||'')===typeWant;
+    let matchesDate=true;
+    if(dateFilter!=='الكل'&&r.created_at){
+      const created=new Date(r.created_at);
+      if(dateFilter==='اليوم')matchesDate=created.toDateString()===now.toDateString();
+      else if(dateFilter==='آخر 7 أيام')matchesDate=(now-created)<=7*24*60*60*1000;
+      else if(dateFilter==='هذا الشهر')matchesDate=created.getFullYear()===now.getFullYear()&&created.getMonth()===now.getMonth();
+    }
+    const g=!goalFilter||String(r.guardian_goal||'')===goalFilter;
+    const staffDomain=!staffDomainFilter||staffMeta(r).domain===staffDomainFilter;
+    const sm=supporterMeta(r);
+    const supType=!supporterTypeFilter||sm.typeId===supporterTypeFilter;
+    const supMethod=!supporterMethodFilter||sm.methodId===supporterMethodFilter;
+    const mm=memberMeta(r);
+    const memInt=!memberInterestFilter||mm.interestIds.includes(memberInterestFilter);
+    return s&&st&&matchesType&&matchesDate&&g&&staffDomain&&supType&&supMethod&&memInt;
+  });
   data.sort((a,b)=>{const da=new Date(a.created_at||0).getTime();const db=new Date(b.created_at||0).getTime();return sort==='oldest'?da-db:db-da}); return data;
 }
 function renderTable(type){
@@ -312,6 +357,18 @@ function renderAttachmentsReview(){
   const panel=$('attachmentsReviewPanel'); const list=$('attachmentsReviewList'); const summary=$('attachmentsReviewSummary');
   if(!panel||!list) return;
   panel.style.display='block';
+  const ctx=reviewContext();
+  const prof=window.JOIN_ATTACHMENT_CATALOG?.completionProfile?.(ctx||{});
+  if(prof?.noAttachments){
+    if(summary)summary.innerHTML='<span>لا مرفقات لهذا النوع — راجع البيانات ثم قبول الطلب.</span>';
+    list.innerHTML='<div class="file-preview-empty">عضوية المتابعة لا تتطلب ملفات. استخدم «قبول الطلب» بعد التحقق من البريد والاهتمامات.</div>';
+    return;
+  }
+  if(prof?.blocked){
+    if(summary)summary.innerHTML='<span>لا يمكن مراجعة مرفقات هذا الطلب.</span>';
+    list.innerHTML=`<div class="review-lock">${escapeHtml(prof.message||'نوع الطلب غير مدعوم.')}</div>`;
+    return;
+  }
   if(!currentCompletion){
     if(summary) summary.innerHTML='<span>لم يرفع صاحب الطلب المرفقات المطلوبة بعد.</span>';
     list.innerHTML='<div class="review-lock">لا توجد مرفقات جاهزة للمراجعة حتى الآن. استخدم زر طلب استكمال لإشعار صاحب الطلب بإكمال الملفات.</div>'; 
@@ -366,7 +423,31 @@ function previewFile(key){
   modal.classList.add('show'); document.body.style.overflow='hidden';
 }
 function closeFilePreview(){ $('filePreviewModal')?.classList.remove('show'); if(!$('requestModal')?.classList.contains('show')) document.body.style.overflow=''; }
-async function openRequest(id){const r=findReq(id);if(!r)return;currentRequestId=id;$('d_name').textContent=r.full_name||'-';$('d_type').textContent=getTypeLabel(r.request_type);$('d_status').textContent=getStatusLabel(r.status||'new');$('d_ref').textContent=refCode(r);$('d_phone').textContent=r.phone||'-';$('d_email').textContent=r.email||'-';$('d_city').textContent=r.city||'-';$('d_date').textContent=`${formatDate(r.created_at)} ${formatTime(r.created_at)}`;$('d_notes').textContent=notes(r);$('d_extra').innerHTML=buildExtraDetails(r);$('requestModal').classList.add('show');document.body.style.overflow='hidden';await loadCompletionForRequest(id)}
+async function openRequest(id){
+  const r=findReq(id);if(!r)return;
+  currentRequestId=id;
+  $('d_name').textContent=r.full_name||'-';
+  $('d_type').textContent=getTypeLabel(r.request_type);
+  $('d_status').textContent=getStatusLabel(r.status||'new');
+  const refEl=$('d_ref')||$('d_reference');
+  if(refEl)refEl.textContent=refCode(r);
+  $('d_phone').textContent=r.phone||'-';
+  $('d_email').textContent=r.email||'-';
+  if($('d_city'))$('d_city').textContent=r.city||'-';
+  $('d_date').textContent=`${formatDate(r.created_at)} ${formatTime(r.created_at)}`;
+  const notesEl=$('d_notes');
+  if(notesEl)notesEl.textContent=notes(r);
+  const extra=$('d_extra');
+  if(extra)extra.innerHTML=buildExtraDetails(r);
+  $('requestModal').classList.add('show');
+  document.body.style.overflow='hidden';
+  if(approvalRequiresAttachments(r)) await loadCompletionForRequest(id);
+  else{
+    currentCompletion=null;
+    const panel=$('attachmentsReviewPanel');
+    if(panel)panel.style.display='none';
+  }
+}
 function closeRequest(){currentRequestId=null;currentCompletion=null;$('requestModal')?.classList.remove('show');$('filePreviewModal')?.classList.remove('show');document.body.style.overflow=''}
 function buildExtraDetails(r){const pairs=[]; const add=(k,v)=>{if(v!==undefined&&v!==null&&String(v).trim()!=='')pairs.push([k,v])};
   if(r.request_type==='player'){
@@ -833,11 +914,15 @@ async function updateStatus(id,status){
   });
   if(!ok)return;
   try{
-    if(status==='approved' && (r.request_type==='coach' || r.request_type==='player')){
+    if(status==='approved' && approvalRequiresAttachments(r)){
       if(!currentCompletion || String(currentCompletion.request_id)!==String(id)) await loadCompletionForRequest(id);
       const missing=reviewMissingItems(currentCompletion);
-      if(missing.length){showToast('لا يمكن اعتماد الطلب قبل قبول كل المرفقات الإجبارية المطلوبة.','error'); if($('attachmentsReviewSummary')) $('attachmentsReviewSummary').innerHTML += `<div class="review-lock">المتبقي: ${escapeHtml(missing.join('، '))}</div>`; return;}
-      await setFinalReview('approved','تم اعتماد جميع المرفقات الإجبارية المطلوبة.');
+      if(missing.length){
+        showToast('لا يمكن اعتماد الطلب قبل قبول كل المرفقات الإجبارية المطلوبة.','error');
+        if($('attachmentsReviewSummary')) $('attachmentsReviewSummary').innerHTML += `<div class="review-lock">المتبقي: ${escapeHtml(missing.join('، '))}</div>`;
+        return;
+      }
+      if(currentCompletion) await setFinalReview('approved','تم اعتماد جميع المرفقات الإجبارية المطلوبة.');
     }
     let sideResult=null;
     if(status==='approved') sideResult=await approveSideEffect(r);
@@ -865,6 +950,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   $('modalAcceptBtn')?.addEventListener('click',()=>currentRequestId&&updateStatus(currentRequestId,'approved')); $('modalRejectBtn')?.addEventListener('click',()=>currentRequestId&&updateStatus(currentRequestId,'rejected')); $('modalCompleteBtn')?.addEventListener('click',()=>currentRequestId&&updateStatus(currentRequestId,'pending'));
   const statusFilterEl = $('statusFilter');
   if (window.REQUEST_TYPE && statusFilterEl) statusFilterEl.value = 'all';
-  ['searchInput','statusFilter','sortFilter','guardianGoalFilter','staffDomainFilter','supporterTypeFilter','supporterMethodFilter','memberInterestFilter'].forEach(id=>$(id)?.addEventListener(id==='searchInput'?'input':'change',()=>renderTable(window.REQUEST_TYPE||null))); $('exportBtn')?.addEventListener('click',exportCsv);
+  ['searchInput','statusFilter','sortFilter','typeFilter','dateFilter','guardianGoalFilter','staffDomainFilter','supporterTypeFilter','supporterMethodFilter','memberInterestFilter'].forEach(id=>$(id)?.addEventListener(id==='searchInput'?'input':'change',()=>renderTable(window.REQUEST_TYPE||null)));
+  $('applyFiltersBtn')?.addEventListener('click',()=>renderTable(window.REQUEST_TYPE||null));
+  $('exportBtn')?.addEventListener('click',exportCsv);
   loadRequests(window.REQUEST_TYPE||null);
 });

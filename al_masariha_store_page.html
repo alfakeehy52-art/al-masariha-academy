@@ -178,6 +178,7 @@ footer{display:none}
 <script src="js/supabase-client.js"></script>
 <script src="js/supabase-public-lookup.js"></script>
 <script src="js/store-order-submit.js"></script>
+<script src="js/visitor-message.js"></script>
 <script>
 function escapeHtml(v){
   return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;');
@@ -246,7 +247,11 @@ function setupOrderModal(){
     }catch(err){
       console.error(err);
       msg.className = 'order-msg err';
-      msg.textContent = 'تعذر إرسال الطلب. حاول مرة أخرى أو تواصل معنا.';
+      const fallback = 'تعذر إرسال الطلب. حاول مرة أخرى أو تواصل معنا.';
+      msg.textContent =
+        typeof sanitizeVisitorMessage === 'function'
+          ? sanitizeVisitorMessage(err && err.message, fallback)
+          : fallback;
     }
   });
 }

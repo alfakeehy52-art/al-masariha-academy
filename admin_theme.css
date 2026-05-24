@@ -267,7 +267,8 @@ tr:hover td{background:rgba(255,255,255,.02)}
   }
   .table-wrap td.empty-cell{display:block;text-align:center!important}
   .table-wrap td.empty-cell::before{display:none}
-  .row-actions,.table-actions{justify-content:flex-start;width:100%}
+  .row-actions,.table-actions{justify-content:flex-start;width:100%;flex-direction:column;align-items:stretch}
+  .row-actions .mini-btn,.table-actions .mini-btn{width:100%;justify-content:center}
   .mini-btn,.icon-btn{min-height:44px;min-width:44px;padding:10px 14px}
   .btn,.button{min-height:44px}
   .input,.select,.textarea,.field input,.field select{min-height:48px}
