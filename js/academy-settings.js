@@ -244,7 +244,13 @@
     setText("[data-academy='hero_h1']", s.hero_heading_1);
     setText("[data-academy='hero_highlight']", s.hero_heading_highlight);
     setText("[data-academy='hero_h2']", s.hero_heading_2);
-    setText("[data-academy='hero_desc']", s.hero_description);
+    const heroDescFallback = DEFAULTS.hero_description;
+    let heroDesc = String(s.hero_description || "").trim() || heroDescFallback;
+    if (/قاعدة\s*البيانات|supabase/i.test(heroDesc)) heroDesc = heroDescFallback;
+    if (typeof sanitizeVisitorMessage === "function") {
+      heroDesc = sanitizeVisitorMessage(heroDesc, heroDescFallback);
+    }
+    setText("[data-academy='hero_desc']", heroDesc);
     setText("[data-academy='about_snippet']", s.about_snippet);
 
     applyLogoToImages(s.logo_url, true);

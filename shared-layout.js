@@ -329,6 +329,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       if (!window.SUPABASE_CONFIG) await loadScriptOnce("supabase-config.js");
       if (!window.createSupabaseClient) await loadScriptOnce("js/supabase-client.js");
+      if (!window.sanitizeVisitorMessage) await loadScriptOnce("js/visitor-message.js");
       if (!window.applyBrandCacheEarly) await loadScriptOnce("js/academy-settings.js");
       if (typeof applyBrandCacheEarly === "function") applyBrandCacheEarly();
       if (!window.initAcademySettingsOnSite) await loadScriptOnce("js/academy-settings.js");

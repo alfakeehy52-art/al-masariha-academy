@@ -19,7 +19,7 @@ create table if not exists public.academy_settings (
   hero_heading_1 text default 'أكاديمية',
   hero_heading_highlight text default 'المسارحة',
   hero_heading_2 text default 'لكرة القدم',
-  hero_description text default 'انضم للأكاديمية، تابع اللاعبين والمدربين من قاعدة البيانات، وقدّم طلبك بخطوات واضحة.',
+  hero_description text default 'انضم للأكاديمية، تابع اللاعبين والمدربين والمباريات، وقدّم طلبك بخطوات واضحة.',
   hero_image_url text default '',
   about_snippet text default 'أكاديمية المسارحة لكرة القدم تهدف إلى تطوير مهارات اللاعبين وصناعة جيل مميز من المواهب الكروية.',
   footer_copyright text default '© أكاديمية المسارحة لكرة القدم - جميع الحقوق محفوظة',
