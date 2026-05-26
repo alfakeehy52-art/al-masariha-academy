@@ -64,19 +64,38 @@
     document.body.appendChild(el);
   }
 
+  function isImageFile(file) {
+    if (!file) return false;
+    const type = String(file.type || "").toLowerCase();
+    if (type.startsWith("image/")) return true;
+    return /\.(jpe?g|png|gif|webp|bmp|heic|heif)$/i.test(String(file.name || ""));
+  }
+
   function loadImage(file) {
     return new Promise((resolve, reject) => {
-      const url = URL.createObjectURL(file);
-      const img = new Image();
-      img.onload = () => {
-        URL.revokeObjectURL(url);
-        resolve(img);
+      const fromDataUrl = (dataUrl) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error("تعذر قراءة الصورة"));
+        img.src = dataUrl;
       };
-      img.onerror = () => {
-        URL.revokeObjectURL(url);
-        reject(new Error("تعذر قراءة الصورة"));
+      const fromBlob = () => {
+        const url = URL.createObjectURL(file);
+        const img = new Image();
+        img.onload = () => {
+          URL.revokeObjectURL(url);
+          resolve(img);
+        };
+        img.onerror = () => {
+          URL.revokeObjectURL(url);
+          const reader = new FileReader();
+          reader.onload = () => fromDataUrl(reader.result);
+          reader.onerror = () => reject(new Error("تعذر قراءة الصورة"));
+          reader.readAsDataURL(file);
+        };
+        img.src = url;
       };
-      img.src = url;
+      fromBlob();
     });
   }
 
@@ -90,7 +109,7 @@
     const quality = opts.quality != null ? opts.quality : 0.9;
 
     return new Promise((resolve, reject) => {
-      if (!file || !String(file.type || "").startsWith("image/")) {
+      if (!isImageFile(file)) {
         reject(new Error("ملف غير صالح"));
         return;
       }
@@ -224,19 +243,26 @@
         stage.onpointercancel = end;
       }
 
+      function primeView() {
+        layout();
+        zoom.value = "100";
+        offsetX = 0;
+        offsetY = 0;
+        draw();
+      }
+
       loadImage(file)
         .then((loaded) => {
           img = loaded;
           active = { file };
-          layout();
-          zoom.value = "100";
-          offsetX = 0;
-          offsetY = 0;
-          draw();
-          bindDrag();
-          zoom.oninput = () => draw();
           overlay.classList.add("show");
           document.body.style.overflow = "hidden";
+          bindDrag();
+          zoom.oninput = () => draw();
+          requestAnimationFrame(() => {
+            primeView();
+            requestAnimationFrame(primeView);
+          });
 
           document.getElementById("icdOk").onclick = async () => {
             const blob = await exportBlob();
@@ -267,7 +293,7 @@
     input.addEventListener("change", async () => {
       const file = input.files && input.files[0];
       if (!file) return;
-      if (!String(file.type || "").startsWith("image/")) return;
+      if (!isImageFile(file)) return;
       try {
         const cropped = await open(file, options);
         const dt = new DataTransfer();

@@ -213,18 +213,26 @@
     return blank || "........................";
   }
 
+  function adminSignatoryNameLine(off) {
+    const name = String((off && off.name) || "").trim();
+    return name ? esc(name) : "........................";
+  }
+
+  function adminApprovalPendingHint(approved) {
+    if (approved) {
+      return '<p style="margin:6px 0 0;font-size:11px;color:#666">تم الاعتماد الإلكتروني — التاريخ أعلاه.</p>';
+    }
+    return '<p style="margin:6px 0 0;font-size:11px;color:#666">يُوقَّع إلكترونياً عند الاعتماد النهائي من الإدارة (الاسم من إعدادات الأكاديمية).</p>';
+  }
+
   function adminApprovalSignatureHtml(r) {
     const approved = isApprovedRequest(r);
     const off = officialSignatory();
-    const nameLine =
-      approved && off.name ? esc(off.name) : "........................";
+    const nameLine = adminSignatoryNameLine(off);
     const dateLine = approved
       ? formatArDate(r.reviewed_at || r.approved_at || r.updated_at)
       : ".... / .... / ..........";
-    const hint = approved
-      ? ""
-      : '<p style="margin:6px 0 0;font-size:11px;color:#666">يُوقَّع ويُختم عند الاعتماد النهائي من الإدارة.</p>';
-    return `<div class="sig"><h4>اعتماد الإدارة</h4><p>المنصب: ${esc(off.title)}</p><p>اسم المسؤول: ${nameLine}</p><p>التوقيع / الختم:</p><p>التاريخ: ${esc(dateLine)}</p>${hint}</div>`;
+    return `<div class="sig"><h4>اعتماد الإدارة</h4><p>المنصب: ${esc(off.title)}</p><p>اسم المسؤول: ${nameLine}</p><p>التوقيع / الختم:</p><p>التاريخ: ${esc(dateLine)}</p>${adminApprovalPendingHint(approved)}</div>`;
   }
 
   function guardianSignatureHtml(r) {
@@ -365,8 +373,7 @@
     const playerName = r.full_name || r.child_name || "";
     const off = officialSignatory();
     const approved = isApprovedRequest(r);
-    const adminName =
-      approved && off.name ? esc(off.name) : "........................";
+    const adminName = adminSignatoryNameLine(off);
     const adminDate = approved
       ? esc(formatArDate(r.reviewed_at || r.approved_at || r.updated_at))
       : ".... / .... / ..........";
@@ -379,7 +386,7 @@
       ? `<div class="sig sig-primary"><h4>مصادقة ولي الأمر</h4><p>الاسم: ${sigLine(g.name)}</p><p>رقم الهوية: ${sigLine(g.id)}</p><p>صلة القرابة: ${sigLine(g.relationship)}</p><p>رقم الجوال: ${sigLine(g.phone)}</p><p>التوقيع:</p><p>التاريخ: .... / .... / ..........</p></div>`
       : "";
 
-    const adminSig = `<div class="sig sig-admin"><h4>اعتماد الإدارة</h4><p>اسم المسؤول: ${adminName}</p><p>المسمى الوظيفي: ${esc(off.title)}</p><p>التوقيع / الختم:</p><p>التاريخ: ${adminDate}</p>${approved ? "" : '<p style="font-size:11px;color:#666;margin-top:6px">يُوقَّع عند الاعتماد النهائي.</p>'}</div>`;
+    const adminSig = `<div class="sig sig-admin"><h4>اعتماد الإدارة</h4><p>اسم المسؤول: ${adminName}</p><p>المسمى الوظيفي: ${esc(off.title)}</p><p>التوقيع / الختم:</p><p>التاريخ: ${adminDate}</p>${adminApprovalPendingHint(approved)}</div>`;
 
     const gridClass = minor ? "signatures signatures-triple" : "signatures";
     return `<div class="section"><h3>المصادقات</h3><div class="${gridClass}">${playerSig}${guardianSig}${adminSig}</div></div>`;
