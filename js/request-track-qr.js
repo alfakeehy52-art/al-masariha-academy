@@ -94,6 +94,30 @@
     });
   }
 
+  async function renderQrOnImage(imgEl, url) {
+    if (!imgEl || !url) return;
+    const dataUrlFallback =
+      "https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=" +
+      encodeURIComponent(url);
+    try {
+      await loadQrLib();
+      const dataUrl = await window.QRCode.toDataURL(url, {
+        width: 180,
+        margin: 1,
+        color: { dark: "#05110b", light: "#ffffff" }
+      });
+      imgEl.src = dataUrl;
+      imgEl.alt = "رمز التحقق";
+    } catch (e) {
+      console.warn("[qr] canvas failed, using fallback image", e);
+      imgEl.onerror = () => {
+        imgEl.alt = "تعذر تحميل الرمز";
+      };
+      imgEl.src = dataUrlFallback;
+    }
+  }
+
   window.renderRequestTrackQr = renderRequestTrackQr;
+  window.renderQrOnImage = renderQrOnImage;
   window.buildRequestTrackUrl = trackUrl;
 })();

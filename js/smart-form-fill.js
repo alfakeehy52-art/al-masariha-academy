@@ -274,6 +274,8 @@
 
   function playerUnifiedContentHtml(r) {
     const ctx = playerFormContext(r);
+    const g = parseGuardianFromRequest(r);
+    const rel = String(g.relationship || "").trim();
     const minor = ctx.minor;
     const joinExtra = minor
       ? `<p>وفي حال كان اللاعب دون <b>18 سنة هجرية</b>، فإن ولي الأمر أو الوصي النظامي يُعد مسؤولاً عن الموافقة على الطلب والالتزام بالتعليمات واللوائح المعتمدة لدى الأكاديمية.</p>`
