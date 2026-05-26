@@ -18,15 +18,24 @@ function reviewContext(){
   const req=findReq(currentRequestId);
   return req || currentCompletion || null;
 }
-function getReviewFilesByType(type, ctx){
-  if(typeof window.getReviewFilesByType==='function' && window.getReviewFilesByType.length>=2){
-    return window.getReviewFilesByType(type, ctx);
+/** لا تُسمّى getReviewFilesByType — الاسم على window يُستبدل ويسبب تكراراً لا نهائياً */
+function resolveAdminReviewFiles(type, ctx){
+  const cat=window.JOIN_ATTACHMENT_CATALOG;
+  if(cat&&typeof cat.getReviewFilesByType==='function'){
+    const files=cat.getReviewFilesByType(type,ctx);
+    return Array.isArray(files)?files:[];
+  }
+  const fn=window.__reviewFilesResolver;
+  if(typeof fn==='function'){
+    const files=fn(type,ctx);
+    return Array.isArray(files)?files:[];
   }
   return [];
 }
 function getCurrentReviewFiles(){
   const ctx=reviewContext();
-  return getReviewFilesByType(ctx?.request_type || currentCompletion?.request_type, ctx);
+  const type=ctx?.request_type||currentCompletion?.request_type;
+  return resolveAdminReviewFiles(type,ctx);
 }
 function approvalRequiresAttachments(r){
   if(!r)return false;
@@ -452,6 +461,7 @@ function renderAttachmentsReview(){
     return;
   }
   const files=getCurrentReviewFiles();
+  if(!Array.isArray(files)) throw new Error('review files not array');
   const requiredFiles=files.filter(f=>f.required);
   const approved=requiredFiles.filter(f=>String(currentCompletion[f.status]||'pending')==='approved').length;
   const missing=requiredFiles.filter(f=>!String(currentCompletion[f.url]||'').trim()).length;
@@ -464,7 +474,8 @@ function renderAttachmentsReview(){
   }).join('');
   }catch(err){
     console.error(err);
-    list.innerHTML=completionLoadErrorHtml('تعذر عرض قائمة المرفقات. حدّث الصفحة أو أعد فتح الطلب.', currentRequestId);
+    const detail=err&&err.message?` (${escapeHtml(String(err.message).slice(0,120))})`:'';
+    list.innerHTML=completionLoadErrorHtml('تعذر عرض قائمة المرفقات. حدّث الصفحة أو أعد فتح الطلب.'+detail, currentRequestId);
   }
 }
 function getReviewFile(key){return getCurrentReviewFiles().find(f=>f.key===key)}

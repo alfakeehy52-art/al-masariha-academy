@@ -64,6 +64,7 @@
     return completion?.contract_file_url || completion?.player_join_file_url || null;
   }
 
+  window.__reviewFilesResolver = getReviewFilesByType;
   window.getReviewFilesByType = getReviewFilesByType;
   window.completionIsFullyApproved = completionIsFullyApproved;
   window.reviewMissingItems = reviewMissingItems;
