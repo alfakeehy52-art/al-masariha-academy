@@ -470,7 +470,9 @@ function renderAttachmentsReview(){
     const url=safeUrl(currentCompletion[f.url]);
     const st=currentCompletion[f.status]||'pending';
     const note=currentCompletion[f.note]||'';
-    return `<article class="attachment-card"><div class="attachment-top"><div><div class="attachment-title">${escapeHtml(f.title)} ${f.required?'':'<span style="color:var(--muted);font-size:12px">(اختياري)</span>'}</div><span class="subtext">${url?'ملف مرفوع وجاهز للمعاينة':'لا يوجد ملف مرفوع'}</span></div><span class="tag ${fileStatusClass(st)}">${escapeHtml(getFileStatusLabel(st))}</span></div><div class="attachment-actions">${url?`<button class="mini-btn review" onclick="previewFile('${f.key}')">معاينة</button><a class="mini-btn more" href="${escapeHtml(url)}" target="_blank" rel="noopener">فتح</a>`:''}<button class="mini-btn accept" onclick="setFileReview('${f.key}','approved')">قبول</button><button class="mini-btn reject" onclick="setFileReview('${f.key}','rejected')">رفض</button><button class="mini-btn more" onclick="setFileReview('${f.key}','reupload')">إعادة رفع</button></div><div class="attachment-note"><textarea id="note_${f.key}" placeholder="ملاحظة الإدارة لهذا المرفق">${escapeHtml(note)}</textarea><button class="mini-btn more" onclick="saveFileNote('${f.key}')">حفظ الملاحظة</button></div></article>`;
+    const mismatch=storageFolderMismatchHint(f,url);
+    const mismatchHtml=mismatch?`<div class="subtext" style="color:#ffb4b4;font-weight:800;margin-top:6px">${escapeHtml(mismatch)}</div>`:'';
+    return `<article class="attachment-card"><div class="attachment-top"><div><div class="attachment-title">${escapeHtml(f.title)} ${f.required?'':'<span style="color:var(--muted);font-size:12px">(اختياري)</span>'}</div><span class="subtext">${url?'ملف مرفوع وجاهز للمعاينة':'لا يوجد ملف مرفوع'}</span>${mismatchHtml}</div><span class="tag ${fileStatusClass(st)}">${escapeHtml(getFileStatusLabel(st))}</span></div><div class="attachment-actions">${url?`<button class="mini-btn review" onclick="previewFile('${f.key}')">معاينة</button><a class="mini-btn more" href="${escapeHtml(url)}" target="_blank" rel="noopener">فتح</a>`:''}<button class="mini-btn accept" onclick="setFileReview('${f.key}','approved')">قبول</button><button class="mini-btn reject" onclick="setFileReview('${f.key}','rejected')">رفض</button><button class="mini-btn more" onclick="setFileReview('${f.key}','reupload')">إعادة رفع</button></div><div class="attachment-note"><textarea id="note_${f.key}" placeholder="ملاحظة الإدارة لهذا المرفق">${escapeHtml(note)}</textarea><button class="mini-btn more" onclick="saveFileNote('${f.key}')">حفظ الملاحظة</button></div></article>`;
   }).join('');
   }catch(err){
     console.error(err);
@@ -479,6 +481,15 @@ function renderAttachmentsReview(){
   }
 }
 function getReviewFile(key){return getCurrentReviewFiles().find(f=>f.key===key)}
+function storageFolderMismatchHint(f,url){
+  if(!f||!url)return '';
+  const path=String(url).toLowerCase();
+  const folder=String(f.folder||'').toLowerCase();
+  if(!folder)return '';
+  if(folder==='medical'&&!path.includes('/medical/'))return 'تحذير: مسار الملف لا يطابق مجلد الكشف الطبي — قد يكون مرفوعاً من نموذج آخر.';
+  if(folder==='player-unified'&&!path.includes('/player-unified/'))return 'تحذير: مسار الملف لا يطابق مجلد التسجيل الموحد — قد يكون مرفوعاً من نموذج آخر.';
+  return '';
+}
 async function setFileReview(key,status){
   const f=getReviewFile(key); if(!f||!currentCompletion)return;
   const noteEl=$(`note_${key}`);
@@ -490,7 +501,10 @@ async function setFileReview(key,status){
 async function saveFileNote(key){
   const f=getReviewFile(key); if(!f||!currentCompletion)return;
   const noteEl=$(`note_${key}`);
-  const payload={ [f.note]:noteEl?noteEl.value:null, updated_at:new Date().toISOString() };
+  const noteText=noteEl?String(noteEl.value||'').trim():'';
+  const curStatus=String(currentCompletion[f.status]||'pending');
+  const payload={ [f.note]:noteText||null, updated_at:new Date().toISOString() };
+  if(noteText&&curStatus==='pending') payload[f.status]='reupload';
   const {data,error}=await supabaseClient.from('request_completions').update(payload).eq('id',currentCompletion.id).select('*').single();
   if(error){console.error(error);showToast('تعذر حفظ الملاحظة.','error');return;}
   currentCompletion=data; renderAttachmentsReview(); showToast('تم حفظ الملاحظة.');
@@ -507,8 +521,10 @@ function previewFile(key){
   const url=safeUrl(currentCompletion[f.url]);
   const modal=$('filePreviewModal'); const body=$('filePreviewBody'); const title=$('filePreviewTitle');
   if(!modal||!body)return;
-  title.textContent=f.title;
+  const mismatch=storageFolderMismatchHint(f,url);
+  title.textContent=f.title+(mismatch?' ⚠':'');
   if(!url){body.innerHTML='<div class="file-preview-empty">لا يوجد ملف مرفوع.</div>'}
+  else if(mismatch){const warn=`<p style="color:#ffb4b4;font-weight:800;line-height:1.7;margin:0 0 12px">${escapeHtml(mismatch)}</p>`;if(isImageUrl(url)){body.innerHTML=warn+`<img class="file-preview-img" src="${escapeHtml(url)}" alt="${escapeHtml(f.title)}">`}else if(isPdfUrl(url)){body.innerHTML=warn+`<iframe class="file-preview-frame" src="${escapeHtml(url)}"></iframe>`}else{body.innerHTML=warn+`<div class="file-preview-empty"><a class="btn gold" href="${escapeHtml(url)}" target="_blank" rel="noopener">فتح الملف</a></div>`}}
   else if(isImageUrl(url)){body.innerHTML=`<img class="file-preview-img" src="${escapeHtml(url)}" alt="${escapeHtml(f.title)}">`}
   else if(isPdfUrl(url)){body.innerHTML=`<iframe class="file-preview-frame" src="${escapeHtml(url)}"></iframe>`}
   else {body.innerHTML=`<div class="file-preview-empty">لا يمكن المعاينة المباشرة لهذا النوع. <br><br><a class="btn gold" href="${escapeHtml(url)}" target="_blank" rel="noopener">فتح الملف</a></div>`}

@@ -70,7 +70,7 @@
   <script src="supabase-config.js"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/academy-roles.js"></script>
-  <script src="js/join-attachments-catalog.js"></script>
+  <script src="js/join-attachments-catalog.js?v=20260522-reupload2"></script>
   <script src="js/request-completion-review.js"></script>
   <script src="js/supabase-public-lookup.js"></script>
   <script src="js/chat-drawer.js"></script>
@@ -113,7 +113,7 @@
         actions.push(`<button class="btn" type="button" id="openChatWithAdminBtn">تواصل مع الإدارة</button>`);
       }
       if(!isApprovedStatus(row.status)){
-        if(canRequestCompletion(row)) actions.push(`<a class="btn gold" href="${completionUrl(row)}">استكمال البيانات والمرفقات</a>`);
+        if(canRequestCompletion(row)) actions.push(`<a class="btn gold" href="${completionUrl(row)}">رفع المرفقات / إعادة الرفع</a>`);
         else if(canPrepareAttachments(row)) actions.push(`<a class="btn" href="${completionUrl(row)}">تحضير المرفقات مسبقًا</a>`);
         actions.push(`<a class="btn" href="index.html">الرئيسية</a>`);
         actions.push(`<a class="btn" href="al_masariha_join_page.html">تقديم طلب جديد</a>`);
@@ -153,13 +153,19 @@
 
     function fileReviewFields(row){
       if(typeof getReviewFilesByType==='function'){
-        return getReviewFilesByType(row.request_type,row).map(f=>({label:f.title,status:f.status,note:f.note}));
+        return getReviewFilesByType(row.request_type,row).map(f=>({label:f.title,url:f.url,status:f.status,note:f.note}));
       }
       return [];
     }
-    function isRejected(v){return ['rejected','رفض','مرفوض'].includes(String(v||'').trim().toLowerCase())}
+    function fileNeedsAction(data,f){
+      const cat=window.JOIN_ATTACHMENT_CATALOG;
+      if(cat&&cat.fileNeedsVisitorReupload)return cat.fileNeedsVisitorReupload(data,{url:f.url,status:f.status,note:f.note});
+      const s=String(data[f.status]||'').toLowerCase();
+      return s==='rejected'||s==='reupload'||!!String(data[f.note]||'').trim();
+    }
+    function isRejected(data,f){return fileNeedsAction(data,f)}
     function isAccepted(v){return ['accepted','approved','قبول','مقبول'].includes(String(v||'').trim().toLowerCase())}
-    function reviewStatusText(v){if(isRejected(v))return 'مرفوض'; if(isAccepted(v))return 'مقبول'; return 'قيد المراجعة'}
+    function reviewStatusText(st,note){const cat=window.JOIN_ATTACHMENT_CATALOG;if(cat&&cat.fileReviewStatusLabel)return cat.fileReviewStatusLabel(st,note);const s=String(st||'').trim().toLowerCase();if(s==='rejected')return 'مرفوض — مطلوب إعادة الرفع';if(s==='reupload')return 'مطلوب إعادة الرفع';if(isAccepted(st))return 'مقبول';return 'قيد المراجعة'}
     async function findOfficialRecord(row){
       return null;
     }
@@ -207,11 +213,13 @@
           return;
         }
       }
-      const rejected=fields.filter(f=>isRejected(data[f.status]));
+      const rejected=fields.filter(f=>isRejected(data,f));
       const items=(rejected.length?rejected:fields).map(f=>{
-        const cls=isRejected(data[f.status])?'bad':(isAccepted(data[f.status])?'good':'warn');
-        const note=data[f.note] ? `<br><span>ملاحظة الإدارة: ${esc(data[f.note])}</span>` : '';
-        return `<div class="review-item ${cls}"><b>${esc(f.label)}: ${esc(reviewStatusText(data[f.status]))}</b>${note}</div>`;
+        const st=data[f.status];
+        const noteVal=data[f.note];
+        const cls=isRejected(data,f)?'bad':(isAccepted(st)?'good':'warn');
+        const note=noteVal ? `<br><span>ملاحظة الإدارة: ${esc(noteVal)}</span>` : '';
+        return `<div class="review-item ${cls}"><b>${esc(f.label)}: ${esc(reviewStatusText(st,noteVal))}</b>${note}</div>`;
       }).join('');
       const title=rejected.length?'مرفقات تحتاج إعادة رفع':'حالة مراجعة المرفقات';
       box.innerHTML=`<h3>${title}</h3><div class="review-list">${items}</div>`;

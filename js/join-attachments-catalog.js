@@ -31,12 +31,24 @@
       key: "playerUnifiedFile",
       label: "نموذج التسجيل الموحد الموقّع",
       folder: "player-unified",
+      printDocType: "player-unified",
+      uploadHint: "اطبع من رابط «نموذج التسجيل الموحد» فقط (صفحتان) — لا ترفع ملف الكشف الطبي هنا.",
       url: "player_join_file_url",
       status: "player_join_file_status",
       note: "player_join_file_note",
       required: true
     },
-    { key: "medicalFile", label: "نموذج الكشف الطبي المعتمد", folder: "medical", url: "medical_file_url", status: "medical_file_status", note: "medical_file_note", required: true }
+    {
+      key: "medicalFile",
+      label: "نموذج الكشف الطبي المعتمد",
+      folder: "medical",
+      printDocType: "medical-form",
+      uploadHint: "اطبع من رابط «نموذج الكشف الطبي» فقط (صفحة واحدة) — لا ترفع ملف التسجيل الموحد هنا.",
+      url: "medical_file_url",
+      status: "medical_file_status",
+      note: "medical_file_note",
+      required: true
+    }
   ];
 
   const GUARDIAN_ID_FILE = {
@@ -89,12 +101,24 @@
       key: "playerUnifiedFile",
       label: "نموذج التسجيل الموحد الموقّع (ولي الأمر)",
       folder: "player-unified",
+      printDocType: "player-unified",
+      uploadHint: "اطبع من رابط «نموذج التسجيل الموحد» فقط (صفحتان) — لا ترفع ملف الكشف الطبي هنا.",
       url: "player_join_file_url",
       status: "player_join_file_status",
       note: "player_join_file_note",
       required: true
     },
-    { key: "medicalFile", label: "نموذج الكشف الطبي المعتمد", folder: "medical", url: "medical_file_url", status: "medical_file_status", note: "medical_file_note", required: true }
+    {
+      key: "medicalFile",
+      label: "نموذج الكشف الطبي المعتمد",
+      folder: "medical",
+      printDocType: "medical-form",
+      uploadHint: "اطبع من رابط «نموذج الكشف الطبي» فقط (صفحة واحدة) — لا ترفع ملف التسجيل الموحد هنا.",
+      url: "medical_file_url",
+      status: "medical_file_status",
+      note: "medical_file_note",
+      required: true
+    }
   ];
 
   const STAFF_FORMS_BASE = [
@@ -341,8 +365,58 @@
       url: a.url,
       status: a.status,
       note: a.note,
-      required: !!a.required
+      required: !!a.required,
+      folder: a.folder,
+      printDocType: a.printDocType
     }));
+  }
+
+  function inferPrintDocType(item) {
+    if (item && item.printDocType) return item.printDocType;
+    const folder = String((item && item.folder) || "").toLowerCase();
+    if (folder === "medical") return "medical-form";
+    if (folder === "player-unified") return "player-unified";
+    return "";
+  }
+
+  /** حالات المرفق من مراجعة الإدارة */
+  function normalizeFileReviewStatus(status) {
+    return String(status || "pending")
+      .trim()
+      .toLowerCase();
+  }
+
+  function fileNeedsReupload(status) {
+    const s = normalizeFileReviewStatus(status);
+    return s === "rejected" || s === "reupload";
+  }
+
+  function fileReviewStatusLabel(status, note) {
+    const s = normalizeFileReviewStatus(status);
+    const hasNote = String(note || "").trim().length > 0;
+    if (s === "approved") return "مقبول";
+    if (s === "rejected") return "مرفوض — مطلوب إعادة الرفع";
+    if (s === "reupload") return "مطلوب إعادة الرفع";
+    if (hasNote && s === "pending") return "ملاحظة من الإدارة — مطلوب إعادة الرفع";
+    if (s === "pending") return "قيد المراجعة";
+    return String(status || "قيد المراجعة");
+  }
+
+  /** هل يجب على الزائر رفع ملف جديد لهذا المرفق؟ */
+  function fileNeedsVisitorReupload(completion, item) {
+    if (!item) return false;
+    const urlKey = item.url;
+    const statusKey = item.status;
+    const noteKey = item.note;
+    if (!completion) return true;
+    const url = String(completion[urlKey] || "").trim();
+    const st = normalizeFileReviewStatus(completion[statusKey]);
+    const note = String(completion[noteKey] || "").trim();
+    if (!url) return true;
+    if (st === "approved") return false;
+    if (fileNeedsReupload(st)) return true;
+    if (note) return true;
+    return false;
   }
 
   function getReviewFilesByType(type, ctx) {
@@ -369,6 +443,11 @@
     requiresAttachments,
     toReviewFiles,
     labelForType,
+    inferPrintDocType,
+    normalizeFileReviewStatus,
+    fileNeedsReupload,
+    fileNeedsVisitorReupload,
+    fileReviewStatusLabel,
     guardianGoal,
     isBusDriver,
     supporterMeta
