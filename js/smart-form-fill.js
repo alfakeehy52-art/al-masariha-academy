@@ -272,7 +272,7 @@
     ];
   }
 
-  function playerUnifiedContentHtml(r) {
+  function playerUnifiedContentParts(r) {
     const ctx = playerFormContext(r);
     const g = parseGuardianFromRequest(r);
     const rel = String(g.relationship || "").trim();
@@ -301,7 +301,7 @@
       ? `<p>أقر أنا ولي أمر اللاعب <b>${esc(ctx.playerName)}</b>${rel ? ` (<b>${esc(rel)}</b>)` : ""} بصحة البيانات الواردة في هذا النموذج، وبأنني أنوب عنه قانونياً في تقديم طلب انضمامه إلى <b>أكاديمية المسارحة لكرة القدم</b> وفق الأنظمة واللوائح والتعليمات المعتمدة.</p>${joinExtra}`
       : `<p>أقر أنا اللاعب <b>${esc(ctx.playerName)}</b> بصحة بياناتي الواردة في هذا النموذج، وبأنني أقدّم طلب الانضمام <b>لنفسي</b> إلى <b>أكاديمية المسارحة لكرة القدم</b> وفق الأنظمة واللوائح والتعليمات المعتمدة.</p>`;
 
-    return `
+    const page1 = `
       <div class="section"><h3>طلب الانضمام</h3>
         ${joinLead}
         <p>ويُعد قبول اللاعب قبولاً مبدئياً إلى حين مراجعة الطلب واعتماده من قبل الإدارة الفنية والإدارية واستكمال المتطلبات والمرفقات اللازمة — ومنها <b>نموذج الكشف الطبي</b> المعتمد (نموذج منفصل).</p>
@@ -331,7 +331,9 @@
       <div class="section"><h3>تحمل المسؤولية الرياضية</h3>
         <p>${liabilityIntro}</p>
         <p>ولا تتحمل الأكاديمية أي مسؤولية ناتجة عن إخفاء معلومات صحية مؤثرة تخص اللاعب.</p>
-      </div>
+      </div>`;
+
+    const page2 = `
       ${guardianBlock}
       <div class="section"><h3>ملاحظات</h3>
         <ul class="notes-list">
@@ -340,6 +342,21 @@
           <li>يُرفق مع الطلب نموذج الكشف الطبي والمستندات المطلوبة حسب سياسة الأكاديمية.</li>
         </ul>
       </div>`;
+
+    return { page1, page2 };
+  }
+
+  function playerUnifiedContentPage1Html(r) {
+    return playerUnifiedContentParts(r).page1;
+  }
+
+  function playerUnifiedContentPage2Html(r) {
+    return playerUnifiedContentParts(r).page2;
+  }
+
+  function playerUnifiedContentHtml(r) {
+    const parts = playerUnifiedContentParts(r);
+    return parts.page1 + parts.page2;
   }
 
   function playerUnifiedSignaturesHtml(r) {
@@ -413,6 +430,9 @@
     playerCategoryDisplay,
     playerPositionDisplay,
     playerUnifiedMetaRows,
+    playerUnifiedContentParts,
+    playerUnifiedContentPage1Html,
+    playerUnifiedContentPage2Html,
     playerUnifiedContentHtml,
     playerUnifiedSignaturesHtml,
     playerUnifiedDocTitles,
