@@ -42,6 +42,8 @@
     body.join-submitted .path-section,body.join-submitted #formShell .join-form > .section:not(.submit-zone){display:none}
     body.join-submitted #formShell .submit-zone .policy-box,body.join-submitted #formShell .submit-zone .consent-card,body.join-submitted #formShell .submit-zone .submit-center,body.join-submitted #formShell .submit-zone .action-row{display:none}
     .join-support-fab.is-ready{border-color:rgba(46,204,113,.5);box-shadow:0 0 0 4px rgba(46,204,113,.12),0 14px 34px rgba(0,0,0,.35)}
+    .join-silent-select{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+    .age-banner.minor{margin:4px 0 12px;padding:14px 16px;border-radius:16px;border:1px solid rgba(255,180,80,.35);background:rgba(255,180,80,.1);color:#ffe79c;font-weight:800;font-size:14px;line-height:1.75}
   </style>
 </head>
 <body class="join-page inner-page">
@@ -92,25 +94,23 @@
       <form id="joinForm" class="join-form" novalidate>
         <section class="section type-panel active" data-panel="player">
           <h3 class="section-title">بيانات طلب اللاعب</h3>
-          <div class="policy-note">يتم احتساب عمر اللاعب بالتقويم الهجري المعتمد في المملكة العربية السعودية. في حال كان عمر اللاعب أقل من 18 سنة هجرية، يتطلب النظام إضافة بيانات ولي الأمر واعتماد الموافقة الرسمية لإتمام التسجيل. أما اللاعب البالغ 18 سنة هجرية فأكثر، فيستطيع استكمال طلب الانضمام مباشرةً بنفسه.</div>
           <div class="grid">
             <div class="field"><label for="playerFullName">اسم اللاعب <span style="color:#f5d46b">*</span></label><input id="playerFullName" name="playerFullName" type="text" placeholder="الاسم الكامل للاعب" autocomplete="name" /></div>
             <div class="field"><label for="playerNationalId">هوية / إقامة اللاعب <span style="color:#f5d46b">*</span></label><input id="playerNationalId" name="playerNationalId" type="text" inputmode="numeric" maxlength="20" placeholder="رقم هوية أو إقامة اللاعب" /></div>
-            <div class="field full"><label for="playerBirthHijri">تاريخ الميلاد الهجري للاعب <span style="color:#f5d46b">*</span></label><input id="playerBirthHijri" name="playerBirthHijri" class="hijri-date-input" type="text" inputmode="numeric" dir="ltr" maxlength="10" placeholder="22/11/1411" autocomplete="off" spellcheck="false" /><p class="hijri-date-hint" id="playerBirthHijriHint" aria-live="polite"></p></div>
-            <div class="field"><label for="playerAge">العمر الهجري (يُحسب تلقائياً)</label><input id="playerAge" name="playerAge" type="text" inputmode="numeric" placeholder="—" readonly autocomplete="off" /><p class="hijri-today-hint" id="hijriTodayHint"></p></div>
-            <div class="field full age-banner minor" id="playerAgeBannerMinor" style="display:none">لاعب قاصر: أدخل بيانات ولي الأمر أدناه. يُسجَّل ولي الأمر ويُربط بابنك عند الاعتماد — وليس كعضو رياضي مستقل.</div>
-            <div class="field full age-banner adult" id="playerAgeBannerAdult" style="display:none">لاعب بالغ (18 هجرياً فأكثر): يكمل الطلب باسمه وبياناته دون ولي أمر في النموذج.</div>
+            <div class="field full"><label for="playerBirthHijri">تاريخ الميلاد الهجري <span style="color:#f5d46b">*</span></label><input id="playerBirthHijri" name="playerBirthHijri" class="hijri-date-input" type="text" inputmode="numeric" dir="ltr" maxlength="10" placeholder="22/11/1411" autocomplete="off" spellcheck="false" /><p class="hijri-date-hint" id="playerBirthHijriHint" aria-live="polite"></p></div>
+            <input type="hidden" id="playerAge" name="playerAge" value="" />
+            <select id="ageCategory" class="join-silent-select" tabindex="-1" aria-hidden="true"><option value="">—</option><option>براعم</option><option>ناشئين</option><option>شباب</option><option>فريق أول</option></select>
+            <input type="hidden" id="ageCategoryHidden" name="ageCategory" value="" />
+            <div class="field full age-banner minor" id="playerAgeBannerMinor" style="display:none" role="alert">لاعب قاصر — أكمل بيانات ولي الأمر أدناه.</div>
             <div class="field full" id="minorGuardianBox" style="display:none">
               <div class="grid">
                 <p class="minor-guardian-title">بيانات ولي الأمر (إلزامي للقاصر)</p>
-                <p class="minor-guardian-hint">ولي الأمر جهة اتصال وموافقة قانونية فقط.</p>
                 <div class="field"><label for="relationship">صلة القرابة</label><select id="relationship" name="relationship"><option value="">اختر</option><option>أب</option><option>أم</option><option>أخ</option><option>أخت</option><option>ولي أمر آخر</option></select></div>
                 <div class="field"><label for="guardianName">اسم ولي الأمر</label><input id="guardianName" name="guardianName" type="text" placeholder="الاسم الكامل لولي الأمر" /></div>
                 <div class="field"><label for="guardianPhone">جوال ولي الأمر</label><input id="guardianPhone" name="guardianPhone" type="tel" placeholder="05xxxxxxxx" /></div>
                 <div class="field"><label for="guardianNationalId">هوية ولي الأمر</label><input id="guardianNationalId" name="guardianNationalId" type="text" placeholder="رقم الهوية" /></div>
               </div>
             </div>
-            <div class="field field-readonly"><label for="ageCategory">الفئة (تُحدد تلقائياً حسب العمر)</label><select id="ageCategory" disabled><option value="">—</option><option>براعم</option><option>ناشئين</option><option>شباب</option><option>فريق أول</option></select><input type="hidden" id="ageCategoryHidden" name="ageCategory" /><p class="field-hint">تُقترح حسب العمر الهجري. الإدارة والمدرب يمكنهم تعديل الفئة لاحقاً.</p></div>
             <div class="field"><label for="position">المركز المفضل</label><select id="position" name="position"><option value="">اختر المركز</option><option>حارس مرمى</option><option>مدافع</option><option>وسط</option><option>جناح</option><option>مهاجم</option></select></div>
             <div class="field full"><label for="playerNotes">نبذة أو ملاحظات</label><textarea id="playerNotes" name="playerNotes" placeholder="اكتب أي معلومات مهمة عن اللاعب"></textarea></div>
           </div>
@@ -252,8 +252,8 @@
   <script src="js/academy-member-profile.js"></script>
   <script src="js/join-intake-policy.js"></script>
   <script src="js/visitor-message.js"></script>
-  <script src="js/request-track-qr.js"></script>
+  <script src="js/request-track-qr.js?v=20260522-unified"></script>
   <script src="js/chat-drawer.js"></script>
-  <script src="js/join-page-app.js"></script>
+  <script src="js/join-page-app.js?v=20260522-unified"></script>
 </body>
 </html>

@@ -15,25 +15,39 @@
   };
 
   const PLAYER_FORMS = [
-    ["نموذج انضمام / تسجيل اللاعب", "عقد تسجيل اللاعب في الأكاديمية.", "player-join"],
-    ["موافقة ولي الأمر", "إقرار الموافقة على مشاركة اللاعب.", "guardian-approval"],
-    ["تعهد الالتزام والانضباط", "تعهد اللاعب وولي الأمر.", "player-pledge"],
-    ["إقرار تحمل المسؤولية والإصابات", "إقرار المشاركة والمسؤولية الرياضية.", "liability-waiver"],
-    ["إقرار الأنظمة المالية والإدارية", "التزامات الرسوم واللوائح الإدارية.", "financial-rules"],
-    ["نموذج الكشف الطبي", "للمركز الصحي — لياقة اللاعب.", "medical-form"]
+    [
+      "نموذج التسجيل الموحد",
+      "يشمل الانضمام واللوائح والإقرارات — وقّع مرة واحدة ثم ارفعه.",
+      "player-unified"
+    ],
+    ["نموذج الكشف الطبي", "للمركز الصحي — يُرفق منفصلاً عن النموذج الموحد.", "medical-form"]
   ];
 
-  const PLAYER_FILES = [
+  const PLAYER_FILES_CORE = [
     { key: "idDocument", label: "هوية / إقامة اللاعب", folder: "ids", url: "id_document_url", status: "id_document_status", note: "id_document_note", required: true },
     { key: "personalPhoto", label: "صورة اللاعب الشخصية", folder: "photos", url: "personal_photo_url", status: "personal_photo_status", note: "personal_photo_note", required: true, accept: "image/*" },
     { key: "certificateFile", label: "شهادة الميلاد", folder: "birth-certificates", url: "certificate_file_url", status: "certificate_file_status", note: "certificate_file_note", required: true },
-    { key: "playerJoinFile", label: "نموذج انضمام اللاعب الموقّع", folder: "player-join", url: "player_join_file_url", status: "player_join_file_status", note: "player_join_file_note", required: true },
-    { key: "guardianApprovalFile", label: "موافقة ولي الأمر الموقّعة", folder: "guardian-approval", url: "guardian_approval_file_url", status: "guardian_approval_file_status", note: "guardian_approval_file_note", required: true },
-    { key: "playerCommitmentFile", label: "تعهد الالتزام الموقّع", folder: "player-pledge", url: "player_commitment_file_url", status: "player_commitment_file_status", note: "player_commitment_file_note", required: true },
-    { key: "pledgeFile", label: "إقرار تحمل المسؤولية والإصابات الموقّع", folder: "liability-waivers", url: "pledge_file_url", status: "pledge_file_status", note: "pledge_file_note", required: true },
-    { key: "contractFile", label: "إقرار الأنظمة المالية والإدارية الموقّع", folder: "financial-rules", url: "contract_file_url", status: "contract_file_status", note: "contract_file_note", required: true },
+    {
+      key: "playerUnifiedFile",
+      label: "نموذج التسجيل الموحد الموقّع",
+      folder: "player-unified",
+      url: "player_join_file_url",
+      status: "player_join_file_status",
+      note: "player_join_file_note",
+      required: true
+    },
     { key: "medicalFile", label: "نموذج الكشف الطبي المعتمد", folder: "medical", url: "medical_file_url", status: "medical_file_status", note: "medical_file_note", required: true }
   ];
+
+  const GUARDIAN_ID_FILE = {
+    key: "guardianIdDocument",
+    label: "هوية / إقامة ولي الأمر",
+    folder: "guardian-ids",
+    url: "guardian_approval_file_url",
+    status: "guardian_approval_file_status",
+    note: "guardian_approval_file_note",
+    required: true
+  };
 
   const GUARDIAN_LINK_FORMS = [
     ["نموذج ربط ولي أمر بلاعب", "ربط ولي الأمر بلاعب مسجل.", "guardian-link"],
@@ -49,21 +63,38 @@
   ];
 
   const GUARDIAN_NEW_FORMS = [
-    ["تسجيل لاعب جديد عبر ولي الأمر", "نموذج إداري لتسجيل لاعب جديد.", "guardian-new-player"],
-    ["تعهد ولي الأمر", "صحة البيانات والمتابعة.", "guardian-pledge"],
-    ...PLAYER_FORMS.filter((f) => f[2] !== "player-join")
+    [
+      "نموذج التسجيل الموحد للاعب",
+      "لتسجيل ابن قاصر — يوقّعه ولي الأمر ثم يُرفع.",
+      "player-unified"
+    ],
+    ["نموذج الكشف الطبي", "للمركز الصحي — لياقة اللاعب.", "medical-form"]
   ];
 
   const GUARDIAN_NEW_FILES = [
     { key: "idDocument", label: "هوية / إقامة ولي الأمر", folder: "guardian-ids", url: "id_document_url", status: "id_document_status", note: "id_document_note", required: true },
     { key: "personalPhoto", label: "صورة ولي الأمر (اختياري)", folder: "guardian-photos", url: "personal_photo_url", status: "personal_photo_status", note: "personal_photo_note", required: false, accept: "image/*" },
-    { key: "guardianNewPlayerFile", label: "نموذج تسجيل لاعب جديد موقّع", folder: "guardian-new-player", url: "guardian_pledge_file_url", status: "guardian_pledge_file_status", note: "guardian_pledge_file_note", required: true },
-    ...PLAYER_FILES.filter((f) => f.key !== "idDocument" && f.key !== "personalPhoto").map((f) => {
-      if (f.key === "certificateFile") {
-        return { ...f, label: "شهادة ميلاد اللاعب" };
-      }
-      return { ...f };
-    })
+    { key: "playerIdDocument", label: "هوية / إقامة اللاعب", folder: "ids", url: "guardian_link_file_url", status: "guardian_link_file_status", note: "guardian_link_file_note", required: true },
+    { key: "playerPhoto", label: "صورة اللاعب", folder: "photos", url: "guardian_pledge_file_url", status: "guardian_pledge_file_status", note: "guardian_pledge_file_note", required: true, accept: "image/*" },
+    {
+      key: "certificateFile",
+      label: "شهادة ميلاد اللاعب",
+      folder: "birth-certificates",
+      url: "certificate_file_url",
+      status: "certificate_file_status",
+      note: "certificate_file_note",
+      required: true
+    },
+    {
+      key: "playerUnifiedFile",
+      label: "نموذج التسجيل الموحد الموقّع (ولي الأمر)",
+      folder: "player-unified",
+      url: "player_join_file_url",
+      status: "player_join_file_status",
+      note: "player_join_file_note",
+      required: true
+    },
+    { key: "medicalFile", label: "نموذج الكشف الطبي المعتمد", folder: "medical", url: "medical_file_url", status: "medical_file_status", note: "medical_file_note", required: true }
   ];
 
   const STAFF_FORMS_BASE = [
@@ -241,13 +272,51 @@
     return files;
   }
 
+  function isPlayerMinor(ctx) {
+    if (!ctx || String(ctx.request_type || "").toLowerCase() !== "player") return false;
+    if (window.SMART_FORM_FILL && typeof window.SMART_FORM_FILL.isMinorPlayer === "function") {
+      return window.SMART_FORM_FILL.isMinorPlayer(ctx);
+    }
+    const age = Number(ctx.player_age ?? ctx.age ?? ctx.child_age);
+    return Number.isFinite(age) && age > 0 && age < 18;
+  }
+
+  function playerFormDocs(ctx) {
+    const minor = isPlayerMinor(ctx);
+    return PLAYER_FORMS.map((f) => {
+      if (f[2] !== "player-unified") return f;
+      return [
+        f[0],
+        minor
+          ? "نموذج واحد — يوقّعه ولي الأمر نيابة عن اللاعب القاصر."
+          : "نموذج واحد — يوقّعه اللاعب البالغ بنفسه.",
+        f[2]
+      ];
+    });
+  }
+
+  function playerAttachments(ctx) {
+    const minor = isPlayerMinor(ctx);
+    const files = PLAYER_FILES_CORE.map((f) => {
+      if (f.key !== "playerUnifiedFile") return { ...f };
+      return {
+        ...f,
+        label: minor
+          ? "نموذج التسجيل الموحد الموقّع (ولي الأمر)"
+          : "نموذج التسجيل الموحد الموقّع (اللاعب)"
+      };
+    });
+    if (minor) files.splice(3, 0, { ...GUARDIAN_ID_FILE });
+    return files;
+  }
+
   function getFormDocs(ctx) {
     const p = completionProfile(ctx);
     if (p.blocked || p.noAttachments) return [];
     if (p.type === "guardian") {
       return p.key === "guardian_new" ? GUARDIAN_NEW_FORMS : GUARDIAN_LINK_FORMS;
     }
-    if (p.type === "player") return PLAYER_FORMS;
+    if (p.type === "player") return playerFormDocs(ctx);
     if (p.type === "staff" || p.type === "coach") return staffForms(ctx);
     if (p.type === "supporter") return SUPPORTER_FORMS;
     return [];
@@ -259,7 +328,7 @@
     if (p.type === "guardian") {
       return p.key === "guardian_new" ? GUARDIAN_NEW_FILES : GUARDIAN_LINK_FILES;
     }
-    if (p.type === "player") return PLAYER_FILES;
+    if (p.type === "player") return playerAttachments(ctx);
     if (p.type === "staff" || p.type === "coach") return staffFiles(ctx);
     if (p.type === "supporter") return supporterFiles(ctx);
     return [];

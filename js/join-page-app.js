@@ -150,10 +150,7 @@
       const formatted = formatHijriDateDigits(digits);
       el.value = formatted;
       el.classList.remove("field-rejected");
-      if ($("playerBirthHijriHint")) {
-        $("playerBirthHijriHint").textContent =
-          digits.length < 8 ? "أكمل: يوم/شهر/سنة — مثال 22/11/1411" : "";
-      }
+      if ($("playerBirthHijriHint")) $("playerBirthHijriHint").textContent = "";
       onChange?.();
     };
 
@@ -219,12 +216,8 @@
     }
 
     if (isCurrentPlayerMinor()) {
-      if (title) title.textContent = "بيانات تواصل إضافية لولي الأمر";
-      if (hint) {
-        hint.textContent =
-          "اسم ولي الأمر وجواله وهويته مسجلان في قسم بيانات اللاعب أعلاه. أكمل البريد والمدينة هنا إن رغبت.";
-        hint.style.display = "block";
-      }
+      if (title) title.textContent = "بيانات تواصل إضافية";
+      if (hint) hint.style.display = "none";
       setFieldVisible(fnField, false);
       setFieldVisible(idField, false);
       setFieldVisible(phoneFieldEl, false);
@@ -235,11 +228,8 @@
     }
 
     if (isCurrentPlayerAdult()) {
-      if (title) title.textContent = "بيانات تواصل اللاعب";
-      if (hint) {
-        hint.textContent = "اسم اللاعب وهويته مسجلان في قسم بيانات اللاعب. أكمل الجوال والبريد والمدينة هنا.";
-        hint.style.display = "block";
-      }
+      if (title) title.textContent = "بيانات التواصل";
+      if (hint) hint.style.display = "none";
       setFieldVisible(fnField, false);
       setFieldVisible(idField, false);
       setFieldVisible(phoneFieldEl, true);
@@ -250,11 +240,8 @@
       return;
     }
 
-    if (title) title.textContent = "بيانات التواصل الأساسية";
-    if (hint) {
-      hint.textContent = "أدخل تاريخ الميلاد أولاً لتحديد حقول التواصل المناسبة (قاصر أو بالغ).";
-      hint.style.display = "block";
-    }
+    if (title) title.textContent = "بيانات التواصل";
+    if (hint) hint.style.display = "none";
     setFieldVisible(fnField, false);
     setFieldVisible(idField, false);
     setFieldVisible(phoneFieldEl, false);
@@ -503,8 +490,7 @@
   }
 
   function refreshHijriTodayHint() {
-    const el = $("hijriTodayHint");
-    if (el && policy().formatHijriTodayLabel) el.textContent = "اليوم الهجري: " + policy().formatHijriTodayLabel();
+    /* العمر والفئة يُحسبان صامتاً — لا نعرض «اليوم الهجري» للزائر */
   }
 
   function getSelectedMemberInterests() {
@@ -515,13 +501,10 @@
     const age = Number($("playerAge")?.value || 0);
     const isPlayer = activeType === "player";
     const isMinor = isPlayer && policy().isMinorHijriAge && policy().isMinorHijriAge(age);
-    const isAdult = isPlayer && policy().isAdultHijriAge && policy().isAdultHijriAge(age);
     const box = $("minorGuardianBox");
     const banMinor = $("playerAgeBannerMinor");
-    const banAdult = $("playerAgeBannerAdult");
     if (box) box.style.display = isMinor ? "block" : "none";
     if (banMinor) banMinor.style.display = isMinor ? "block" : "none";
-    if (banAdult) banAdult.style.display = isAdult ? "block" : "none";
     if (!isMinor) {
       ["relationship", "guardianName", "guardianPhone", "guardianNationalId"].forEach((id) => {
         if ($(id)) $(id).value = "";
@@ -955,8 +938,14 @@
         showToast("أكمل تاريخ الميلاد لتحديد حقول التواصل.", "warn");
         return false;
       }
-      if (!formData.ageCategory || !formData.position) {
-        showToast("اختر فئة اللاعب والمركز المفضل.", "warn");
+      if (!formData.ageCategory) {
+        showToast("تعذر تحديد الفئة من تاريخ الميلاد. راجع التاريخ وأعد المحاولة.", "warn");
+        $("playerBirthHijri")?.focus();
+        return false;
+      }
+      if (!formData.position) {
+        showToast("اختر المركز المفضل.", "warn");
+        $("position")?.focus();
         return false;
       }
     }
@@ -1042,7 +1031,8 @@
     "volunteer_field", "availability", "volunteer_notes", "created_at", "status", "admin_notes",
     "reviewed_at", "updated_at", "reference_code", "notes", "guardian_relation",
     "child_age", "child_category", "child_position",
-    "linked_player_id", "linked_player_ids", "coach_job_title", "coach_specialty", "coach_experience", "supporter_type"
+    "linked_player_id", "linked_player_ids", "coach_job_title", "coach_specialty", "coach_experience", "supporter_type",
+    "guardian_name", "guardian_phone", "guardian_national_id"
   ]);
 
   function cleanText(value) {
@@ -1139,7 +1129,10 @@
         position: cleanText(data.position),
         player_notes: playerNotes,
         notes: mergeTextBlocks(notes, guardianLines.length ? guardianLines.join("\n") : null),
-        relationship: minor ? cleanText(data.relationship) : null
+        relationship: minor ? cleanText(data.relationship) : null,
+        guardian_name: minor ? cleanText(data.guardianName) : null,
+        guardian_phone: minor ? cleanText(data.guardianPhone) : null,
+        guardian_national_id: minor ? cleanText(data.guardianNationalId) : null
       });
     }
     if (activeType === "guardian") {

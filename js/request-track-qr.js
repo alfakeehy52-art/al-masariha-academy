@@ -61,7 +61,29 @@
       });
     } catch (e) {
       console.error(e);
-      wrap.innerHTML = `<p style="color:#ffd7d7">تعذر إنشاء الرمز. احفظ رقم المرجع: <strong>${ref || "-"}</strong></p>`;
+      const img = document.createElement("img");
+      img.alt = "رمز متابعة الطلب";
+      img.width = 168;
+      img.height = 168;
+      img.style.borderRadius = "12px";
+      img.style.background = "#fff";
+      img.style.padding = "8px";
+      img.src =
+        "https://api.qrserver.com/v1/create-qr-code/?size=168x168&data=" +
+        encodeURIComponent(url);
+      img.onerror = () => {
+        wrap.innerHTML = `<p style="color:#ffd7d7">تعذر إنشاء الرمز. احفظ رقم المرجع: <strong>${ref || "-"}</strong></p>`;
+      };
+      wrap.innerHTML = "";
+      wrap.appendChild(img);
+      container.querySelector("[data-qr-dl]")?.addEventListener("click", () => {
+        const a = document.createElement("a");
+        a.download = `masarha-track-${String(ref || "request").replace(/[^\w-]+/g, "")}.png`;
+        a.href = img.src;
+        a.target = "_blank";
+        a.rel = "noopener";
+        a.click();
+      });
       return;
     }
     container.querySelector("[data-qr-dl]")?.addEventListener("click", () => {

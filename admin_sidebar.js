@@ -53,29 +53,6 @@ document.addEventListener("DOMContentLoaded", () => {
       ]
     },
     {
-      id: "support",
-      title: "الدعم والتواصل",
-      badgeKey: "supportTotal",
-      items: [
-        {
-          href: "communications_dashboard.html",
-          label: "محادثات الطلبات",
-          desc: "محادثة مرتبطة بطلب انضمام",
-          icon: "inbox",
-          badgeKey: "openChats",
-          match: ["communications_dashboard.html"]
-        },
-        {
-          href: "contact_messages_dashboard.html",
-          label: "رسائل تواصل معنا",
-          desc: "استفسارات نموذج الموقع",
-          icon: "bell",
-          badgeKey: "newContactMessages",
-          match: ["contact_messages_dashboard.html"]
-        }
-      ]
-    },
-    {
       id: "requests",
       title: "الطلبات والمراجعة",
       badgeKey: "pendingRequests",
@@ -131,6 +108,29 @@ document.addEventListener("DOMContentLoaded", () => {
           navRole: "admin"
         },
         { href: "academy_settings_dashboard.html", label: "الإعدادات", desc: "إعدادات الأكاديمية", icon: "settings", match: ["academy_settings_dashboard.html"] }
+      ]
+    },
+    {
+      id: "support",
+      title: "الدعم والتواصل",
+      badgeKey: "supportTotal",
+      items: [
+        {
+          href: "communications_dashboard.html",
+          label: "محادثات الطلبات",
+          desc: "محادثة مرتبطة بطلب انضمام",
+          icon: "inbox",
+          badgeKey: "openChats",
+          match: ["communications_dashboard.html"]
+        },
+        {
+          href: "contact_messages_dashboard.html",
+          label: "رسائل تواصل معنا",
+          desc: "استفسارات نموذج الموقع",
+          icon: "bell",
+          badgeKey: "newContactMessages",
+          match: ["contact_messages_dashboard.html"]
+        }
       ]
     }
   ];
@@ -344,7 +344,8 @@ document.addEventListener("DOMContentLoaded", () => {
       #admin-sidebar{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
       .admin-pro-menu{display:flex;flex-direction:column;gap:12px;margin:0;overflow-y:auto;overflow-x:hidden;min-height:0;padding:2px 2px 16px;scrollbar-width:thin;scrollbar-color:rgba(213,177,90,.7) rgba(255,255,255,.06)}
       .menu-group{padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.06)}
-      .menu-group:last-of-type{border-bottom:none}
+      .menu-group[data-group="support"]{margin-top:4px;padding-top:12px;border-top:1px solid rgba(213,177,90,.14);border-bottom:none}
+      .menu-group[data-group="support"] .menu-group-title{color:#f0d58f}
       .menu-group-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 6px 8px}
       .menu-group-title{color:#9fb0a4;font-size:11px;font-weight:900;letter-spacing:.4px}
       .menu-group.is-active-group .menu-group-title{color:#f0d58f}

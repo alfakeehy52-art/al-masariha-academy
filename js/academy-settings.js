@@ -38,7 +38,9 @@
     join_closed_types: "[]",
     join_closed_message_ar:
       "التقديم متوقف مؤقتاً. يمكنك متابعة حالة طلبك السابق أو التواصل مع إدارة الأكاديمية.",
-    custom_staff_roles_json: "[]"
+    custom_staff_roles_json: "[]",
+    official_signatory_title_ar: "مدير أكاديمية المسارحة",
+    official_signatory_name_ar: ""
   };
 
   let _cache = null;
