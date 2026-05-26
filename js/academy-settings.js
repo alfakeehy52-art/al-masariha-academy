@@ -218,6 +218,23 @@
     });
   }
 
+  /** نصوص إعدادات الموقع العامة فقط — لا تُطبَّق على ملاحظات الطلبات أو بيانات الأعضاء */
+  function isUnsafeVisitorCopy(text) {
+    return /قاعدة\s*البيانات|supabase|postgres|pgrst|row\s*level|anon\s*key|api\s*key|service\s*role|jwt|\.sql\b|اعتماد\s*الشراكة|بعد\s*اعتماد\s*الشراكة|قاعدة\s*تسويق|من\s*قاعدة\s*البيانات/i.test(
+      String(text || "")
+    );
+  }
+
+  function cleanVisitorCopy(text, fallback) {
+    const fb = fallback != null ? String(fallback) : "";
+    let t = String(text || "").trim();
+    if (!t || isUnsafeVisitorCopy(t)) return fb;
+    if (typeof sanitizeVisitorMessage === "function") {
+      t = sanitizeVisitorMessage(t, fb || t);
+    }
+    return t || fb;
+  }
+
   function toggleSection(key, visible) {
     document.querySelectorAll(`[data-settings-section="${key}"]`).forEach((el) => {
       el.style.display = visible ? "" : "none";
@@ -234,7 +251,7 @@
 
     setText("[data-academy='brand_name']", s.brand_name_ar);
     setText("[data-academy='brand_subtitle']", s.brand_subtitle_ar);
-    setText("[data-academy='tagline']", s.tagline);
+    setText("[data-academy='tagline']", cleanVisitorCopy(s.tagline, DEFAULTS.tagline));
     setText("[data-academy='location']", s.location_text);
     setText("[data-academy='contact_email']", s.contact_email);
     setText("[data-academy='contact_phone']", s.contact_phone || "—");
@@ -245,13 +262,9 @@
     setText("[data-academy='hero_highlight']", s.hero_heading_highlight);
     setText("[data-academy='hero_h2']", s.hero_heading_2);
     const heroDescFallback = DEFAULTS.hero_description;
-    let heroDesc = String(s.hero_description || "").trim() || heroDescFallback;
-    if (/قاعدة\s*البيانات|supabase/i.test(heroDesc)) heroDesc = heroDescFallback;
-    if (typeof sanitizeVisitorMessage === "function") {
-      heroDesc = sanitizeVisitorMessage(heroDesc, heroDescFallback);
-    }
+    const heroDesc = cleanVisitorCopy(String(s.hero_description || "").trim() || heroDescFallback, heroDescFallback);
     setText("[data-academy='hero_desc']", heroDesc);
-    setText("[data-academy='about_snippet']", s.about_snippet);
+    setText("[data-academy='about_snippet']", cleanVisitorCopy(s.about_snippet, DEFAULTS.about_snippet));
 
     applyLogoToImages(s.logo_url, true);
     document.querySelectorAll("[data-academy='logo'], #adminSidebarLogo").forEach((img) => {

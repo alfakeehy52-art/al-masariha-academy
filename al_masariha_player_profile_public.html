@@ -15,14 +15,20 @@
         linear-gradient(180deg, var(--pp-bg-1), var(--pp-bg-2) 55%, #05110c 100%);
       color:var(--pp-text);
     }
-    .player-profile-page{width:min(1420px, calc(100% - 34px));margin:30px auto 0}
+    .player-profile-page{width:min(1420px, calc(100% - 34px));margin:30px auto 0;font-family:'Cairo',system-ui,sans-serif}
+    .profile-hero > .player-card-xl{
+      width:100%;
+      max-width:100%;
+      min-width:0;
+      justify-self:stretch;
+    }
     .profile-hero{display:grid;grid-template-columns:330px 1fr;gap:26px;padding:28px;border-radius:34px;overflow:hidden;background:linear-gradient(135deg, rgba(213,177,90,.10), rgba(8,20,14,.95) 35%, rgba(11,29,21,.95) 100%);border:1px solid rgba(213,177,90,.14);box-shadow:0 24px 60px rgba(0,0,0,.24)}
-    .player-card-xl{border-radius:30px;overflow:hidden;background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)), radial-gradient(circle at top, rgba(213,177,90,.08), transparent 35%), linear-gradient(180deg, #0b1b14 0%, #08130f 100%);border:1px solid rgba(213,177,90,.14);box-shadow:0 22px 46px rgba(0,0,0,.24)}
+    .player-card-xl{border-radius:30px;overflow:hidden;background:linear-gradient(180deg, rgba(255,255,255,.05), rgba(255,255,255,.02)), radial-gradient(circle at top, rgba(213,177,90,.08), transparent 35%), linear-gradient(180deg, #0b1b14 0%, #08130f 100%);border:1px solid rgba(213,177,90,.14);box-shadow:0 22px 46px rgba(0,0,0,.24);display:flex;flex-direction:column;align-items:stretch;width:100%;min-width:0;box-sizing:border-box}
     .card-xl-top{padding:22px 22px 0;display:grid;grid-template-columns:72px 1fr 72px;align-items:start;gap:10px}
     .card-xl-rating{display:flex;flex-direction:column;align-items:center;justify-content:center;width:72px;height:94px;border-radius:20px;background:linear-gradient(180deg, #ead08b, #caa245);color:#15120b;font-weight:950}
     .card-xl-rating strong{font-size:30px;line-height:1}
-    .card-xl-rating span{font-size:13px;margin-top:4px;font-weight:900}
-    .card-xl-position{text-align:center;padding-top:12px;color:var(--pp-gold-soft);font-weight:900;font-size:20px}
+    .card-xl-rating span{font-size:12px;margin-top:4px;font-weight:900;line-height:1.2;text-align:center}
+    .card-xl-position{text-align:center;padding-top:10px;color:var(--pp-gold-soft);font-weight:900;font-size:clamp(15px,2.2vw,18px);line-height:1.35;max-width:92px;justify-self:center}
     .card-xl-number{display:flex;align-items:center;justify-content:center;width:72px;height:72px;border-radius:20px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08);font-weight:950;font-size:30px}
     .card-xl-avatar-wrap{display:flex;justify-content:center;margin-top:14px}
     .card-xl-avatar{
@@ -49,11 +55,42 @@
     .card-xl-info p{margin:8px 0 0;color:var(--pp-muted);font-weight:700;font-size:15px}
     .card-xl-meta{margin-top:18px;display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
     .card-meta-chip{padding:8px 12px;border-radius:999px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);font-weight:800;font-size:13px}
-    .card-xl-footer{padding:18px}
-    .back-btn{display:flex;align-items:center;justify-content:center;width:100%;padding:15px 18px;border-radius:18px;text-decoration:none;font-weight:900;font-size:16px;background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.10);color:#fff}
+    .card-xl-footer{
+      position:relative;
+      z-index:2;
+      margin-top:auto;
+      padding:18px 0 26px;
+      width:100%;
+      box-sizing:border-box;
+    }
+    .back-btn-wrap{
+      width:100%;
+      box-sizing:border-box;
+      padding-inline:22px;
+      display:block;
+    }
+    .back-btn{
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      width:100%;
+      margin:0;
+      padding:15px 22px;
+      border-radius:18px;
+      text-decoration:none;
+      font-weight:900;
+      font-size:16px;
+      text-align:center;
+      background:rgba(255,255,255,.05);
+      border:1px solid rgba(255,255,255,.10);
+      color:#fff;
+      box-sizing:border-box;
+      transition:background .2s ease,border-color .2s ease;
+    }
+    .back-btn:hover{background:rgba(255,255,255,.08);border-color:rgba(213,177,90,.22)}
     .profile-main{display:flex;flex-direction:column;gap:20px}
-    .headline-row h2{margin:0;font-size:clamp(34px, 3.6vw, 54px);line-height:1.08;font-weight:950}
-    .headline-row p{margin:10px 0 0;color:var(--pp-muted);line-height:1.9;max-width:760px;font-size:16px}
+    .headline-row h2{margin:0;font-size:clamp(34px, 3.6vw, 54px);line-height:1.08;font-weight:950;letter-spacing:-0.02em}
+    .headline-row p{margin:12px 0 0;color:#c8d2ca;line-height:1.85;max-width:72ch;font-size:17px;font-weight:700}
     .summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px}
     .summary-box{padding:18px;border-radius:24px;background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid var(--pp-line)}
     .summary-box strong{display:block;font-size:14px;color:var(--pp-muted);margin-bottom:8px;font-weight:800}
@@ -84,8 +121,8 @@
     <section class="profile-hero">
       <aside class="player-card-xl">
         <div class="card-xl-top">
-          <div class="card-xl-rating"><strong id="ovr">—</strong><span>OVR</span></div>
-          <div class="card-xl-position" id="positionCode">—</div>
+          <div class="card-xl-rating"><strong id="ovr">—</strong><span>التقييم</span></div>
+          <div class="card-xl-position" id="positionLabel">—</div>
           <div class="card-xl-number" id="shirtNumber">—</div>
         </div>
 
@@ -102,7 +139,9 @@
         </div>
 
         <div class="card-xl-footer">
-          <a class="back-btn" href="al_masariha_players_page.html">العودة إلى صفحة اللاعبين</a>
+          <div class="back-btn-wrap">
+            <a class="back-btn" href="al_masariha_players_page.html">العودة إلى صفحة اللاعبين</a>
+          </div>
         </div>
       </aside>
 
@@ -193,13 +232,9 @@ function calcAge(date, existingAge){
   return age > 0 ? age : 16;
 }
 
-function publicPositionCode(player){
+function publicPositionLabel(player){
   const p = String(player.position || '').trim();
-  const map = {
-    'مهاجم':'ST','جناح':'RW','وسط':'CM','وسط هجومي':'CAM','محور':'CDM',
-    'مدافع':'CB','حارس مرمى':'GK','ظهير أيمن':'RB','ظهير أيسر':'LB'
-  };
-  return map[p] || p || 'CM';
+  return p || 'لاعب';
 }
 
 function buildStats(player){
@@ -265,7 +300,7 @@ function renderPlayer(player){
   const position = player.position || 'لاعب';
 
   setText('ovr', overall(stats));
-  setText('positionCode', publicPositionCode(player));
+  setText('positionLabel', publicPositionLabel(player));
   setText('shirtNumber', number);
   setText('playerName', fullName);
   setText('playerSubtitle', `${position} — لاعب الأكاديمية`);

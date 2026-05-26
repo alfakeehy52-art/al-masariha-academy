@@ -3,20 +3,30 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>مركز التواصل | أكاديمية المسارحة</title>
+  <title>محادثات الطلبات | أكاديمية المسارحة</title>
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin_theme.css">
   <style>
-    :root{--bg:#09111f;--line:rgba(255,255,255,.08);--text:#ecf2ff;--muted:#9fb0d1;--gold:#d4af37;--gold2:#f5d46b;--radius:20px}
-    *{box-sizing:border-box}html,body{margin:0;font-family:'Cairo',sans-serif;background:linear-gradient(180deg,var(--bg),#0d1628);color:var(--text);min-height:100vh}
+    :root{--line:rgba(255,255,255,.08);--muted:#9fb0d1;--gold:#d4af37;--gold2:#f5d46b}
     .layout{display:grid;grid-template-columns:290px 1fr;min-height:100vh}
     .sidebar{padding:26px 18px;border-left:1px solid var(--line);background:rgba(212,175,55,.08)}
-    .brand h1{margin:0;font-size:22px;color:var(--gold2)}.brand p{margin:8px 0 0;color:var(--muted);font-size:14px;line-height:1.8}
-    .main{padding:26px}.main h2{margin:0 0 8px;font-size:30px}.main>p{color:var(--muted);line-height:1.8}
-    .card{margin-top:22px;border:1px solid var(--line);border-radius:var(--radius);overflow:hidden;background:rgba(255,255,255,.03)}
-    table{width:100%;border-collapse:collapse}th,td{padding:14px;text-align:right;border-bottom:1px solid var(--line);font-size:14px}
-    th{color:var(--muted);font-weight:800}.btn{display:inline-flex;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:#fff;font-weight:900;cursor:pointer;font-family:inherit;text-decoration:none}
-    .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#1a1a1a;border:none}
-    .tag{padding:6px 10px;border-radius:999px;font-size:12px;font-weight:900;background:rgba(55,125,255,.12);color:#bdd0ff}
+    .main{padding:26px}
+    .info-box{margin:0 0 20px;padding:16px 18px;border-radius:18px;border:1px solid rgba(213,177,90,.22);background:rgba(213,177,90,.08);line-height:1.9;font-size:14px;color:#dce5f4}
+    .info-box strong{color:var(--gold2)}
+    .info-box ul{margin:10px 20px 0;padding:0}
+    .card{margin-top:12px;border:1px solid var(--line);border-radius:20px;overflow:hidden;background:rgba(255,255,255,.03)}
+    table{width:100%;border-collapse:collapse}
+    th,td{padding:14px 16px;text-align:right;border-bottom:1px solid var(--line);font-size:14px}
+    th{color:var(--muted);font-weight:800;background:rgba(0,0,0,.12)}
+    .room-row{cursor:pointer;transition:background .15s ease}
+    .room-row:hover,.room-row:focus-visible{background:rgba(213,177,90,.1);outline:none}
+    .room-row td:last-child{color:var(--gold2);font-weight:800;font-size:13px;white-space:nowrap}
+    .tag{display:inline-flex;padding:6px 10px;border-radius:999px;font-size:12px;font-weight:900}
+    .tag-type{background:rgba(55,125,255,.14);color:#bdd0ff}
+    .tag-open{background:rgba(21,145,95,.16);color:#caffdd}
+    .tag-closed{background:rgba(255,255,255,.08);color:#dce5f4}
+    .tag-archived{background:rgba(255,255,255,.05);color:#9fb0d1}
+    .btn{display:inline-flex;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:#fff;font-weight:900;cursor:pointer;font-family:inherit;text-decoration:none}
     @media(max-width:1000px){.layout{grid-template-columns:1fr}.sidebar{border-left:none;border-bottom:1px solid var(--line)}}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -25,64 +35,154 @@
   <script src="js/admin-auth.js"></script>
   <script>requireAdmin();</script>
 </head>
-<body>
+<body class="store-admin">
   <div class="layout">
     <aside class="sidebar">
-      <div class="brand"><h1>أكاديمية المسارحة</h1><p>مركز التواصل التشغيلي</p></div>
+      <div class="brand"><h1>محادثات الطلبات</h1><p>متابعة محادثات مرتبطة بطلبات الانضمام</p></div>
       <div id="admin-sidebar"></div>
     </aside>
     <main class="main">
-      <h2>محادثات الطلبات</h2>
-      <p>غرف المحادثة مع مقدّمي الطلبات (ليست رسائل البريد من نموذج «تواصل معنا»). من جدول الطلبات استخدم زر <strong>تواصل</strong>، أو اضغط «فتح المحادثة» هنا.</p>
+      <div class="page-intro">
+        <h1>محادثات الطلبات</h1>
+        <p>غرف محادثة مفتوحة مع مقدّمي طلبات الانضمام (لاعب، ولي أمر، عضوية، إلخ).</p>
+      </div>
+
+      <div class="info-box" role="note">
+        <strong>كيف يعمل الدعم؟ (قناتان منفصلتان)</strong>
+        <ul>
+          <li><strong>محادثات الطلبات (هذه الصفحة):</strong> الزائر يضغط «تواصل مع الدعم» أثناء أو بعد تقديم طلب — تُفتح محادثة <em>مرتبطة برقم الطلب</em>. من جدول الطلبات يوجد زر «تواصل» لنفس الغرفة.</li>
+          <li><strong>رسائل تواصل معنا:</strong> رسالة من صفحة «تواصل معنا» العامة — ليست محادثة فورية؛ تظهر في صندوق الرسائل من القائمة الرئيسية «الدعم والتواصل».</li>
+        </ul>
+        <p style="margin:12px 0 0">اضغط على <strong>أي سطر</strong> في الجدول لفتح المحادثة مباشرة.</p>
+      </div>
+
       <div class="card">
         <table>
           <thead>
-            <tr><th>الغرفة</th><th>النوع</th><th>الحالة</th><th>آخر رسالة</th><th></th></tr>
+            <tr>
+              <th>الغرفة / الطلب</th>
+              <th>النوع</th>
+              <th>الحالة</th>
+              <th>آخر رسالة</th>
+              <th>فتح</th>
+            </tr>
           </thead>
           <tbody id="roomsBody">
             <tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">جاري التحميل...</td></tr>
           </tbody>
         </table>
       </div>
-      <p style="margin-top:16px"><a class="btn" href="admin_requests.html">← إدارة الطلبات</a></p>
+      <p style="margin-top:16px;display:flex;gap:10px;flex-wrap:wrap">
+        <a class="btn" href="admin_requests.html">← إدارة الطلبات</a>
+        <a class="btn" href="contact_messages_dashboard.html">صندوق تواصل معنا</a>
+      </p>
     </main>
   </div>
   <script src="admin_sidebar.js"></script>
   <script src="js/chat-drawer.js"></script>
   <script>
     const sb = createSupabaseClient();
-    const body = document.getElementById('roomsBody');
+    const body = document.getElementById("roomsBody");
 
-    function esc(v){return String(v??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
-    function fmt(v){if(!v)return '—';const d=new Date(v);return Number.isNaN(d.getTime())?'—':d.toLocaleString('ar-SA')}
+    const ROOM_TYPE_AR = {
+      join_request: "طلب انضمام",
+      guardian: "ولي أمر",
+      staff: "كادر",
+      temporary_invite: "دعوة مؤقتة",
+      admin_support: "دعم إداري"
+    };
 
-    async function loadRooms(){
-      const { data, error } = await sb.from('chat_rooms').select('id,title_ar,room_type,status,last_message_at,related_entity_table,related_entity_id').order('last_message_at',{ascending:false,nullsFirst:false}).limit(80);
-      if(error){
-        body.innerHTML = `<tr><td colspan="5" style="color:#ffd0d0;padding:20px">${esc(error.message)}</td></tr>`;
+    const STATUS_AR = { open: "مفتوحة", closed: "مغلقة", archived: "مؤرشفة" };
+
+    function esc(v) {
+      return String(v ?? "")
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+
+    function fmt(v) {
+      if (!v) return "—";
+      const d = new Date(v);
+      return Number.isNaN(d.getTime()) ? "—" : d.toLocaleString("ar-SA");
+    }
+
+    function roomTypeLabel(t) {
+      return ROOM_TYPE_AR[String(t || "")] || "طلب انضمام";
+    }
+
+    function statusLabel(s) {
+      const key = String(s || "open");
+      return STATUS_AR[key] || "مفتوحة";
+    }
+
+    function statusClass(s) {
+      const key = String(s || "open");
+      if (key === "closed") return "tag-closed";
+      if (key === "archived") return "tag-archived";
+      return "tag-open";
+    }
+
+    function openRoomRow(tr) {
+      const table = tr.dataset.table;
+      const entity = tr.dataset.entity;
+      const title = tr.dataset.title || "طلب";
+      if (table !== "join_requests" || !entity) {
+        alert("هذه الغرفة غير مرتبطة بطلب انضمام. افتحها من سياق الطلب المناسب.");
         return;
       }
-      if(!data||!data.length){
-        body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">لا توجد غرف بعد. أنشئها من زر «تواصل» في إدارة الطلبات.</td></tr>';
+      if (!window.ChatDrawer) {
+        alert("وحدة المحادثة غير متوفرة. حدّث الصفحة.");
         return;
       }
-      body.innerHTML = data.map(r=>`<tr>
-        <td><strong>${esc(r.title_ar)}</strong></td>
-        <td><span class="tag">${esc(r.room_type)}</span></td>
-        <td>${esc(r.status)}</td>
-        <td>${esc(fmt(r.last_message_at))}</td>
-        <td><button type="button" class="btn btn-gold open-room" data-table="${esc(r.related_entity_table||'')}" data-entity="${esc(r.related_entity_id||'')}">فتح المحادثة</button></td>
-      </tr>`).join('');
-      body.querySelectorAll('.open-room').forEach(btn=>{
-        btn.addEventListener('click',()=>{
-          if(btn.dataset.table!=='join_requests'||!btn.dataset.entity){
-            alert('فتح من إدارة الطلبات لهذا النوع حالياً.');
-            return;
+      ChatDrawer.openForJoinRequest({ joinRequestId: entity, fullName: title });
+    }
+
+    function bindRoomRows() {
+      body.querySelectorAll(".room-row").forEach((tr) => {
+        tr.addEventListener("click", () => openRoomRow(tr));
+        tr.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            openRoomRow(tr);
           }
-          ChatDrawer.openForJoinRequest({ joinRequestId: btn.dataset.entity, fullName: btn.closest('tr')?.querySelector('strong')?.textContent||'طلب' });
         });
       });
     }
+
+    async function loadRooms() {
+      const { data, error } = await sb
+        .from("chat_rooms")
+        .select("id,title_ar,room_type,status,last_message_at,related_entity_table,related_entity_id")
+        .order("last_message_at", { ascending: false, nullsFirst: false })
+        .limit(80);
+
+      if (error) {
+        body.innerHTML =
+          '<tr><td colspan="5" style="color:#ffd0d0;padding:20px">تعذر تحميل المحادثات. حدّث الصفحة أو تحقق من الاتصال.</td></tr>';
+        return;
+      }
+      if (!data || !data.length) {
+        body.innerHTML =
+          '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">لا توجد محادثات بعد. عندما يضغط الزائر «تواصل مع الدعم» من صفحة الانضمام أو زر «تواصل» في الطلبات، ستظهر هنا.</td></tr>';
+        return;
+      }
+
+      body.innerHTML = data
+        .map(
+          (r) => `<tr class="room-row" tabindex="0" role="button" aria-label="فتح محادثة ${esc(r.title_ar)}"
+        data-table="${esc(r.related_entity_table || "")}" data-entity="${esc(r.related_entity_id || "")}" data-title="${esc(r.title_ar)}">
+        <td><strong>${esc(r.title_ar)}</strong></td>
+        <td><span class="tag tag-type">${esc(roomTypeLabel(r.room_type))}</span></td>
+        <td><span class="tag ${statusClass(r.status)}">${esc(statusLabel(r.status))}</span></td>
+        <td>${esc(fmt(r.last_message_at))}</td>
+        <td>اضغط لفتح ←</td>
+      </tr>`
+        )
+        .join("");
+      bindRoomRows();
+    }
+
     loadRooms();
   </script>
 </body>

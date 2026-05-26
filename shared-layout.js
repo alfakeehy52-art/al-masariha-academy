@@ -140,9 +140,11 @@ document.addEventListener("DOMContentLoaded", () => {
     <div>
       <div class="site-footer-title">متابعة الطلبات</div>
       <div class="site-footer-links">
-        <a href="request_status.html">طلب انضمام (REQ-…)</a>
-        <a href="store_order_status.html">طلب متجر (ORD-…)</a>
-        <a href="request_completion.html">استكمال مرفقات</a>
+        <a href="request_status.html">متابعة طلب الانضمام</a>
+        <a href="store_order_status.html">متابعة طلب المتجر</a>
+        <a href="request_completion.html">استكمال المرفقات</a>
+        <a href="al_masariha_terms.html">الشروط والأحكام</a>
+        <a href="al_masariha_privacy.html">سياسة الخصوصية</a>
       </div>
     </div>
 
@@ -153,15 +155,15 @@ document.addEventListener("DOMContentLoaded", () => {
     </div>
 
     <div class="site-footer-social-block">
-      <div class="site-footer-title">تابعنا</div>
+      <div class="site-footer-title">تابعنا <span class="site-social-badge">قريباً</span></div>
       <div class="site-social-icons" role="group" aria-label="شبكات التواصل — قريباً">
-        <button type="button" class="site-social-btn" data-social="whatsapp" aria-label="واتساب — قريباً" title="واتساب — قريباً"><span class="site-social-ico">💬</span><span class="site-social-soon">قريباً</span></button>
-        <button type="button" class="site-social-btn" data-social="instagram" aria-label="إنستغرام — قريباً" title="إنستغرام — قريباً"><span class="site-social-ico">📷</span><span class="site-social-soon">قريباً</span></button>
-        <button type="button" class="site-social-btn" data-social="twitter" aria-label="X — قريباً" title="X — قريباً"><span class="site-social-ico">𝕏</span><span class="site-social-soon">قريباً</span></button>
-        <button type="button" class="site-social-btn" data-social="tiktok" aria-label="تيك توك — قريباً" title="تيك توك — قريباً"><span class="site-social-ico">🎵</span><span class="site-social-soon">قريباً</span></button>
-        <button type="button" class="site-social-btn" data-social="snapchat" aria-label="سناب شات — قريباً" title="سناب شات — قريباً"><span class="site-social-ico">👻</span><span class="site-social-soon">قريباً</span></button>
+        <button type="button" class="site-social-btn" data-social="whatsapp" aria-label="واتساب — قريباً" title="واتساب — قريباً"><span class="site-social-ico" aria-hidden="true">💬</span></button>
+        <button type="button" class="site-social-btn" data-social="instagram" aria-label="إنستغرام — قريباً" title="إنستغرام — قريباً"><span class="site-social-ico" aria-hidden="true">📷</span></button>
+        <button type="button" class="site-social-btn" data-social="twitter" aria-label="X — قريباً" title="X — قريباً"><span class="site-social-ico" aria-hidden="true">𝕏</span></button>
+        <button type="button" class="site-social-btn" data-social="tiktok" aria-label="تيك توك — قريباً" title="تيك توك — قريباً"><span class="site-social-ico" aria-hidden="true">🎵</span></button>
+        <button type="button" class="site-social-btn" data-social="snapchat" aria-label="سناب شات — قريباً" title="سناب شات — قريباً"><span class="site-social-ico" aria-hidden="true">👻</span></button>
       </div>
-      <p class="site-social-hint">حسابات التواصل الرسمية قيد التفعيل — ستُربط هنا بعد اعتماد الشراكة.</p>
+      <p class="site-social-hint">حسابات التواصل الرسمية ستُضاف هنا قريباً.</p>
     </div>
 
   </div>
@@ -292,7 +294,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.querySelectorAll(".site-social-btn").forEach((btn) => {
       btn.addEventListener("click", (e) => {
         e.preventDefault();
-        toastEl.textContent = "قريباً — حسابات التواصل الرسمية ستظهر هنا بعد اعتماد الشراكة.";
+        toastEl.textContent = "قريباً — روابط التواصل الرسمية ستُضاف هنا.";
         toastEl.classList.add("show");
         clearTimeout(initSocialComingSoon._t);
         initSocialComingSoon._t = setTimeout(() => toastEl.classList.remove("show"), 3200);

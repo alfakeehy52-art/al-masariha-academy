@@ -80,7 +80,7 @@
       .map(normalizeInterestId)
       .filter(Boolean);
     const lines = [];
-    if (ids.length) lines.push(`الاهتمامات: ${ids.join("، ")}`);
+    if (ids.length) lines.push(`الاهتمامات: ${ids.map(interestLabel).filter(Boolean).join("، ")}`);
     if (Array.isArray(extraLines)) lines.push(...extraLines.filter(Boolean));
     return lines.join("\n");
   }

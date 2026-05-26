@@ -53,6 +53,29 @@ document.addEventListener("DOMContentLoaded", () => {
       ]
     },
     {
+      id: "support",
+      title: "الدعم والتواصل",
+      badgeKey: "supportTotal",
+      items: [
+        {
+          href: "communications_dashboard.html",
+          label: "محادثات الطلبات",
+          desc: "محادثة مرتبطة بطلب انضمام",
+          icon: "inbox",
+          badgeKey: "openChats",
+          match: ["communications_dashboard.html"]
+        },
+        {
+          href: "contact_messages_dashboard.html",
+          label: "رسائل تواصل معنا",
+          desc: "استفسارات نموذج الموقع",
+          icon: "bell",
+          badgeKey: "newContactMessages",
+          match: ["contact_messages_dashboard.html"]
+        }
+      ]
+    },
+    {
       id: "requests",
       title: "الطلبات والمراجعة",
       badgeKey: "pendingRequests",
@@ -70,9 +93,7 @@ document.addEventListener("DOMContentLoaded", () => {
             { href: "supporters_requests.html", label: "طلبات الداعمين", icon: "heart", match: ["supporters_requests.html"] },
             { href: "staff_requests.html", label: "طلبات الكوادر", icon: "coach", match: ["staff_requests.html"] },
             { href: "academy_members_requests.html", label: "طلبات عضوية الأكاديمية", icon: "star", match: ["academy_members_requests.html"] },
-            { href: "admin_completion_dashboard.html", label: "استكمال الطلبات", icon: "clip", match: ["admin_completion_dashboard.html"] },
-            { href: "communications_dashboard.html", label: "محادثات الطلبات", icon: "inbox", match: ["communications_dashboard.html"] },
-            { href: "contact_messages_dashboard.html", label: "رسائل نموذج التواصل", icon: "bell", match: ["contact_messages_dashboard.html"] }
+            { href: "admin_completion_dashboard.html", label: "استكمال الطلبات", icon: "clip", match: ["admin_completion_dashboard.html"] }
           ]
         }
       ]
@@ -140,6 +161,9 @@ document.addEventListener("DOMContentLoaded", () => {
     const active = isChild ? isChildActive(item) : isItemActive(item) && !(item.children && item.children.length && !isChild);
     const desc = item.desc ? `<span class="nav-desc">${item.desc}</span>` : "";
     const navRoleAttr = item.navRole ? ` data-nav-role="${item.navRole}"` : "";
+    const badge = item.badgeKey
+      ? `<span class="nav-item-badge" data-badge="${item.badgeKey}" hidden aria-label="تنبيهات">0</span>`
+      : "";
     return `
       <a href="${item.href}" class="nav-link${isChild ? " nav-sublink" : ""}${active ? " active" : ""}"${navRoleAttr}>
         ${iconHtml(item.icon)}
@@ -147,6 +171,7 @@ document.addEventListener("DOMContentLoaded", () => {
           <span class="nav-label">${item.label}</span>
           ${desc}
         </span>
+        ${badge}
         <span class="nav-arrow">${ICONS.chevron}</span>
       </a>
     `;
@@ -325,8 +350,10 @@ document.addEventListener("DOMContentLoaded", () => {
       .menu-group.is-active-group .menu-group-title{color:#f0d58f}
       .menu-group-badge{min-width:22px;height:22px;padding:0 7px;border-radius:999px;background:rgba(199,59,59,.22);border:1px solid rgba(199,59,59,.35);color:#ffd7d7;font-size:11px;font-weight:900;display:inline-flex;align-items:center;justify-content:center}
       .menu-group-badge[hidden]{display:none!important}
+      .nav-item-badge{min-width:22px;height:22px;padding:0 7px;border-radius:999px;background:rgba(199,59,59,.24);border:1px solid rgba(199,59,59,.38);color:#fff;font-size:11px;font-weight:900;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0}
+      .nav-item-badge[hidden]{display:none!important}
       .menu-group-links{display:grid;gap:6px}
-      .nav-link{display:grid;grid-template-columns:40px 1fr 18px;align-items:center;gap:10px;min-height:54px;padding:8px 10px;text-decoration:none!important;color:#ecf2ff!important;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:16px;font-weight:800;transition:.18s ease;box-shadow:0 6px 18px rgba(0,0,0,.08)}
+      .nav-link{display:grid;grid-template-columns:40px 1fr auto 18px;align-items:center;gap:10px;min-height:54px;padding:8px 10px;text-decoration:none!important;color:#ecf2ff!important;background:rgba(255,255,255,.03);border:1px solid rgba(255,255,255,.07);border-radius:16px;font-weight:800;transition:.18s ease;box-shadow:0 6px 18px rgba(0,0,0,.08)}
       .nav-sublink{grid-template-columns:32px 1fr 14px;min-height:46px;margin-inline-start:10px;background:rgba(255,255,255,.02);border-radius:14px}
       .nav-sublink .nav-icon{width:32px;height:32px;border-radius:12px}
       .nav-sublink .nav-label{font-size:13px}
@@ -473,20 +500,42 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function setBadgeCount(key, count) {
+    const n = Number(count) || 0;
+    document.querySelectorAll(`[data-badge="${key}"]`).forEach((el) => {
+      el.textContent = String(n);
+      el.hidden = n <= 0;
+    });
+  }
+
   async function loadSidebarBadges() {
     if (typeof createSupabaseClient !== "function") return;
     try {
       const sb = createSupabaseClient();
-      const { count, error } = await sb
-        .from("join_requests")
-        .select("id", { count: "exact", head: true })
-        .in("status", ["new", "review", "reviewing", "pending", "needs_completion"]);
-      if (error) return;
-      const badge = document.querySelector('[data-badge="pendingRequests"]');
-      if (!badge) return;
-      const n = count || 0;
-      badge.textContent = String(n);
-      badge.hidden = n <= 0;
+      const [pendingRes, contactRes, chatRes] = await Promise.all([
+        sb
+          .from("join_requests")
+          .select("id", { count: "exact", head: true })
+          .in("status", ["new", "review", "reviewing", "pending", "needs_completion"]),
+        sb
+          .from("contact_messages")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "new"),
+        sb
+          .from("chat_rooms")
+          .select("id", { count: "exact", head: true })
+          .eq("status", "open")
+          .eq("room_type", "join_request")
+      ]);
+
+      const pending = pendingRes.error ? 0 : pendingRes.count || 0;
+      const contactNew = contactRes.error ? 0 : contactRes.count || 0;
+      const openChats = chatRes.error ? 0 : chatRes.count || 0;
+
+      setBadgeCount("pendingRequests", pending);
+      setBadgeCount("newContactMessages", contactNew);
+      setBadgeCount("openChats", openChats);
+      setBadgeCount("supportTotal", contactNew + openChats);
     } catch (e) {}
   }
 

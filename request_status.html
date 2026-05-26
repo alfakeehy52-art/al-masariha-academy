@@ -75,6 +75,7 @@
   <script src="js/supabase-public-lookup.js"></script>
   <script src="js/chat-drawer.js"></script>
   <script src="js/visitor-message.js"></script>
+  <script src="js/request-track-qr.js"></script>
   <script>
     const sb = createSupabaseClient();
     const $=id=>document.getElementById(id);
@@ -87,8 +88,14 @@
     function dateFmt(v){if(!v)return '-';const d=new Date(v);return Number.isNaN(d.getTime())?String(v):d.toLocaleDateString('ar-SA',{year:'numeric',month:'2-digit',day:'2-digit'})}
     function isApprovedStatus(s){return ['approved','accepted','معتمد','مقبول'].includes(String(s||'').trim().toLowerCase()) || statusLabel(s)==='مقبول'}
     function isRejectedStatus(s){return ['rejected','مرفوض'].includes(String(s||'').trim().toLowerCase())}
+    function requestNeedsAttachments(row){
+      const cat=window.JOIN_ATTACHMENT_CATALOG;
+      if(cat&&typeof cat.requiresAttachments==='function') return cat.requiresAttachments(row);
+      return ['player','guardian','staff','coach','supporter'].includes(String(row?.request_type||'').toLowerCase());
+    }
     function shouldComplete(s){return !isApprovedStatus(s) && !isRejectedStatus(s) && (['pending','needs_completion'].includes(String(s||'')) || statusLabel(s)==='بانتظار استكمال')}
-    function canPrepareAttachments(s){return !isApprovedStatus(s) && !isRejectedStatus(s) && ['new','review','reviewing'].includes(String(s||''))}
+    function canPrepareAttachments(row){return requestNeedsAttachments(row) && !isApprovedStatus(row.status) && !isRejectedStatus(row.status) && ['new','review','reviewing'].includes(String(row.status||''))}
+    function canRequestCompletion(row){return requestNeedsAttachments(row) && shouldComplete(row.status)}
     function completionUrl(row){return `request_completion.html?request_id=${encodeURIComponent(row.id)}&ref=${encodeURIComponent(row.reference_code||'')}&phone=${encodeURIComponent(row.phone||'')}`}
     function renderRequest(row){
       $('resultBox').classList.add('show');
@@ -106,12 +113,24 @@
         actions.push(`<button class="btn" type="button" id="openChatWithAdminBtn">تواصل مع الإدارة</button>`);
       }
       if(!isApprovedStatus(row.status)){
-        if(shouldComplete(row.status)) actions.push(`<a class="btn gold" href="${completionUrl(row)}">استكمال البيانات والمرفقات</a>`);
-        else if(canPrepareAttachments(row.status)) actions.push(`<a class="btn" href="${completionUrl(row)}">تحضير المرفقات مسبقًا</a>`);
+        if(canRequestCompletion(row)) actions.push(`<a class="btn gold" href="${completionUrl(row)}">استكمال البيانات والمرفقات</a>`);
+        else if(canPrepareAttachments(row)) actions.push(`<a class="btn" href="${completionUrl(row)}">تحضير المرفقات مسبقًا</a>`);
         actions.push(`<a class="btn" href="index.html">الرئيسية</a>`);
         actions.push(`<a class="btn" href="al_masariha_join_page.html">تقديم طلب جديد</a>`);
+      } else {
+        actions.push(`<a class="btn" href="index.html">الرئيسية</a>`);
       }
       $('resultActions').innerHTML=actions.join('');
+      let qrHost=document.getElementById('requestTrackQrBox');
+      if(!qrHost){
+        qrHost=document.createElement('div');
+        qrHost.id='requestTrackQrBox';
+        qrHost.className='request-qr-box';
+        $('resultBox').appendChild(qrHost);
+      }
+      if(typeof window.renderRequestTrackQr==='function'){
+        window.renderRequestTrackQr(qrHost,row.reference_code,row.phone,{title:'رمز متابعة الطلب',hint:'امسح الرمز لفتح هذه الصفحة لاحقاً برقم المرجع والجوال.'});
+      }
       const chatBtn=document.getElementById('openChatWithAdminBtn');
       if(chatBtn&&window.ChatDrawer){
         chatBtn.addEventListener('click',()=>{
@@ -148,9 +167,20 @@
       const box=document.getElementById('completionReviewBox');
       if(!box) return;
       if(isApprovedStatus(row.status)){
+        if(row.request_type==='academy_member'){
+          box.innerHTML=`<h3>تم قبول عضويتك</h3><div class="review-list"><div class="review-item good"><b>مرحباً بك في متابعي الأكاديمية.</b><span>عضوية المتابعة لا تتضمن حساب دخول أو لوحة تحكم حالياً. سنواصل معك عبر البريد أو الجوال، ويمكنك متابعة الطلب من هذه الصفحة في أي وقت.</span></div></div><div class="result-actions"><a class="btn" href="index.html">العودة للرئيسية</a></div>`;
+          return;
+        }
         const record=await findOfficialRecord(row);
         const link='';
         box.innerHTML=`<h3>تم اعتماد الطلب رسميًا</h3><div class="review-list"><div class="review-item good"><b>تهانينا، تم اعتماد طلبك رسميًا.</b><span>تم إغلاق مرحلة الاستكمال، ولا يمكن إعادة رفع المرفقات بعد الاعتماد النهائي.</span></div></div><div class="result-actions">${link}<a class="btn" href="index.html">العودة للرئيسية</a></div>`;
+        return;
+      }
+      if(!requestNeedsAttachments(row)){
+        const cat=window.JOIN_ATTACHMENT_CATALOG;
+        const prof=cat&&cat.completionProfile?cat.completionProfile(row):{};
+        const profMsg=typeof sanitizeVisitorMessage==='function'?sanitizeVisitorMessage(prof.message,'لا مرفقات مطلوبة لهذا النوع من الطلب.'):(prof.message||'لا مرفقات مطلوبة لهذا النوع من الطلب.');
+        box.innerHTML=`<h3>حالة الطلب</h3><div class="review-list"><div class="review-item good">${esc(profMsg)}</div></div>`;
         return;
       }
       let data=null; let error=null;

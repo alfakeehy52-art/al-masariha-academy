@@ -19,7 +19,7 @@
     financial: { id: "financial", label: "مالي" },
     logistics: { id: "logistics", label: "لوجستي" },
     media_sponsorship: { id: "media_sponsorship", label: "رعاية إعلامية" },
-    partnership: { id: "partnership", label: "شراكة" }
+    partnership: { id: "partnership", label: "رعاية مؤسسية" }
   };
 
   const TYPE_ALIASES = {
@@ -46,7 +46,10 @@
     مالي: "financial",
     لوجستي: "logistics",
     "رعاية إعلامية": "media_sponsorship",
+    رعاية: "partnership",
+    "رعاية مؤسسية": "partnership",
     شراكة: "partnership",
+    "شراكة مؤسسية": "partnership",
     financial: "financial",
     logistics: "logistics",
     media_sponsorship: "media_sponsorship",

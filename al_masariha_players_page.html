@@ -174,6 +174,12 @@
       border:1px solid rgba(213,177,90,.12);
       box-shadow:0 22px 46px rgba(0,0,0,.22);
       min-height:520px;
+      display:flex;
+      flex-direction:column;
+      align-items:stretch;
+      width:100%;
+      min-width:0;
+      box-sizing:border-box;
       transition:transform .22s ease, box-shadow .22s ease, border-color .22s ease;
     }
 
@@ -223,9 +229,11 @@
     }
 
     .player-rating span{
-      font-size:13px;
+      font-size:11px;
       margin-top:4px;
       font-weight:900;
+      line-height:1.2;
+      text-align:center;
     }
 
     .player-position{
@@ -233,8 +241,11 @@
       padding-top:10px;
       color:var(--fifa-gold-2);
       font-weight:900;
-      font-size:18px;
-      letter-spacing:.5px;
+      font-size:clamp(14px,2vw,17px);
+      line-height:1.35;
+      letter-spacing:0;
+      padding-inline:4px;
+      justify-self:center;
     }
 
     .player-number{
@@ -348,8 +359,17 @@
 
     .player-footer{
       position:relative;
-      z-index:1;
-      padding:18px;
+      z-index:2;
+      margin-top:auto;
+      padding:18px 0 22px;
+      width:100%;
+      box-sizing:border-box;
+    }
+
+    .player-btn-wrap{
+      width:100%;
+      box-sizing:border-box;
+      padding-inline:22px;
     }
 
     .player-btn{
@@ -357,14 +377,17 @@
       align-items:center;
       justify-content:center;
       width:100%;
-      padding:16px 18px;
+      margin:0;
+      padding:16px 20px;
       border-radius:18px;
       text-decoration:none;
       font-weight:900;
       font-size:16px;
+      text-align:center;
       background:linear-gradient(180deg, #e2c16c, #cda84d);
       color:#111;
       box-shadow:0 14px 28px rgba(0,0,0,.16);
+      box-sizing:border-box;
     }
 
     .players-note{
@@ -764,6 +787,27 @@ html, body{
       return map[pos] || pos || "لاعب";
     }
 
+    function positionBadgeLabel(player){
+      return roleArabic(player.position || publicPosition(player));
+    }
+
+    function arabicPlayerCountPhrase(count){
+      const n = Number(count) || 0;
+      if (n === 1) return "لاعباً واحداً";
+      if (n === 2) return "لاعبان";
+      if (n >= 3 && n <= 10) return `${n} لاعبين`;
+      return `${n} لاعباً`;
+    }
+
+    function formatPlayersResultsNote(shownCount){
+      const shown = Number(shownCount) || 0;
+      const total = allPlayers.length;
+      if (!shown) return "لا توجد نتائج مطابقة حسب المعايير الحالية.";
+      const shownPhrase = arabicPlayerCountPhrase(shown);
+      if (shown === total) return `يعرض ${shownPhrase}.`;
+      return `يعرض ${shownPhrase} من ${arabicPlayerCountPhrase(total)}.`;
+    }
+
     function publicPosition(player){
       const p = String(player.position || "").trim();
       const map = {
@@ -841,6 +885,7 @@ html, body{
 
     function createCard(player){
       const pos = publicPosition(player);
+      const positionLabel = positionBadgeLabel(player);
       const rating = overall(player);
       const number = player.shirtNumber || player.code || "-";
       const role = roleArabic(player.position || pos);
@@ -856,8 +901,8 @@ html, body{
       return `
         <article class="player-card" data-role="${roleGroup(player)}" data-category="${escapeHtml(category)}" data-rating="${rating}" data-name="${escapeHtml(player.fullName || "")}">
           <div class="player-top">
-            <div class="player-rating"><strong>${rating}</strong><span>OVR</span></div>
-            <div class="player-position">${escapeHtml(pos)}</div>
+            <div class="player-rating"><strong>${rating}</strong><span>التقييم</span></div>
+            <div class="player-position">${escapeHtml(positionLabel)}</div>
             <div class="player-number">${escapeHtml(number)}</div>
           </div>
           <div class="player-avatar-wrap"><div class="player-avatar">${player.image ? `<img src="${escapeHtml(player.image)}" alt="${escapeHtml(player.fullName || "")}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : escapeHtml(getInitials(player.fullName || ""))}</div></div>
@@ -872,7 +917,7 @@ html, body{
             </div>
           </div>
           <div class="player-stats-box">${statsHtml}</div>
-          <div class="player-footer"><a class="player-btn" href="al_masariha_player_profile_public.html?id=${encodeURIComponent(player.id)}">عرض الملف الكامل</a></div>
+          <div class="player-footer"><div class="player-btn-wrap"><a class="player-btn" href="al_masariha_player_profile_public.html?id=${encodeURIComponent(player.id)}">عرض الملف الكامل</a></div></div>
         </article>
       `;
     }
@@ -918,7 +963,7 @@ html, body{
       }
 
       grid.innerHTML = players.map(createCard).join("");
-      note.textContent = `يتم عرض ${players.length} لاعب/لاعبين.`;
+      note.textContent = formatPlayersResultsNote(players.length);
     }
 
     function showPlayersLoading(){

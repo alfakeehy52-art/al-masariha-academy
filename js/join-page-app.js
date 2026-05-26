@@ -25,7 +25,7 @@
     guardian: { group: "members", label: "ولي أمر", step: "ربط أو متابعة" },
     academy_member: { group: "members", label: "عضو أكاديمي", step: "متابعة وفعاليات" },
     staff: { group: "staff", label: "طلب وظيفة / كادر", step: "انضمام ككادر" },
-    supporter: { group: "community", label: "داعم", step: "شراكة ودعم" }
+    supporter: { group: "community", label: "داعم", step: "رعاية ودعم" }
   };
 
   let activeType = "player";
@@ -34,6 +34,8 @@
   let searchTimer = null;
   let staffDomainId = "";
   let staffRoleId = "";
+  const SUBMISSION_STORAGE_KEY = "masarha_last_join_v1";
+  let lastSubmission = null;
 
   const $ = (id) => document.getElementById(id);
 
@@ -81,6 +83,415 @@
     return policy().calcHijriAge ? policy().calcHijriAge(birth) : null;
   }
 
+  function extractHijriDateDigits(value) {
+    const raw = policy().normalizeDigits ? policy().normalizeDigits(String(value || "")) : String(value || "");
+    return raw.replace(/\D/g, "").slice(0, 8);
+  }
+
+  function formatHijriDateDigits(digits) {
+    if (!digits) return "";
+    if (digits.length <= 2) return digits;
+    if (digits.length <= 4) return `${digits.slice(0, 2)}/${digits.slice(2)}`;
+    return `${digits.slice(0, 2)}/${digits.slice(2, 4)}/${digits.slice(4)}`;
+  }
+
+  function isValidPartialHijriDigits(digits) {
+    if (!digits) return true;
+    const len = digits.length;
+    if (len === 1) {
+      const d = Number(digits[0]);
+      if (d > 3) return false;
+    }
+    if (len >= 2) {
+      const day = Number(digits.slice(0, 2));
+      if (day < 1 || day > 30) return false;
+    }
+    if (len === 3) {
+      const m = Number(digits[2]);
+      if (m > 1) return false;
+    }
+    if (len >= 4) {
+      const month = Number(digits.slice(2, 4));
+      if (month < 1 || month > 12) return false;
+    }
+    if (len >= 5 && digits[4] !== "1") return false;
+    if (len >= 8) {
+      const year = Number(digits.slice(4, 8));
+      if (year < 1300 || year > 1500) return false;
+    }
+    return true;
+  }
+
+  function attachHijriDateField(el, onChange) {
+    if (!el || el.dataset.hijriMaskBound === "1") return;
+    el.dataset.hijriMaskBound = "1";
+    let lastValidDigits = "";
+
+    const syncFromInput = () => {
+      const digits = extractHijriDateDigits(el.value);
+      if (!digits) {
+        lastValidDigits = "";
+        el.value = "";
+        el.classList.remove("field-rejected");
+        if ($("playerBirthHijriHint")) $("playerBirthHijriHint").textContent = "";
+        onChange?.();
+        return;
+      }
+      if (!isValidPartialHijriDigits(digits)) {
+        el.value = formatHijriDateDigits(lastValidDigits);
+        el.classList.add("field-rejected");
+        if ($("playerBirthHijriHint")) {
+          $("playerBirthHijriHint").textContent =
+            "قيمة غير صحيحة — اليوم ١–٣٠، الشهر ١–١٢، السنة ١٤٠٠–١٥٠٠. امسح وأعد الإدخال من اليسار: يوم/شهر/سنة.";
+        }
+        return;
+      }
+      lastValidDigits = digits;
+      const formatted = formatHijriDateDigits(digits);
+      el.value = formatted;
+      el.classList.remove("field-rejected");
+      if ($("playerBirthHijriHint")) {
+        $("playerBirthHijriHint").textContent =
+          digits.length < 8 ? "أكمل: يوم/شهر/سنة — مثال 22/11/1411" : "";
+      }
+      onChange?.();
+    };
+
+    el.addEventListener("input", syncFromInput);
+    el.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        e.preventDefault();
+        lastValidDigits = "";
+        el.value = "";
+        el.classList.remove("field-rejected");
+        if ($("playerBirthHijriHint")) $("playerBirthHijriHint").textContent = "";
+        onChange?.();
+      }
+    });
+    el.addEventListener("paste", (e) => {
+      e.preventDefault();
+      const text = (e.clipboardData || window.clipboardData)?.getData("text") || "";
+      el.value = text;
+      syncFromInput();
+    });
+  }
+
+  function getPlayerFormAge() {
+    return Number($("playerAge")?.value || 0);
+  }
+
+  function isCurrentPlayerMinor() {
+    return activeType === "player" && policy().isMinorHijriAge && policy().isMinorHijriAge(getPlayerFormAge());
+  }
+
+  function isCurrentPlayerAdult() {
+    return activeType === "player" && policy().isAdultHijriAge && policy().isAdultHijriAge(getPlayerFormAge());
+  }
+
+  function setFieldVisible(el, visible) {
+    if (!el) return;
+    el.style.display = visible ? "" : "none";
+  }
+
+  function updatePlayerContactSection() {
+    const title = $("contactSectionTitle");
+    const hint = $("contactSectionHint");
+    const fnField = $("contactFullNameField");
+    const idField = $("contactNationalIdField");
+    const phoneFieldEl = $("contactPhoneField");
+    const fullNameInput = $("fullName");
+    const nationalIdInput = $("nationalId");
+    const phoneInput = $("phone");
+
+    if (activeType !== "player") {
+      if (title) title.textContent = "بيانات التواصل الأساسية";
+      if (hint) hint.style.display = "none";
+      setFieldVisible(fnField, true);
+      setFieldVisible(idField, true);
+      setFieldVisible(phoneFieldEl, true);
+      if ($("fullNameLabel")) $("fullNameLabel").textContent = "الاسم الكامل";
+      if ($("nationalIdLabel")) $("nationalIdLabel").textContent = "رقم الهوية / الإقامة";
+      if ($("phoneLabel")) $("phoneLabel").textContent = "رقم الجوال";
+      if (fullNameInput) fullNameInput.placeholder = "اكتب الاسم الكامل";
+      if (nationalIdInput) nationalIdInput.placeholder = "أدخل رقم الهوية أو الإقامة";
+      if (phoneInput) phoneInput.placeholder = "05xxxxxxxx";
+      return;
+    }
+
+    if (isCurrentPlayerMinor()) {
+      if (title) title.textContent = "بيانات تواصل إضافية لولي الأمر";
+      if (hint) {
+        hint.textContent =
+          "اسم ولي الأمر وجواله وهويته مسجلان في قسم بيانات اللاعب أعلاه. أكمل البريد والمدينة هنا إن رغبت.";
+        hint.style.display = "block";
+      }
+      setFieldVisible(fnField, false);
+      setFieldVisible(idField, false);
+      setFieldVisible(phoneFieldEl, false);
+      if (fullNameInput) fullNameInput.value = "";
+      if (nationalIdInput) nationalIdInput.value = "";
+      if (phoneInput) phoneInput.value = "";
+      return;
+    }
+
+    if (isCurrentPlayerAdult()) {
+      if (title) title.textContent = "بيانات تواصل اللاعب";
+      if (hint) {
+        hint.textContent = "اسم اللاعب وهويته مسجلان في قسم بيانات اللاعب. أكمل الجوال والبريد والمدينة هنا.";
+        hint.style.display = "block";
+      }
+      setFieldVisible(fnField, false);
+      setFieldVisible(idField, false);
+      setFieldVisible(phoneFieldEl, true);
+      if ($("phoneLabel")) $("phoneLabel").textContent = "جوال اللاعب";
+      if (phoneInput) phoneInput.placeholder = "05xxxxxxxx";
+      if (fullNameInput) fullNameInput.value = "";
+      if (nationalIdInput) nationalIdInput.value = "";
+      return;
+    }
+
+    if (title) title.textContent = "بيانات التواصل الأساسية";
+    if (hint) {
+      hint.textContent = "أدخل تاريخ الميلاد أولاً لتحديد حقول التواصل المناسبة (قاصر أو بالغ).";
+      hint.style.display = "block";
+    }
+    setFieldVisible(fnField, false);
+    setFieldVisible(idField, false);
+    setFieldVisible(phoneFieldEl, false);
+  }
+
+  function mapSubmitError(err) {
+    const code = String(err?.code || "");
+    const msg = String(err?.message || err?.details || err?.hint || err || "").toLowerCase();
+    if (code === "23505" || msg.includes("duplicate")) {
+      if (msg.includes("phone") || msg.includes("جوال")) {
+        return "رقم الجوال مسجل مسبقاً في طلب آخر. استخدم رقماً مختلفاً أو تواصل مع الدعم.";
+      }
+      if (msg.includes("email") || msg.includes("بريد")) {
+        return "البريد الإلكتروني مسجل مسبقاً. جرّب بريداً آخر أو اترك الحقل فارغاً.";
+      }
+      if (msg.includes("national") || msg.includes("هوية")) {
+        return "رقم الهوية مسجل مسبقاً في طلب سابق. تحقق من الرقم أو تواصل مع الدعم.";
+      }
+      return "البيانات المدخلة مسجلة مسبقاً (جوال أو بريد أو هوية). راجع الحقول أو تواصل مع الدعم.";
+    }
+    if (code === "23502" || msg.includes("not-null") || msg.includes("null value")) {
+      return "يوجد حقل إلزامي فارغ. راجع النموذج وأكمل جميع الحقول المطلوبة.";
+    }
+    if (code === "42501" || msg.includes("policy") || msg.includes("permission") || msg.includes("rls")) {
+      return "تعذر إرسال الطلب حالياً. حدّث الصفحة أو تواصل مع الدعم.";
+    }
+    if (msg.includes("network") || msg.includes("fetch") || msg.includes("failed to fetch")) {
+      return "تعذر الاتصال بالخادم. تحقق من الإنترنت وحاول مرة أخرى.";
+    }
+    if (msg.includes("invalid input syntax")) {
+      return "أحد الحقول يحتوي صيغة غير صحيحة. راجع التاريخ والأرقام.";
+    }
+    if (
+      msg.includes("schema cache") ||
+      msg.includes("could not find") ||
+      code === "PGRST204" ||
+      (msg.includes("column") && msg.includes("join_requests"))
+    ) {
+      return "تعذر إرسال الطلب حالياً بسبب إعداد النظام. تواصل مع إدارة الأكاديمية عبر صفحة التواصل.";
+    }
+    return typeof sanitizeVisitorMessage === "function"
+      ? sanitizeVisitorMessage(err?.message, "تعذر إرسال الطلب. تحقق من البيانات أو تواصل مع الدعم.")
+      : "تعذر إرسال الطلب. تحقق من البيانات أو تواصل مع الدعم.";
+  }
+
+  function minorGuardianNoteLines(data) {
+    const lines = [];
+    const rel = cleanText(data.relationship);
+    const name = cleanText(data.guardianName);
+    const gPhone = cleanText(data.guardianPhone);
+    const gId = cleanText(data.guardianNationalId);
+    if (rel) lines.push(`صلة ولي الأمر: ${rel}`);
+    if (name) lines.push(`اسم ولي الأمر: ${name}`);
+    if (gPhone) lines.push(`جوال ولي الأمر: ${gPhone}`);
+    if (gId) lines.push(`هوية ولي الأمر: ${gId}`);
+    return lines;
+  }
+
+  function mergeTextBlocks(...parts) {
+    return parts.filter(Boolean).join("\n\n") || null;
+  }
+
+  function loadLastSubmission() {
+    if (lastSubmission?.reference_code) return lastSubmission;
+    try {
+      const raw = sessionStorage.getItem(SUBMISSION_STORAGE_KEY);
+      if (raw) lastSubmission = JSON.parse(raw);
+    } catch (e) {
+      lastSubmission = null;
+    }
+    return lastSubmission;
+  }
+
+  function saveLastSubmission(payload) {
+    lastSubmission = {
+      reference_code: payload.reference_code || "",
+      phone: payload.phone || "",
+      full_name: payload.full_name || payload.child_name || "",
+      request_type: payload.request_type || activeType
+    };
+    try {
+      sessionStorage.setItem(SUBMISSION_STORAGE_KEY, JSON.stringify(lastSubmission));
+    } catch (e) {}
+  }
+
+  function clearLastSubmission() {
+    lastSubmission = null;
+    try {
+      sessionStorage.removeItem(SUBMISSION_STORAGE_KEY);
+    } catch (e) {}
+  }
+
+  function updateSupportFab() {
+    const fab = $("joinSupportFab");
+    if (!fab) return;
+    const sub = loadLastSubmission();
+    if (sub?.reference_code && sub?.phone) {
+      fab.classList.add("is-ready");
+      fab.textContent = "💬 محادثة مع الإدارة";
+      fab.setAttribute(
+        "aria-label",
+        "محادثة مع الإدارة — الطلب " + sub.reference_code
+      );
+      return;
+    }
+    fab.classList.remove("is-ready");
+    fab.textContent = "💬 تواصل مع الدعم";
+    fab.setAttribute("aria-label", "تواصل مع الدعم");
+  }
+
+  function openJoinSupport() {
+    const sub = loadLastSubmission();
+    const phone = (
+      $("phone")?.value ||
+      $("guardianPhone")?.value ||
+      sub?.phone ||
+      ""
+    ).trim();
+    const ref = (sub?.reference_code || "").trim();
+    const name =
+      (
+        $("playerFullName")?.value ||
+        $("fullName")?.value ||
+        $("guardianName")?.value ||
+        sub?.full_name ||
+        ""
+      ).trim() || "زائر";
+
+    if (window.ChatDrawer && ref && phone) {
+      ChatDrawer.openAsGuest({ referenceCode: ref, phone, fullName: name });
+      return;
+    }
+    if (window.ChatDrawer && sub?.reference_code && !phone) {
+      showToast("رقم الجوال مطلوب لفتح المحادثة. راجع شاشة التأكيد أو صفحة متابعة الطلب.", "warn");
+      return;
+    }
+    if (window.ChatDrawer && !ref && phone) {
+      showToast(
+        "للمحادثة بعد التسجيل استخدم زر «محادثة مع الإدارة» في شاشة التأكيد الخضراء.",
+        "warn"
+      );
+      return;
+    }
+    if (window.ChatDrawer && !phone) {
+      showToast("أرسل الطلب أولاً ليظهر رقم المرجع والمحادثة، أو أدخل جوالك في النموذج.", "warn");
+      ($("phone") || $("guardianPhone"))?.focus();
+      return;
+    }
+    window.location.href = "al_masariha_contact_page.html";
+  }
+
+  async function ensureGuestChatRoom(ref, phone) {
+    const sb = getSupabase();
+    if (!sb || !ref || !phone) return;
+    try {
+      await sb.rpc("chat_guest_open_join_room", { p_ref: ref, p_phone: phone });
+    } catch (e) {
+      console.warn("[join] chat room ensure:", e);
+    }
+  }
+
+  async function showSubmissionSuccess(payload, options) {
+    const opts = options || {};
+    saveLastSubmission(payload);
+
+    const panel = $("joinSuccessPanel");
+    const refEl = $("successRefCode");
+    const link = $("statusFollowLink");
+    const qrBox = $("statusFollowQr");
+
+    document.body.classList.add("join-submitted");
+
+    if (refEl) refEl.textContent = payload.reference_code || "—";
+    if (link) {
+      const params = new URLSearchParams();
+      if (payload.reference_code) params.set("ref", payload.reference_code);
+      if (payload.phone) params.set("phone", payload.phone);
+      link.href = `request_status.html?${params.toString()}`;
+    }
+    if (panel) panel.hidden = false;
+
+    if (qrBox) {
+      qrBox.innerHTML =
+        '<p style="color:#b6c1b8;font-size:14px;margin:0">جاري إنشاء رمز المتابعة…</p>';
+      if (typeof window.renderRequestTrackQr === "function") {
+        await window.renderRequestTrackQr(qrBox, payload.reference_code, payload.phone, {
+          title: "رمز متابعة طلبك",
+          hint: "امسح الرمز من جوالك — أو احفظ الصورة — لفتح صفحة متابعة الطلب مباشرة."
+        });
+      } else {
+        qrBox.innerHTML =
+          '<p style="color:#ffd7d7">تعذر تحميل مكتبة الرمز. استخدم زر «نسخ الرقم» أو «متابعة حالة الطلب».</p>';
+      }
+    }
+
+    updateSupportFab();
+    if (opts.scroll !== false) {
+      panel?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  function bindSuccessPanelActions() {
+    $("copyRefBtn")?.addEventListener("click", async () => {
+      const ref =
+        loadLastSubmission()?.reference_code ||
+        $("successRefCode")?.textContent ||
+        "";
+      if (!ref || ref === "—") return;
+      try {
+        await navigator.clipboard.writeText(ref);
+        showToast("تم نسخ رقم المرجع.", "success");
+      } catch (e) {
+        showToast("انسخ الرقم يدوياً: " + ref, "warn");
+      }
+    });
+    $("successOpenChatBtn")?.addEventListener("click", () => openJoinSupport());
+    $("joinNewRequestBtn")?.addEventListener("click", () => {
+      document.body.classList.remove("join-submitted");
+      const panel = $("joinSuccessPanel");
+      if (panel) panel.hidden = true;
+      clearLastSubmission();
+      updateSupportFab();
+      $("joinForm")?.reset();
+      staffDomainId = "";
+      staffRoleId = "";
+      selectedPlayers = [];
+      renderSelectedPlayers();
+      activateType(activeType);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    });
+  }
+
+  function pulseSupportFab() {
+    $("joinSupportFab")?.classList.add("pulse");
+    setTimeout(() => $("joinSupportFab")?.classList.remove("pulse"), 2600);
+  }
+
   function autoSelectCategoryByAge(age) {
     const select = $("ageCategory");
     const hidden = $("ageCategoryHidden");
@@ -116,6 +527,7 @@
         if ($(id)) $(id).value = "";
       });
     }
+    updatePlayerContactSection();
   }
 
   function syncStaffHiddenFields() {
@@ -331,6 +743,7 @@
     activeType = type;
     if (type !== "guardian") clearGuardianTransient();
     updateMinorGuardianVisibility();
+    updatePlayerContactSection();
     syncFormValidation();
     updatePathUI();
     const submitBtn = $("joinSubmitBtn");
@@ -460,49 +873,90 @@
 
   function validate(formData) {
     if (!$("confirmPolicy")?.checked) {
-      showToast("يجب الموافقة على إرسال الطلب للمراجعة.", "warn");
+      showToast("يجب الموافقة على الشروط والأحكام وسياسة الخصوصية.", "warn");
       $("confirmPolicy")?.focus();
       return false;
     }
-    if (!formData.fullName?.trim()) {
-      showToast("الاسم الكامل مطلوب.", "warn");
-      $("fullName").focus();
-      return false;
+
+    if (activeType !== "player") {
+      if (!formData.fullName?.trim()) {
+        showToast("الاسم الكامل مطلوب.", "warn");
+        $("fullName")?.focus();
+        return false;
+      }
+      if (!formData.nationalId?.trim()) {
+        showToast("رقم الهوية مطلوب.", "warn");
+        $("nationalId")?.focus();
+        return false;
+      }
+      if (!formData.phone?.trim()) {
+        showToast("رقم الجوال مطلوب.", "warn");
+        $("phone")?.focus();
+        return false;
+      }
     }
-    if (!formData.nationalId?.trim()) {
-      showToast("رقم الهوية مطلوب.", "warn");
-      $("nationalId").focus();
-      return false;
-    }
-    if (!formData.phone?.trim()) {
-      showToast("رقم الجوال مطلوب.", "warn");
-      $("phone").focus();
-      return false;
-    }
+
     if (activeType === "player") {
+      if (!formData.playerFullName?.trim()) {
+        showToast("اسم اللاعب مطلوب.", "warn");
+        $("playerFullName")?.focus();
+        return false;
+      }
+      if (!formData.playerNationalId?.trim()) {
+        showToast("رقم هوية / إقامة اللاعب مطلوب.", "warn");
+        $("playerNationalId")?.focus();
+        return false;
+      }
       const birthRaw = String(formData.playerBirthHijri || "").trim();
       if (!birthRaw) {
         showToast("تاريخ الميلاد الهجري مطلوب.", "warn");
+        $("playerBirthHijri")?.focus();
         return false;
       }
       const birth = parseHijriDate(birthRaw);
       if (!birth) {
-        showToast("صيغة التاريخ الهجري غير صحيحة.", "warn");
+        showToast("صيغة التاريخ الهجري غير صحيحة. استخدم يوم/شهر/سنة — مثال: 22/11/1411", "warn");
+        $("playerBirthHijri")?.focus();
         return false;
       }
       const age = calcHijriAge(birth);
       if (age === null) {
-        showToast("تعذر حساب العمر.", "warn");
+        showToast("تعذر حساب العمر من التاريخ المدخل.", "warn");
         return false;
       }
       if (policy().isMinorHijriAge && policy().isMinorHijriAge(age)) {
-        if (!formData.relationship || !formData.guardianName?.trim() || !formData.guardianPhone?.trim()) {
-          showToast("بيانات ولي الأمر مطلوبة للقاصر.", "warn");
+        if (!formData.relationship) {
+          showToast("اختر صلة القرابة لولي الأمر.", "warn");
+          $("relationship")?.focus();
           return false;
         }
+        if (!formData.guardianName?.trim()) {
+          showToast("اسم ولي الأمر مطلوب للقاصر.", "warn");
+          $("guardianName")?.focus();
+          return false;
+        }
+        if (!formData.guardianPhone?.trim()) {
+          showToast("جوال ولي الأمر مطلوب للقاصر.", "warn");
+          $("guardianPhone")?.focus();
+          return false;
+        }
+        if (!formData.guardianNationalId?.trim()) {
+          showToast("هوية ولي الأمر مطلوبة للقاصر.", "warn");
+          $("guardianNationalId")?.focus();
+          return false;
+        }
+      } else if (policy().isAdultHijriAge && policy().isAdultHijriAge(age)) {
+        if (!formData.phone?.trim()) {
+          showToast("جوال اللاعب مطلوب.", "warn");
+          $("phone")?.focus();
+          return false;
+        }
+      } else {
+        showToast("أكمل تاريخ الميلاد لتحديد حقول التواصل.", "warn");
+        return false;
       }
       if (!formData.ageCategory || !formData.position) {
-        showToast("أكمل بيانات اللاعب.", "warn");
+        showToast("اختر فئة اللاعب والمركز المفضل.", "warn");
         return false;
       }
     }
@@ -552,9 +1006,9 @@
     }
     if (activeType === "supporter") {
       const SP = supporterProfile();
-      const typeId = cleanText(data.supportType);
-      const levelId = cleanText(data.supportLevel);
-      const methodId = cleanText(data.supportMethod);
+      const typeId = cleanText(formData.supportType);
+      const levelId = cleanText(formData.supportLevel);
+      const methodId = cleanText(formData.supportMethod);
       if (!typeId || !SP.isValidType?.(typeId)) {
         showToast("اختر نوع الداعم.", "warn");
         return false;
@@ -567,7 +1021,7 @@
         showToast("اختر طريقة الدعم.", "warn");
         return false;
       }
-      if (SP.needsEntityName?.(typeId) && !data.entityName?.trim()) {
+      if (SP.needsEntityName?.(typeId) && !formData.entityName?.trim()) {
         showToast("اسم الجهة / النشاط مطلوب للمؤسسة والراعي المحتمل.", "warn");
         $("entityName")?.focus();
         return false;
@@ -586,8 +1040,8 @@
     "child_name", "relationship", "children_count", "guardian_goal", "guardian_notes",
     "support_type", "support_level", "entity_name", "support_method", "support_notes",
     "volunteer_field", "availability", "volunteer_notes", "created_at", "status", "admin_notes",
-    "reviewed_at", "updated_at", "reference_code", "notes", "guardian_relation", "guardian_name",
-    "guardian_phone", "guardian_national_id", "child_age", "child_category", "child_position",
+    "reviewed_at", "updated_at", "reference_code", "notes", "guardian_relation",
+    "child_age", "child_category", "child_position",
     "linked_player_id", "linked_player_ids", "coach_job_title", "coach_specialty", "coach_experience", "supporter_type"
   ]);
 
@@ -665,28 +1119,27 @@
       notes
     };
     if (activeType === "player") {
+      const age = Number(data.playerAge || 0);
+      const minor = policy().isMinorHijriAge && policy().isMinorHijriAge(age);
+      const guardianLines = minor ? minorGuardianNoteLines(data) : [];
+      const playerNotes = mergeTextBlocks(
+        cleanText(data.playerNotes),
+        guardianLines.length ? guardianLines.join("\n") : null
+      );
       Object.assign(base, {
+        full_name: cleanText(data.playerFullName),
+        national_id: cleanText(data.playerNationalId),
+        phone: minor ? cleanText(data.guardianPhone) : cleanText(data.phone),
+        email: cleanText(data.email),
+        city: cleanText(data.city),
+        child_name: cleanText(data.playerFullName),
         player_age: cleanNumber(data.playerAge),
         birth_hijri: cleanText(data.playerBirthHijri),
         age_category: cleanText(data.ageCategory),
         position: cleanText(data.position),
-        player_notes: cleanText(data.playerNotes),
-        relationship:
-          policy().isMinorHijriAge && policy().isMinorHijriAge(Number(data.playerAge || 0))
-            ? cleanText(data.relationship)
-            : null,
-        guardian_name:
-          policy().isMinorHijriAge && policy().isMinorHijriAge(Number(data.playerAge || 0))
-            ? cleanText(data.guardianName)
-            : null,
-        guardian_phone:
-          policy().isMinorHijriAge && policy().isMinorHijriAge(Number(data.playerAge || 0))
-            ? cleanText(data.guardianPhone)
-            : null,
-        guardian_national_id:
-          policy().isMinorHijriAge && policy().isMinorHijriAge(Number(data.playerAge || 0))
-            ? cleanText(data.guardianNationalId)
-            : null
+        player_notes: playerNotes,
+        notes: mergeTextBlocks(notes, guardianLines.length ? guardianLines.join("\n") : null),
+        relationship: minor ? cleanText(data.relationship) : null
       });
     }
     if (activeType === "guardian") {
@@ -745,17 +1198,6 @@
     if (error) throw error;
   }
 
-  function showStatusFollow(referenceCode, phone) {
-    const box = $("statusFollowBox");
-    const link = $("statusFollowLink");
-    if (!box || !link) return;
-    const params = new URLSearchParams();
-    if (referenceCode) params.set("ref", referenceCode);
-    if (phone) params.set("phone", phone);
-    link.href = `request_status.html?${params.toString()}`;
-    box.style.display = "grid";
-  }
-
   const ALLOWED_PATH_TYPES = new Set([
     "player",
     "guardian",
@@ -811,8 +1253,18 @@
       }
       updateMinorGuardianVisibility();
     };
-    ["input", "change", "blur"].forEach((evt) => $("playerBirthHijri")?.addEventListener(evt, handleBirthHijriInput));
+    attachHijriDateField($("playerBirthHijri"), handleBirthHijriInput);
     $("playerAge")?.addEventListener("input", updateMinorGuardianVisibility);
+
+    updatePlayerContactSection();
+    $("joinSupportFab")?.addEventListener("click", openJoinSupport);
+    bindSuccessPanelActions();
+    const restored = loadLastSubmission();
+    if (restored?.reference_code) {
+      showSubmissionSuccess(restored, { scroll: false });
+    } else {
+      updateSupportFab();
+    }
 
     syncFormValidation();
 
@@ -829,19 +1281,13 @@
       btn.textContent = "جاري الإرسال...";
       try {
         await insertJoinRequest(payload);
-        showToast(`تم إرسال الطلب. المرجع: ${payload.reference_code}`, "success");
-        showStatusFollow(payload.reference_code, payload.phone);
-        formEl.reset();
-        staffDomainId = "";
-        staffRoleId = "";
-        renderStaffDomainTiles();
-        renderStaffRoleChips();
-        selectedPlayers = [];
-        renderSelectedPlayers();
-        activateType(activeType);
+        await ensureGuestChatRoom(payload.reference_code, payload.phone);
+        await showSubmissionSuccess(payload);
+        showToast("تم إرسال طلبك. احفظ رقم المرجع الظاهر في الشاشة.", "success");
       } catch (err) {
         console.error(err);
-        showToast("تعذر إرسال الطلب.", "error");
+        showToast(mapSubmitError(err), "error");
+        pulseSupportFab();
       } finally {
         btn.disabled = false;
         btn.textContent = "إرسال الطلب";

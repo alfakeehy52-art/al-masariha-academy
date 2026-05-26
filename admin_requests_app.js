@@ -70,7 +70,50 @@ function memberMeta(r){
   const AMP=window.ACADEMY_MEMBER_PROFILE;
   if(AMP&&AMP.parseFromRequest) return AMP.parseFromRequest(r);
   const ids=parseInterestsArray(r.notes||r.guardian_notes||'');
-  return {interestIds:ids,interestsLabel:ids.join('، ')||'-'};
+  const labelFn=(id)=>{const AMP2=window.ACADEMY_MEMBER_PROFILE;return AMP2&&AMP2.interestLabel?AMP2.interestLabel(id):id;};
+  return {interestIds:ids,interestsLabel:ids.map(labelFn).filter(Boolean).join('، ')||'-'};
+}
+function showCompletionAction(r){
+  if(!r||!approvalRequiresAttachments(r)) return false;
+  const label=getStatusLabel(r.status||'new');
+  if(label==='مقبول'||label==='مرفوض') return false;
+  return true;
+}
+function getTableDetailCell(r){
+  if(r.request_type==='academy_member'){
+    const m=memberMeta(r);
+    return shortText(m.interestsLabel,48);
+  }
+  const parts=[];
+  if(r.phone) parts.push(r.phone);
+  if(r.email) parts.push(r.email);
+  return parts.length?parts.join(' • '):shortText(displayNotes(r),40);
+}
+function displayNotes(r){
+  const raw=notes(r);
+  if(r.request_type!=='academy_member') return raw;
+  const m=memberMeta(r);
+  const lines=String(raw||'').split('\n').filter(line=>{
+    const t=line.trim();
+    if(!t) return false;
+    if(/^الاهتمامات:/.test(t)) return false;
+    if(/^معرّ?فات:/.test(t)) return false;
+    return true;
+  });
+  if(m.interestsLabel&&m.interestsLabel!=='-') lines.unshift(`الاهتمامات: ${m.interestsLabel}`);
+  return lines.join('\n')||'-';
+}
+function buildRowActions(r){
+  const id=r.id;
+  let html=`<button class="mini-btn review" onclick="openRequest('${id}')">عرض</button><button class="mini-btn chat" type="button" onclick="openChatForRequest('${id}')">تواصل</button>`;
+  if(getStatusLabel(r.status)!=='مقبول') html+=`<button class="mini-btn accept" onclick="updateStatus('${id}','approved')">قبول</button>`;
+  if(getStatusLabel(r.status)!=='مرفوض') html+=`<button class="mini-btn reject" onclick="updateStatus('${id}','rejected')">رفض</button>`;
+  if(showCompletionAction(r)) html+=`<button class="mini-btn more" onclick="updateStatus('${id}','pending')">استكمال</button>`;
+  return html;
+}
+function syncModalActions(r){
+  const btn=$('modalCompleteBtn');
+  if(btn) btn.style.display=showCompletionAction(r)?'':'none';
 }
 function staffMeta(r){
   const AR=window.ACADEMY_ROLES;
@@ -227,9 +270,17 @@ function renderTable(type){
   const tbody=$('requestsTableBody'); const cfg=TYPE_CONFIG[type]||null; if(!tbody)return;
   if(cfg){$('pageTitle').textContent=cfg.title; $('pageDesc').textContent=cfg.desc; $('typeIcon').textContent=cfg.icon; const heads=$('typeColumns'); if(heads) heads.innerHTML=cfg.cols.map(c=>`<th>${c}</th>`).join('');}
   const c=countsFor(type); if($('statAll')){$('statAll').textContent=c.all;$('statNew').textContent=c.new;$('statReview').textContent=c.review;$('statApproved').textContent=c.approved;}
-  const colLabels=cfg?['','',...cfg.cols,'الحالة','تاريخ الإرسال','الإجراءات']:['','النوع','ملخص','الحالة','تاريخ الإرسال','الإجراءات'];
-  const rows=filtered().map(r=>{const vals=cfg?cfg.fields(r):[getTypeLabel(r.request_type),getRequestSummary(r),shortText(notes(r),28)];const cells=[`<td data-label="رقم المرجع"><span class="tag tag-ref">${escapeHtml(refCode(r))}</span></td>`,`<td data-label="صاحب الطلب"><b class="request-title">${escapeHtml(r.full_name||'طلب بدون اسم')}</b><span class="subtext">${escapeHtml(r.phone||'-')} • ${escapeHtml(r.city||'-')}</span></td>`,...vals.map((v,i)=>`<td data-label="${escapeHtml(colLabels[i+2]||'تفصيل')}">${escapeHtml(v)}</td>`),`<td data-label="الحالة"><span class="tag ${statusClass(r.status||'new')}">${escapeHtml(getStatusLabel(r.status||'new'))}</span></td>`,`<td data-label="تاريخ الإرسال"><div>${escapeHtml(formatDate(r.created_at))}</div><span class="subtext">${escapeHtml(formatTime(r.created_at))}</span></td>`,`<td data-label="الإجراءات"><div class="row-actions"><button class="mini-btn review" onclick="openRequest('${r.id}')">عرض</button><button class="mini-btn chat" type="button" onclick="openChatForRequest('${r.id}')">تواصل</button>${getStatusLabel(r.status)==='مقبول'?'':`<button class="mini-btn accept" onclick="updateStatus('${r.id}','approved')">قبول</button>`}${getStatusLabel(r.status)==='مرفوض'?'':`<button class="mini-btn reject" onclick="updateStatus('${r.id}','rejected')">رفض</button>`}<button class="mini-btn more" onclick="updateStatus('${r.id}','pending')">استكمال</button></div></td>`];return `<tr>${cells.join('')}</tr>`}).join('');
-  const colspan=cfg?cfg.cols.length+5:8; tbody.innerHTML=rows||`<tr><td colspan="${colspan}" class="empty-cell">لا توجد طلبات مطابقة حاليًا.</td></tr>`;
+  const colLabels=cfg?['','',...cfg.cols,'الحالة','تاريخ الإرسال','الإجراءات']:['','النوع','الحالة','بيانات التواصل','تاريخ الإرسال','الإجراءات'];
+  const rows=filtered().map(r=>{
+    const actionHtml=buildRowActions(r);
+    if(!cfg){
+      return `<tr><td data-label="رقم المرجع"><span class="tag tag-ref">${escapeHtml(refCode(r))}</span></td><td data-label="الطلب"><b class="request-title">${escapeHtml(r.full_name||'طلب بدون اسم')}</b><span class="subtext">${escapeHtml(r.phone||'-')} • ${escapeHtml(r.city||'-')}</span></td><td data-label="النوع">${escapeHtml(getTypeLabel(r.request_type))}</td><td data-label="الحالة"><span class="tag ${statusClass(r.status||'new')}">${escapeHtml(getStatusLabel(r.status||'new'))}</span></td><td data-label="بيانات التواصل">${escapeHtml(getTableDetailCell(r))}</td><td data-label="تاريخ الإرسال"><div>${escapeHtml(formatDate(r.created_at))}</div><span class="subtext">${escapeHtml(formatTime(r.created_at))}</span></td><td data-label="الإجراءات"><div class="row-actions">${actionHtml}</div></td></tr>`;
+    }
+    const vals=cfg.fields(r);
+    const cells=[`<td data-label="رقم المرجع"><span class="tag tag-ref">${escapeHtml(refCode(r))}</span></td>`,`<td data-label="صاحب الطلب"><b class="request-title">${escapeHtml(r.full_name||'طلب بدون اسم')}</b><span class="subtext">${escapeHtml(r.phone||'-')} • ${escapeHtml(r.city||'-')}</span></td>`,...vals.map((v,i)=>`<td data-label="${escapeHtml(colLabels[i+2]||'تفصيل')}">${escapeHtml(v)}</td>`),`<td data-label="الحالة"><span class="tag ${statusClass(r.status||'new')}">${escapeHtml(getStatusLabel(r.status||'new'))}</span></td>`,`<td data-label="تاريخ الإرسال"><div>${escapeHtml(formatDate(r.created_at))}</div><span class="subtext">${escapeHtml(formatTime(r.created_at))}</span></td>`,`<td data-label="الإجراءات"><div class="row-actions">${actionHtml}</div></td>`];
+    return `<tr>${cells.join('')}</tr>`;
+  }).join('');
+  const colspan=cfg?cfg.cols.length+5:7; tbody.innerHTML=rows||`<tr><td colspan="${colspan}" class="empty-cell">لا توجد طلبات مطابقة حاليًا.</td></tr>`;
 }
 function getRequestSummary(r){if(r.request_type==='player')return r.position||r.age_category||'-'; if(r.request_type==='guardian')return goalLabel(r.guardian_goal); if(r.request_type==='staff'){const m=staffMeta(r);return m.roleLabel||'-'} if(r.request_type==='academy_member'){const m=memberMeta(r);return m.hasLegacyGoal?(m.legacyGoalLabel||'طلب قديم'):shortText(m.interestsLabel,32);} if(r.request_type==='coach')return r.coach_specialty||r.coach_job_title||'-'; if(r.request_type==='supporter'){const m=supporterMeta(r);return m.methodLabel||'-'} return '-'}
 function findReq(id){return requests.find(r=>String(r.id)===String(id))}
@@ -436,9 +487,10 @@ async function openRequest(id){
   if($('d_city'))$('d_city').textContent=r.city||'-';
   $('d_date').textContent=`${formatDate(r.created_at)} ${formatTime(r.created_at)}`;
   const notesEl=$('d_notes');
-  if(notesEl)notesEl.textContent=notes(r);
+  if(notesEl)notesEl.textContent=displayNotes(r);
   const extra=$('d_extra');
   if(extra)extra.innerHTML=buildExtraDetails(r);
+  syncModalActions(r);
   $('requestModal').classList.add('show');
   document.body.style.overflow='hidden';
   if(approvalRequiresAttachments(r)) await loadCompletionForRequest(id);
@@ -449,16 +501,37 @@ async function openRequest(id){
   }
 }
 function closeRequest(){currentRequestId=null;currentCompletion=null;$('requestModal')?.classList.remove('show');$('filePreviewModal')?.classList.remove('show');document.body.style.overflow=''}
+function guardianFieldsFromRequest(r){
+  const direct={
+    relationship:r.relationship||r.guardian_relation||null,
+    name:r.guardian_name||r.guardian_full_name||r.parent_name||null,
+    phone:r.guardian_phone||r.parent_phone||null,
+    national_id:r.guardian_national_id||null
+  };
+  if(direct.name||direct.phone||direct.national_id) return direct;
+  const blob=[r.player_notes,r.notes].filter(Boolean).join('\n');
+  const pick=(label)=>{
+    const m=blob.match(new RegExp(`^${label}\\s*:\\s*(.+)$`,'m'));
+    return m?String(m[1]).trim():null;
+  };
+  return{
+    relationship:direct.relationship||pick('صلة ولي الأمر'),
+    name:pick('اسم ولي الأمر'),
+    phone:pick('جوال ولي الأمر'),
+    national_id:pick('هوية ولي الأمر')
+  };
+}
 function buildExtraDetails(r){const pairs=[]; const add=(k,v)=>{if(v!==undefined&&v!==null&&String(v).trim()!=='')pairs.push([k,v])};
   if(r.request_type==='player'){
     add('العمر الهجري',r.player_age!=null?`${r.player_age} سنة`:'');
     add('تاريخ الميلاد الهجري',r.birth_hijri||r.birth_date);
     const minor=Number(r.player_age)>0&&Number(r.player_age)<18;
     if(minor){
-      add('صلة ولي الأمر',r.relationship||r.guardian_relation);
-      add('اسم ولي الأمر',r.guardian_name);
-      add('جوال ولي الأمر',r.guardian_phone);
-      add('هوية ولي الأمر',r.guardian_national_id);
+      const g=guardianFieldsFromRequest(r);
+      add('صلة ولي الأمر',g.relationship);
+      add('اسم ولي الأمر',g.name);
+      add('جوال ولي الأمر',g.phone);
+      add('هوية ولي الأمر',g.national_id);
     }else if(Number(r.player_age)>=18){add('الحالة','بالغ — مسؤول عن نفسه');}
     add('الفئة',r.age_category);add('المركز',r.position);
   }
@@ -466,7 +539,6 @@ function buildExtraDetails(r){const pairs=[]; const add=(k,v)=>{if(v!==undefined
     const m=memberMeta(r);
     if(m.hasLegacyGoal){add('تنبيه',m.legacyGoalLabel||'طلب قديم — لا يُعتمد تلقائياً');}
     add('الاهتمامات',m.interestsLabel);
-    add('معرّفات الاهتمام',m.interestIds.length?m.interestIds.join('، '):'-');
     add('البريد (للتواصل)',r.email);
     add('ملاحظة','لا مرفقات — عضوية متابعة فقط');
   }
@@ -585,7 +657,7 @@ async function createPlayer(r){
       r.request_type === 'guardian'
         ? r.full_name
         : (
-            r.guardian_name ||
+            guardianFieldsFromRequest(r).name ||
             r.guardian_full_name ||
             null
           ),

@@ -53,7 +53,10 @@
   function friendlyError(err) {
     const msg = String(err?.message || err || "");
     if (msg.includes("no chat room")) {
-      return "لم تُنشأ غرفة التواصل بعد. من الإدارة: اضغط «تواصل» لإنشائها.";
+      return "تعذر فتح المحادثة. تأكد من رقم المرجع والجوال، أو حدّث الصفحة بعد دقائق.";
+    }
+    if (msg.includes("request not found")) {
+      return "لم يُعثر على الطلب. تحقق من رقم المرجع ورقم الجوال المسجّلين في الطلب.";
     }
     if (msg.includes("admin only")) return "يلزم تسجيل دخول إداري.";
     if (msg.includes("access denied")) return "لا صلاحية للوصول لهذه المحادثة.";

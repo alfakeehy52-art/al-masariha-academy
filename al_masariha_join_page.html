@@ -18,6 +18,30 @@
     .selected-chip button { border: none; background: rgba(255,255,255,.12); color: #fff; border-radius: 50%; width: 22px; height: 22px; cursor: pointer; }
     @keyframes toastIn { from { transform: translateY(10px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
     .toast { animation: toastIn .22s ease; }
+    .hijri-date-input { direction: ltr; text-align: right; unicode-bidi: plaintext; font-variant-numeric: tabular-nums; }
+    .hijri-date-input.field-rejected { border-color: rgba(255,120,120,.55) !important; box-shadow: 0 0 0 2px rgba(255,120,120,.12); }
+    .hijri-date-hint { margin: 6px 0 0; color: #ffb4b4; font-size: 12px; line-height: 1.75; min-height: 1.2em; }
+    .contact-section-hint { grid-column: 1 / -1; margin: 0 0 8px; color: #c8d4cc; line-height: 1.85; }
+    .join-support-fab { position: fixed; inset-inline-start: 18px; bottom: 18px; z-index: 12000; min-height: 48px; padding: 0 18px; border-radius: 999px; border: 1px solid rgba(213,177,90,.35); background: linear-gradient(180deg,#1a2e24,#0f1f18); color: #f0d78a; font-weight: 900; font-family: inherit; cursor: pointer; box-shadow: 0 14px 34px rgba(0,0,0,.35); display: inline-flex; align-items: center; gap: 8px; }
+    .join-support-fab:hover { transform: translateY(-1px); }
+    .join-support-fab.pulse { animation: joinFabPulse 1.2s ease 2; }
+    @keyframes joinFabPulse { 0%,100%{ box-shadow: 0 14px 34px rgba(0,0,0,.35); } 50%{ box-shadow: 0 0 0 6px rgba(213,177,90,.18); } }
+    .join-success-panel{margin-top:20px;padding:28px 24px;border-radius:28px;border:2px solid rgba(46,204,113,.45);background:linear-gradient(180deg,rgba(46,204,113,.14),rgba(255,255,255,.03));text-align:center}
+    .join-success-panel[hidden]{display:none!important}
+    .join-success-icon{width:56px;height:56px;margin:0 auto 14px;border-radius:50%;display:grid;place-items:center;background:rgba(46,204,113,.2);border:2px solid rgba(46,204,113,.5);font-size:28px;font-weight:900;color:#9ef0c3}
+    .join-success-title{margin:0 0 10px;font-size:clamp(24px,3vw,32px);font-weight:950;color:#f0f6f2}
+    .join-success-lead{margin:0 auto 20px;max-width:560px;color:#d2ddd6;line-height:1.9;font-size:15px;font-weight:700}
+    .join-ref-card{margin:0 auto 18px;max-width:420px;padding:18px 20px;border-radius:20px;background:rgba(0,0,0,.22);border:1px solid rgba(213,177,90,.28)}
+    .join-ref-label{display:block;font-size:13px;color:#b8c5bc;font-weight:800;margin-bottom:8px}
+    .join-ref-value{display:block;font-size:clamp(22px,4vw,30px);font-weight:950;color:#f0d78a;letter-spacing:.02em;word-break:break-all;margin-bottom:14px}
+    .join-ref-copy{min-height:44px;padding:0 20px;border-radius:14px;border:1px solid rgba(213,177,90,.35);background:rgba(213,177,90,.12);color:#f0d78a;font-weight:900;font-family:inherit;cursor:pointer}
+    .join-success-actions{display:flex;flex-direction:column;align-items:center;gap:12px;margin-top:18px}
+    .join-success-actions .submit-btn{min-width:min(100%,280px)}
+    .join-success-track{min-width:min(100%,280px);justify-content:center}
+    .join-success-hint{margin:16px auto 0;max-width:520px;color:#a8b5ac;font-size:13px;line-height:1.85}
+    body.join-submitted .path-section,body.join-submitted #formShell .join-form > .section:not(.submit-zone){display:none}
+    body.join-submitted #formShell .submit-zone .policy-box,body.join-submitted #formShell .submit-zone .consent-card,body.join-submitted #formShell .submit-zone .submit-center,body.join-submitted #formShell .submit-zone .action-row{display:none}
+    .join-support-fab.is-ready{border-color:rgba(46,204,113,.5);box-shadow:0 0 0 4px rgba(46,204,113,.12),0 14px 34px rgba(0,0,0,.35)}
   </style>
 </head>
 <body class="join-page inner-page">
@@ -25,7 +49,7 @@
   <main class="join-page">
     <section class="join-hero">
       <div class="join-hero-inner">
-        <span class="join-eyebrow">Join Us · بوابة الانضمام الرسمية</span>
+        <span class="join-eyebrow">بوابة الانضمام الرسمية</span>
         <h1>انضم إلى أكاديمية المسارحة</h1>
         <p class="join-hero-lead">قدّم طلبك أو طلب وظيفة/كادر. تراجع الإدارة الطلب، وعند الاعتماد يُفعَّل حسابك الرسمي مع صلاحيات مناسبة لدورك.</p>
         <div class="journey" aria-label="رحلة الانضمام">
@@ -53,7 +77,7 @@
       <p class="path-group-label">الكوادر والمجتمع</p>
       <div class="path-grid">
         <button type="button" class="path-card featured" data-type="staff"><span class="path-icon">💼</span><span class="path-title">طلب وظيفة / كادر</span><span class="path-desc">رياضي · طبي · إداري · تشغيلي · إعلامي</span><span class="path-tag">موصى به للكوادر</span></button>
-        <button type="button" class="path-card" data-type="supporter"><span class="path-icon">🤝</span><span class="path-title">داعم / راعٍ</span><span class="path-desc">شراكة ودعم مالي أو لوجستي</span></button>
+        <button type="button" class="path-card" data-type="supporter"><span class="path-icon">🤝</span><span class="path-title">داعم / راعٍ</span><span class="path-desc">رعاية ودعم مالي أو لوجستي</span></button>
       </div>
     </section>
 
@@ -68,9 +92,11 @@
       <form id="joinForm" class="join-form" novalidate>
         <section class="section type-panel active" data-panel="player">
           <h3 class="section-title">بيانات طلب اللاعب</h3>
-          <div class="policy-note">يُحسب العمر بالتقويم الهجري (معتمد في السعودية). إذا كان اللاعب أقل من 18 سنة هجرياً تُطلب بيانات ولي الأمر للموافقة والربط — دون عضوية رياضية منفصلة لولي الأمر. إذا كان 18 سنة فأكثر يكمل اللاعب طلبه بنفسه.</div>
+          <div class="policy-note">يتم احتساب عمر اللاعب بالتقويم الهجري المعتمد في المملكة العربية السعودية. في حال كان عمر اللاعب أقل من 18 سنة هجرية، يتطلب النظام إضافة بيانات ولي الأمر واعتماد الموافقة الرسمية لإتمام التسجيل. أما اللاعب البالغ 18 سنة هجرية فأكثر، فيستطيع استكمال طلب الانضمام مباشرةً بنفسه.</div>
           <div class="grid">
-            <div class="field full"><label for="playerBirthHijri">تاريخ الميلاد الهجري للاعب <span style="color:#f5d46b">*</span></label><input id="playerBirthHijri" name="playerBirthHijri" type="text" placeholder="يوم/شهر/سنة — مثال: 15/08/1448 أو 1448/08/15" /></div>
+            <div class="field"><label for="playerFullName">اسم اللاعب <span style="color:#f5d46b">*</span></label><input id="playerFullName" name="playerFullName" type="text" placeholder="الاسم الكامل للاعب" autocomplete="name" /></div>
+            <div class="field"><label for="playerNationalId">هوية / إقامة اللاعب <span style="color:#f5d46b">*</span></label><input id="playerNationalId" name="playerNationalId" type="text" inputmode="numeric" maxlength="20" placeholder="رقم هوية أو إقامة اللاعب" /></div>
+            <div class="field full"><label for="playerBirthHijri">تاريخ الميلاد الهجري للاعب <span style="color:#f5d46b">*</span></label><input id="playerBirthHijri" name="playerBirthHijri" class="hijri-date-input" type="text" inputmode="numeric" dir="ltr" maxlength="10" placeholder="22/11/1411" autocomplete="off" spellcheck="false" /><p class="hijri-date-hint" id="playerBirthHijriHint" aria-live="polite"></p></div>
             <div class="field"><label for="playerAge">العمر الهجري (يُحسب تلقائياً)</label><input id="playerAge" name="playerAge" type="text" inputmode="numeric" placeholder="—" readonly autocomplete="off" /><p class="hijri-today-hint" id="hijriTodayHint"></p></div>
             <div class="field full age-banner minor" id="playerAgeBannerMinor" style="display:none">لاعب قاصر: أدخل بيانات ولي الأمر أدناه. يُسجَّل ولي الأمر ويُربط بابنك عند الاعتماد — وليس كعضو رياضي مستقل.</div>
             <div class="field full age-banner adult" id="playerAgeBannerAdult" style="display:none">لاعب بالغ (18 هجرياً فأكثر): يكمل الطلب باسمه وبياناته دون ولي أمر في النموذج.</div>
@@ -170,12 +196,13 @@
           </div>
         </section>
 
-        <section class="section">
-          <h3 class="section-title">بيانات التواصل الأساسية</h3>
+        <section class="section" id="contactSection">
+          <h3 class="section-title" id="contactSectionTitle">بيانات التواصل الأساسية</h3>
+          <p class="field-hint contact-section-hint" id="contactSectionHint" style="display:none"></p>
           <div class="grid">
-            <div class="field"><label for="fullName">الاسم الكامل</label><input id="fullName" name="fullName" type="text" placeholder="اكتب الاسم الكامل" required /></div>
-            <div class="field"><label for="nationalId">رقم الهوية / الإقامة</label><input id="nationalId" name="nationalId" type="text" inputmode="numeric" maxlength="20" placeholder="أدخل رقم الهوية أو الإقامة" required /></div>
-            <div class="field"><label for="phone">رقم الجوال</label><input id="phone" name="phone" type="tel" placeholder="05xxxxxxxx" required /></div>
+            <div class="field" id="contactFullNameField"><label for="fullName" id="fullNameLabel">الاسم الكامل</label><input id="fullName" name="fullName" type="text" placeholder="اكتب الاسم الكامل" /></div>
+            <div class="field" id="contactNationalIdField"><label for="nationalId" id="nationalIdLabel">رقم الهوية / الإقامة</label><input id="nationalId" name="nationalId" type="text" inputmode="numeric" maxlength="20" placeholder="أدخل رقم الهوية أو الإقامة" /></div>
+            <div class="field" id="contactPhoneField"><label for="phone" id="phoneLabel">رقم الجوال</label><input id="phone" name="phone" type="tel" placeholder="05xxxxxxxx" /></div>
             <div class="field"><label for="email">البريد الإلكتروني <span id="emailRequiredMark" style="display:none;color:#f5d46b">*</span></label><input id="email" name="email" type="email" placeholder="example@email.com" /></div>
             <div class="field full"><label for="city">المدينة</label><input id="city" name="city" type="text" placeholder="اكتب المدينة" /></div>
           </div>
@@ -184,18 +211,33 @@
         <section class="section submit-zone">
           <h3 class="section-title">الإقرار والإرسال</h3>
           <div class="policy-box"><div class="policy-row">أقر بأن البيانات المدخلة صحيحة وأن الطلب يخضع للمراجعة والاعتماد من إدارة الأكاديمية.</div></div>
-          <label class="consent-card field-inline"><input type="checkbox" id="confirmPolicy" required /><span>أوافق على إرسال الطلب للمراجعة.</span></label>
+          <label class="consent-card field-inline"><input type="checkbox" id="confirmPolicy" required /><span>أوافق على <a href="al_masariha_terms.html" target="_blank" rel="noopener">الشروط والأحكام</a> و<a href="al_masariha_privacy.html" target="_blank" rel="noopener">سياسة الخصوصية</a>، وأقر بصحة البيانات المدخلة.</span></label>
           <div class="submit-center"><button type="submit" class="submit-btn submit-btn-hero" id="joinSubmitBtn">إرسال الطلب للمراجعة</button></div>
-          <div class="action-row action-row-secondary"><a href="request_status.html" class="ghost-btn">متابعة انضمام (REQ)</a><a href="store_order_status.html" class="ghost-btn">متابعة متجر (ORD)</a><a href="index.html" class="ghost-btn">العودة للرئيسية</a></div>
-          <div id="statusFollowBox" class="policy-box" style="display:none;margin-top:16px;border-color:rgba(46,204,113,.34);background:rgba(46,204,113,.08)">
-            <div class="policy-row">تم حفظ طلبك. احتفظ برقم المرجع، ويمكنك متابعة حالة الطلب من زر المتابعة.</div>
-            <a id="statusFollowLink" href="request_status.html" class="submit-btn" style="width:fit-content;min-width:190px">متابعة حالة الطلب</a>
-          </div>
+          <div class="action-row action-row-secondary"><a href="request_status.html" class="ghost-btn">متابعة طلب الانضمام</a><a href="store_order_status.html" class="ghost-btn">متابعة طلب المتجر</a><a href="index.html" class="ghost-btn">العودة للرئيسية</a></div>
         </section>
       </form>
+
+      <section id="joinSuccessPanel" class="join-success-panel" hidden aria-live="polite">
+        <div class="join-success-icon" aria-hidden="true">✓</div>
+        <h2 class="join-success-title">تم استلام طلبك بنجاح</h2>
+        <p class="join-success-lead"><strong>احفظ رقم المرجع الآن</strong> — ستحتاجه لمتابعة الطلب والمحادثة مع الإدارة. التقط صورة للشاشة أو امسح الرمز أدناه.</p>
+        <div class="join-ref-card">
+          <span class="join-ref-label">رقم المرجع</span>
+          <strong id="successRefCode" class="join-ref-value">—</strong>
+          <button type="button" class="join-ref-copy" id="copyRefBtn">نسخ الرقم</button>
+        </div>
+        <div id="statusFollowQr" class="request-qr-box"></div>
+        <div class="join-success-actions">
+          <button type="button" class="submit-btn submit-btn-hero" id="successOpenChatBtn">💬 محادثة مع الإدارة الآن</button>
+          <a id="statusFollowLink" class="ghost-btn join-success-track" href="request_status.html">متابعة حالة الطلب</a>
+        </div>
+        <p class="join-success-hint">الإدارة تراجع طلبك خلال أوقات العمل. يمكنك إرسال استفسار فوراً عبر المحادثة — لا حاجة للانتظار بصمت.</p>
+        <button type="button" class="ghost-btn" id="joinNewRequestBtn" style="margin-top:12px">تقديم طلب آخر</button>
+      </section>
     </section>
   </main>
   <div class="toast-wrap" id="toastWrap"></div>
+  <button type="button" class="join-support-fab" id="joinSupportFab" aria-label="تواصل مع الدعم">💬 تواصل مع الدعم</button>
   <div id="site-footer"></div>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="js/site-seo.js"></script>
@@ -210,6 +252,8 @@
   <script src="js/academy-member-profile.js"></script>
   <script src="js/join-intake-policy.js"></script>
   <script src="js/visitor-message.js"></script>
+  <script src="js/request-track-qr.js"></script>
+  <script src="js/chat-drawer.js"></script>
   <script src="js/join-page-app.js"></script>
 </body>
 </html>
