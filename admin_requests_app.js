@@ -391,22 +391,48 @@ function ensureFileReviewUi(){
   }
 }
 
+function completionLoadErrorHtml(msg, requestId){
+  const rid=escapeHtml(String(requestId||''));
+  return `<div class="review-lock">${escapeHtml(msg||'تعذر تحميل المرفقات.')}</div><div class="attachment-actions" style="margin-top:10px"><button type="button" class="mini-btn review" onclick="loadCompletionForRequest('${rid}')">إعادة المحاولة</button></div>`;
+}
 async function loadCompletionForRequest(requestId){
   ensureFileReviewUi();
-  currentCompletion=null;
+  const loadId=String(requestId||'');
   const panel=$('attachmentsReviewPanel'); const list=$('attachmentsReviewList'); const summary=$('attachmentsReviewSummary');
   if(panel) panel.style.display='block';
   if(list) list.innerHTML='<div class="file-preview-empty">جاري تحميل المرفقات...</div>';
   if(summary) summary.innerHTML='';
-  const {data,error}=await supabaseClient.from('request_completions').select('*').eq('request_id',requestId).maybeSingle();
-  if(error){console.error(error); if(list) list.innerHTML='<div class="review-lock">تعذر تحميل المرفقات حاليًا. راجع الاتصال والصلاحيات.</div>'; return null;}
-  currentCompletion=data||null;
-  renderAttachmentsReview();
-  return currentCompletion;
+  const stillCurrent=()=>String(currentRequestId||'')===loadId;
+  try{
+    const query=supabaseClient.from('request_completions').select('*').eq('request_id',loadId).maybeSingle();
+    const timeout=new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout')),20000));
+    const {data,error}=await Promise.race([query,timeout]);
+    if(!stillCurrent()) return null;
+    if(error){
+      console.error(error);
+      const hint=/policy|permission|42501|JWT/i.test(String(error.message||''))
+        ? 'تحقق من تسجيل الدخول كإدارة (صلاحية admin).'
+        : 'راجع الاتصال أو نفّذ سياسات request_completions في Supabase.';
+      if(list) list.innerHTML=completionLoadErrorHtml('تعذر تحميل المرفقات. '+hint, loadId);
+      return null;
+    }
+    currentCompletion=data||null;
+    renderAttachmentsReview();
+    return currentCompletion;
+  }catch(err){
+    console.error(err);
+    if(!stillCurrent()) return null;
+    const msg=String(err&&err.message||'')==='timeout'
+      ? 'انتهت مهلة التحميل (20 ثانية). قد يكون الاتصال بقاعدة البيانات بطيئاً.'
+      : 'حدث خطأ أثناء عرض المرفقات.';
+    if(list) list.innerHTML=completionLoadErrorHtml(msg, loadId);
+    return null;
+  }
 }
 function renderAttachmentsReview(){
   const panel=$('attachmentsReviewPanel'); const list=$('attachmentsReviewList'); const summary=$('attachmentsReviewSummary');
   if(!panel||!list) return;
+  try{
   panel.style.display='block';
   const ctx=reviewContext();
   const prof=window.JOIN_ATTACHMENT_CATALOG?.completionProfile?.(ctx||{});
@@ -436,6 +462,10 @@ function renderAttachmentsReview(){
     const note=currentCompletion[f.note]||'';
     return `<article class="attachment-card"><div class="attachment-top"><div><div class="attachment-title">${escapeHtml(f.title)} ${f.required?'':'<span style="color:var(--muted);font-size:12px">(اختياري)</span>'}</div><span class="subtext">${url?'ملف مرفوع وجاهز للمعاينة':'لا يوجد ملف مرفوع'}</span></div><span class="tag ${fileStatusClass(st)}">${escapeHtml(getFileStatusLabel(st))}</span></div><div class="attachment-actions">${url?`<button class="mini-btn review" onclick="previewFile('${f.key}')">معاينة</button><a class="mini-btn more" href="${escapeHtml(url)}" target="_blank" rel="noopener">فتح</a>`:''}<button class="mini-btn accept" onclick="setFileReview('${f.key}','approved')">قبول</button><button class="mini-btn reject" onclick="setFileReview('${f.key}','rejected')">رفض</button><button class="mini-btn more" onclick="setFileReview('${f.key}','reupload')">إعادة رفع</button></div><div class="attachment-note"><textarea id="note_${f.key}" placeholder="ملاحظة الإدارة لهذا المرفق">${escapeHtml(note)}</textarea><button class="mini-btn more" onclick="saveFileNote('${f.key}')">حفظ الملاحظة</button></div></article>`;
   }).join('');
+  }catch(err){
+    console.error(err);
+    list.innerHTML=completionLoadErrorHtml('تعذر عرض قائمة المرفقات. حدّث الصفحة أو أعد فتح الطلب.', currentRequestId);
+  }
 }
 function getReviewFile(key){return getCurrentReviewFiles().find(f=>f.key===key)}
 async function setFileReview(key,status){
@@ -1014,6 +1044,8 @@ async function updateStatus(id,status){
 }
 function exportCsv(){const rows=[['رقم المرجع','الاسم','النوع','الحالة','الجوال','البريد','المدينة','التاريخ','التفاصيل','الملاحظات']]; filtered().forEach(r=>rows.push([refCode(r),r.full_name||'',getTypeLabel(r.request_type),getStatusLabel(r.status||'new'),r.phone||'',r.email||'',r.city||'',`${formatDate(r.created_at)} ${formatTime(r.created_at)}`,getRequestSummary(r),notes(r)])); const csv=rows.map(row=>row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n'); const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}); const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='academy_requests.csv';document.body.appendChild(a);a.click();a.remove();showToast('تم التصدير بنجاح')}
 
+window.openRequest=openRequest;
+window.loadCompletionForRequest=loadCompletionForRequest;
 document.addEventListener('DOMContentLoaded',()=>{
   ensureFileReviewUi();
   ensureChatUi();
