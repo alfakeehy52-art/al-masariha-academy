@@ -79,7 +79,12 @@
   }
 
   async function uploadCompletionFile(sb, file, folder, referenceCode) {
-    if (!sb || !file) return null;
+    if (!sb) {
+      throw new Error("عميل التخزين غير مهيأ. حدّث الصفحة ثم أعد المحاولة.");
+    }
+    if (!file) {
+      throw new Error("لم يتم اختيار ملف للرفع.");
+    }
     const prepared = await compressImageIfNeeded(file);
     const ref = safeRefSegment(referenceCode);
     const path = `${folder}/${ref}-${Date.now()}.${ext(prepared.name)}`;

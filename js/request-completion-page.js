@@ -356,6 +356,7 @@
 
   async function submitCompletion(e) {
     e.preventDefault();
+    if (!ensureSupabase()) return;
     if (!currentRequest) {
       toast("اضغط «عرض المرفقات» أولاً بعد إدخال المرجع والجوال.");
       return;
@@ -369,6 +370,12 @@
     if (!items.length) {
       toast("لا توجد مرفقات مطلوبة لإعادة الرفع حالياً.");
       return;
+    }
+    const submitBtn = document.querySelector('#completionForm button[type="submit"]');
+    const prevBtnLabel = submitBtn ? submitBtn.textContent : "";
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.textContent = "جاري الإرسال...";
     }
     try {
       for (const item of items) {
@@ -391,7 +398,11 @@
       for (const item of items) {
         const el = $(item.key);
         if (el && el.files.length) {
-          payload[item.url] = await uploadFile(el.files[0], item.folder);
+          const uploadedUrl = await uploadFile(el.files[0], item.folder);
+          if (!uploadedUrl) {
+            throw new Error(`تعذر رفع «${item.label}». حاول مرة أخرى.`);
+          }
+          payload[item.url] = uploadedUrl;
           payload[item.status] = "pending";
           payload[item.note] = null;
           uploaded++;
@@ -401,11 +412,14 @@
         toast("لم يُرفع أي ملف. اختر الملفات من الخانات أعلاه.");
         return;
       }
-      await upsertRequestCompletion(
+      const saved = await upsertRequestCompletion(
         currentRequest.reference_code,
         currentRequest.phone,
         payload
       );
+      if (!saved) {
+        throw new Error("تم رفع الملفات لكن تعذر حفظ بيانات الاستكمال.");
+      }
       try {
         await markJoinRequestReviewing(
           currentRequest.id,
@@ -416,6 +430,11 @@
         console.warn(reviewErr);
       }
       toast("تم إرسال المرفقات بنجاح.");
+      document.querySelectorAll("#attachmentsGrid input[type=file]").forEach((inp) => {
+        inp.value = "";
+      });
+      const notesEl = $("notes");
+      if (notesEl) notesEl.value = "";
       setTimeout(
         () =>
           (location.href = `request_status.html?ref=${encodeURIComponent(currentRequest.reference_code)}&phone=${encodeURIComponent(currentRequest.phone)}`),
@@ -424,6 +443,11 @@
     } catch (err) {
       console.error(err);
       toast(completionErrMsg(err));
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.textContent = prevBtnLabel || "إرسال المرفقات";
+      }
     }
   }
 

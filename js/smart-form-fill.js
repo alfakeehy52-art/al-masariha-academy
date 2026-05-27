@@ -219,10 +219,8 @@
   }
 
   function adminApprovalPendingHint(approved) {
-    if (approved) {
-      return '<p style="margin:6px 0 0;font-size:11px;color:#666">تم الاعتماد الإلكتروني — التاريخ أعلاه.</p>';
-    }
-    return '<p style="margin:6px 0 0;font-size:11px;color:#666">يُوقَّع إلكترونياً عند الاعتماد النهائي من الإدارة (الاسم من إعدادات الأكاديمية).</p>';
+    if (!approved) return "";
+    return '<p class="sig-admin-hint" style="margin:6px 0 0;font-size:11px;color:#666">تم الاعتماد الإلكتروني — التاريخ أعلاه.</p>';
   }
 
   function adminApprovalSignatureHtml(r) {
@@ -334,14 +332,14 @@
       </div>
       <div class="section"><h3>الإقرار الصحي</h3>
         <p>${healthIntro}</p>
-        <p>كما يلتزم مقدم الطلب بإرفاق <b>نموذج الكشف الطبي المعتمد</b> ضمن مستندات التسجيل المطلوبة (نموذج منفصل يعبئه المركز الصحي).</p>
-      </div>
-      <div class="section"><h3>تحمل المسؤولية الرياضية</h3>
-        <p>${liabilityIntro}</p>
-        <p>ولا تتحمل الأكاديمية أي مسؤولية ناتجة عن إخفاء معلومات صحية مؤثرة تخص اللاعب.</p>
+        <p>كما يلتزم مقدم الطلب بإرفاق <b>نموذج الكشف الطبي المعتمد</b> ضمن مستندات التسجيل (نموذج منفصل).</p>
       </div>`;
 
     const page2 = `
+      <div class="section"><h3>تحمل المسؤولية الرياضية</h3>
+        <p>${liabilityIntro}</p>
+        <p>ولا تتحمل الأكاديمية مسؤولية إخفاء معلومات صحية مؤثرة تخص اللاعب.</p>
+      </div>
       ${guardianBlock}
       <div class="section"><h3>ملاحظات</h3>
         <ul class="notes-list">

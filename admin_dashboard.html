@@ -13,6 +13,11 @@
   <script src="js/supabase-client.js"></script>
   <script src="js/admin-auth.js"></script>
   <script>requireAdmin();</script>
+  <style>
+    .stat-link{cursor:pointer;transition:transform .15s ease}
+    .stat-link:hover{transform:translateY(-2px)}
+    .stat-link:focus-visible{outline:2px solid rgba(213,177,90,.65);outline-offset:2px}
+  </style>
   
 
 
@@ -39,10 +44,22 @@
     </div>
 
     <section class="stats">
-      <div class="stat"><span>إجمالي اللاعبين</span><strong id="statPlayers">0</strong></div>
-      <div class="stat"><span>طلبات الانضمام</span><strong id="statRequests">0</strong></div>
-      <div class="stat"><span>الفئة الأعلى</span><strong id="statTopCategory">-</strong></div>
-      <div class="stat"><span>ملفات تحتاج مراجعة</span><strong id="statNeedReview">0</strong></div>
+      <div class="stat stat-link" data-stat-action="players" role="button" tabindex="0" title="فتح قائمة اللاعبين">
+        <span>إجمالي اللاعبين</span>
+        <strong id="statPlayers">0</strong>
+      </div>
+      <div class="stat stat-link" data-stat-action="requests" role="button" tabindex="0" title="فتح طلبات الانضمام">
+        <span>طلبات الانضمام</span>
+        <strong id="statRequests">0</strong>
+      </div>
+      <div class="stat stat-link" data-stat-action="top-category" role="button" tabindex="0" title="فتح لاعبي الفئة الأعلى">
+        <span>الفئة الأعلى</span>
+        <strong id="statTopCategory">-</strong>
+      </div>
+      <div class="stat stat-link" data-stat-action="need-review" role="button" tabindex="0" title="فتح الملفات التي تحتاج مراجعة">
+        <span>ملفات تحتاج مراجعة</span>
+        <strong id="statNeedReview">0</strong>
+      </div>
     </section>
 
     <section class="grid">
@@ -80,6 +97,7 @@
   <script src="admin_sidebar.js"></script>
   <script>
     const supabaseClient = createSupabaseClient();
+    let dashboardTopCategory = "";
 
     function setText(id, value){
       const el = document.getElementById(id);
@@ -95,6 +113,41 @@
       const d = new Date(value);
       if (Number.isNaN(d.getTime())) return '-';
       return d.toLocaleDateString('ar-SA') + ' - ' + d.toLocaleTimeString('ar-SA', {hour:'2-digit', minute:'2-digit'});
+    }
+
+    function openStatTarget(action){
+      if (action === "players"){
+        window.location.href = "players_list_dashboard.html";
+        return;
+      }
+      if (action === "requests"){
+        window.location.href = "admin_requests.html";
+        return;
+      }
+      if (action === "top-category"){
+        if (!dashboardTopCategory || dashboardTopCategory === "-"){
+          window.location.href = "players_list_dashboard.html";
+          return;
+        }
+        window.location.href = `players_list_dashboard.html?category=${encodeURIComponent(dashboardTopCategory)}`;
+        return;
+      }
+      if (action === "need-review"){
+        window.location.href = "players_list_dashboard.html?filter=need-review";
+      }
+    }
+
+    function bindStatCards(){
+      document.querySelectorAll(".stat-link[data-stat-action]").forEach((card) => {
+        const action = card.getAttribute("data-stat-action");
+        card.addEventListener("click", () => openStatTarget(action));
+        card.addEventListener("keydown", (e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            openStatTarget(action);
+          }
+        });
+      });
     }
 
     async function loadDashboard(){
@@ -118,6 +171,7 @@
           if (cat !== '-') categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
         });
         const topCategory = Object.entries(categoryCounts).sort((a,b) => b[1] - a[1])[0]?.[0] || '-';
+        dashboardTopCategory = topCategory;
         setText('statTopCategory', topCategory);
 
         const needReview = playersList.filter(p => !(p.full_name && p.phone && p.category && p.position)).length
@@ -146,7 +200,10 @@
       }
     }
 
-    document.addEventListener('DOMContentLoaded', loadDashboard);
+    document.addEventListener('DOMContentLoaded', () => {
+      bindStatCards();
+      loadDashboard();
+    });
   </script>
 </body>
 </html>

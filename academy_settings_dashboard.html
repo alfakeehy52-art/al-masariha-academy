@@ -393,14 +393,11 @@
       if (typeof applyAcademySettingsToSite === "function") applyAcademySettingsToSite(saved);
       if (typeof applySiteSeo === "function") applySiteSeo("academy_settings_dashboard.html");
       const n = updateLaunchChecklist();
-      const extra =
+      const msg =
         n >= 5
-          ? " الموقع جاهز للإطلاق."
-          : " أكمل البنود الناقصة في قائمة الإطلاق.";
-      showStatus(
-        "تم الحفظ. التغييرات تظهر على الموقع خلال دقيقة." + extra + " " + PRODUCTION_URL,
-        true
-      );
+          ? "تم الحفظ. التغييرات تظهر على الموقع خلال دقيقة."
+          : "تم الحفظ. التغييرات تظهر على الموقع خلال دقيقة. أكمل البنود الناقصة في قائمة الإطلاق.";
+      showStatus(msg, true);
     }
 
     function showStatus(msg, ok) {

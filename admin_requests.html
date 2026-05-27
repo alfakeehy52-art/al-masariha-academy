@@ -27,6 +27,10 @@
     .btn-secondary{background:rgba(255,255,255,.04);color:#fff}
     .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:22px}
     .stat{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid var(--line);border-radius:20px;padding:18px;box-shadow:var(--shadow)}
+    .stat-link{cursor:pointer;transition:transform .15s ease, box-shadow .2s ease}
+    .stat-link:hover{transform:translateY(-2px)}
+    .stat-link:focus-visible{outline:2px solid rgba(212,175,55,.65);outline-offset:2px}
+    .stat-link.is-active{box-shadow:0 0 0 1px rgba(212,175,55,.4) inset}
     .stat span{display:block;color:var(--muted);font-size:13px;margin-bottom:8px;font-weight:700}
     .stat strong{font-size:28px;color:var(--gold-2);font-weight:900}
     .card{background:linear-gradient(180deg, rgba(255,255,255,.04), rgba(255,255,255,.02));border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);overflow:hidden}
@@ -115,11 +119,21 @@
       </div>
 
       <section class="stats">
-        <div class="stat"><span>إجمالي الطلبات</span><strong>42</strong></div>
-        <div class="stat"><span>طلبات جديدة</span><strong>11</strong></div>
-        <div class="stat"><span>جاهز للمراجعة</span><strong>8</strong></div>
-        <div class="stat"><span>تم اعتمادها</span><strong>17</strong></div>
-        <div class="stat"><span>بانتظار استكمال</span><strong>6</strong></div>
+        <div class="stat stat-link is-active" data-stat-filter="all" role="button" tabindex="0" title="عرض كل الحالات">
+          <span>إجمالي الطلبات</span><strong id="statAll">0</strong>
+        </div>
+        <div class="stat stat-link" data-stat-filter="new" role="button" tabindex="0" title="عرض الطلبات الجديدة">
+          <span>طلبات جديدة</span><strong id="statNew">0</strong>
+        </div>
+        <div class="stat stat-link" data-stat-filter="review" role="button" tabindex="0" title="عرض الجاهز للمراجعة">
+          <span>جاهز للمراجعة</span><strong id="statReview">0</strong>
+        </div>
+        <div class="stat stat-link" data-stat-filter="approved" role="button" tabindex="0" title="عرض المعتمدة">
+          <span>تم اعتمادها</span><strong id="statApproved">0</strong>
+        </div>
+        <div class="stat stat-link" data-stat-filter="pending" role="button" tabindex="0" title="عرض بانتظار الاستكمال">
+          <span>بانتظار استكمال</span><strong id="statPending">0</strong>
+        </div>
       </section>
 
       <section class="card">
@@ -128,10 +142,11 @@
           <div class="filters">
             <input type="text" id="searchInput" placeholder="ابحث بالاسم أو الجوال أو البريد..." />
             <select id="typeFilter"><option>كل أنواع الطلبات</option><option>لاعب</option><option>ولي أمر</option><option>مدرب</option><option>داعم</option><option>كادر</option><option>عضو أكاديمية</option></select>
-            <select id="statusFilter"><option>الطلبات النشطة</option><option>كل الحالات</option><option>جديد</option><option>جاهز للمراجعة</option><option>مقبول</option><option>مرفوض</option><option>بانتظار استكمال</option></select>
+            <select id="statusFilter"><option>كل الحالات</option><option>الطلبات النشطة</option><option>جديد</option><option>جاهز للمراجعة</option><option>مقبول</option><option>مرفوض</option><option>بانتظار استكمال</option></select>
             <select id="dateFilter"><option>الكل</option><option>اليوم</option><option>آخر 7 أيام</option><option>هذا الشهر</option></select>
             <select id="sortFilter"><option>ترتيب: الأحدث أولاً</option><option>الأقدم أولاً</option><option>الأعلى أولوية</option></select>
             <button class="btn btn-secondary" type="button" id="applyFiltersBtn">تصفية</button>
+            <button class="btn btn-secondary" type="button" id="resetRequestsFiltersBtn" title="مسح الفلاتر المحفوظة والعودة للعرض الافتراضي">إعادة تعيين الفلاتر</button>
           </div>
           <div style="overflow:auto;">
             <table>
@@ -202,6 +217,6 @@
   <script src="js/academy-member-profile.js"></script>
   <script src="js/join-attachments-catalog.js?v=20260522-reupload2"></script>
   <script src="js/request-completion-review.js?v=20260522-reviewfix"></script>
-  <script src="admin_requests_app.js?v=20260522-reupload2"></script>
+  <script src="admin_requests_app.js?v=20260527-resetfilters"></script>
 </body>
 </html>

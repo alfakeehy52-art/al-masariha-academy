@@ -240,7 +240,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="admin-user-card" id="adminUserCard" hidden>
           <span class="admin-user-label">المسؤول الحالي</span>
           <strong id="adminUserName">—</strong>
-          <span class="admin-user-email" id="adminUserEmail"></span>
+          <span class="admin-user-signatory" id="adminUserSignatory"></span>
         </div>
       </div>
     `;
@@ -285,6 +285,17 @@ document.addEventListener("DOMContentLoaded", () => {
         ? `${subtitle} — نظام إداري موحّد`
         : "نظام إداري موحّد للاعبين والطلبات والتشغيل.";
     }
+    applyAdminUserSignatory(s);
+  }
+
+  function applyAdminUserSignatory(settings) {
+    const el = document.getElementById("adminUserSignatory");
+    if (!el) return;
+    const name = String(
+      (settings || window.ACADEMY_SETTINGS || {}).official_signatory_name_ar || ""
+    ).trim();
+    el.textContent = name || "لم يُحدَّد — من إعدادات الأكاديمية";
+    el.classList.toggle("is-missing", !name);
   }
 
   async function bootstrapSidebarBrand() {
@@ -339,8 +350,8 @@ document.addEventListener("DOMContentLoaded", () => {
       .admin-user-card{margin-top:12px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
       .admin-user-label{display:block;color:#9fb0a4;font-size:11px;font-weight:800;margin-bottom:4px}
       .admin-user-card strong{display:block;color:#f0d58f;font-size:15px;font-weight:900;line-height:1.4}
-      .admin-user-email{display:block;margin-top:6px;color:#9fb0a4;font-size:11px;font-weight:700;word-break:break-all;line-height:1.5}
-      .admin-user-email:empty{display:none}
+      .admin-user-signatory{display:block;margin-top:6px;color:#e8efe9;font-size:13px;font-weight:800;line-height:1.5}
+      .admin-user-signatory.is-missing{color:#9fb0a4;font-size:11px;font-weight:700}
       #admin-sidebar{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
       .admin-pro-menu{display:flex;flex-direction:column;gap:12px;margin:0;overflow-y:auto;overflow-x:hidden;min-height:0;padding:2px 2px 16px;scrollbar-width:thin;scrollbar-color:rgba(213,177,90,.7) rgba(255,255,255,.06)}
       .menu-group{padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.06)}
@@ -459,11 +470,11 @@ document.addEventListener("DOMContentLoaded", () => {
   async function loadAdminIdentity() {
     const card = document.getElementById("adminUserCard");
     const nameEl = document.getElementById("adminUserName");
-    const emailEl = document.getElementById("adminUserEmail");
     if (!card || !nameEl || typeof getAdminSession !== "function") return;
     try {
       if (!window.PANEL_ROLES) await loadScriptOnce("js/panel-access.js");
       if (!window.ACADEMY_ROLES) await loadScriptOnce("js/academy-roles.js");
+      if (!window.loadAcademySettings) await loadScriptOnce("js/academy-settings.js");
       const session = await getAdminSession();
       const user = session && session.user;
       if (!user) return;
@@ -474,11 +485,9 @@ document.addEventListener("DOMContentLoaded", () => {
         identity = getAdminDisplayIdentity(user);
       }
       nameEl.textContent = identity.title || "مسؤول";
-      if (emailEl) {
-        emailEl.textContent = identity.subtitle
-          ? identity.subtitle + (identity.email ? " · " + identity.email : "")
-          : identity.email || "";
-      }
+      const settings =
+        window.ACADEMY_SETTINGS || (await loadAcademySettings().catch(() => null));
+      applyAdminUserSignatory(settings);
       card.hidden = false;
       if (typeof applyPanelNavPolicy === "function") await applyPanelNavPolicy(user);
       else applyAdminNavPolicy(user);

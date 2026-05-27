@@ -47,7 +47,7 @@ function normalizeStatusFilterValue(val){
   const v=String(val||'').trim();
   if(!v||v==='active'||v==='الطلبات النشطة')return 'active';
   if(v==='all'||v==='كل الحالات')return 'all';
-  const map={جديد:'new','جاهز للمراجعة':'review',مقبول:'approved',مرفوض:'rejected','بانتظار استكمال':'pending'};
+  const map={جديد:'new','جاهز للمراجعة':'review','تحت المراجعة':'review',مقبول:'approved',مرفوض:'rejected','بانتظار استكمال':'pending'};
   return map[v]||v;
 }
 function normalizeTypeFilterValue(val){
@@ -57,6 +57,7 @@ function normalizeTypeFilterValue(val){
   return map[v]||v;
 }
 const FILE_STATUS_LABELS = {pending:'قيد المراجعة', approved:'مقبول', rejected:'مرفوض', reupload:'مطلوب إعادة رفع'};
+const REQUESTS_LAST_FILTERS_KEY = 'admin_requests_last_filters_v1';
 
 function $(id){return document.getElementById(id)}
 function escapeHtml(value){return String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
@@ -152,6 +153,98 @@ function refCode(r){if(r.reference_code)return r.reference_code;const shortId=St
 function notes(r){return r.player_notes||r.guardian_notes||r.coach_notes||r.coach_bio||r.support_notes||r.volunteer_notes||r.notes||'-'}
 function showToast(message,type='success'){const wrap=$('toastWrap');if(!wrap)return;const t=document.createElement('div');t.className='toast '+type;t.textContent=message;wrap.appendChild(t);setTimeout(()=>{t.style.opacity='0';t.style.transform='translateY(8px)';t.style.transition='.2s ease';setTimeout(()=>t.remove(),220)},3000)}
 function isActive(r){return ['new','review','reviewing','pending','needs_completion'].includes(String(r.status||'new'))}
+function getCurrentFiltersSnapshot(){
+  return {
+    status: normalizeStatusFilterValue($('statusFilter')?.value || ''),
+    type: normalizeTypeFilterValue($('typeFilter')?.value || '')
+  };
+}
+function saveLastRequestsFilters(){
+  try{
+    const snapshot=getCurrentFiltersSnapshot();
+    if(!snapshot.status && !snapshot.type) return;
+    window.sessionStorage.setItem(REQUESTS_LAST_FILTERS_KEY, JSON.stringify(snapshot));
+  }catch(_e){}
+}
+function loadLastRequestsFilters(){
+  try{
+    const raw=window.sessionStorage.getItem(REQUESTS_LAST_FILTERS_KEY);
+    if(!raw) return null;
+    const parsed=JSON.parse(raw);
+    if(!parsed || typeof parsed!=='object') return null;
+    return {
+      status: normalizeStatusFilterValue(parsed.status || ''),
+      type: normalizeTypeFilterValue(parsed.type || '')
+    };
+  }catch(_e){
+    return null;
+  }
+}
+function buildRequestsReturnUrl(){
+  const saved=loadLastRequestsFilters();
+  const params=new URLSearchParams();
+  const status=saved?.status;
+  const type=saved?.type;
+  if(status && status!=='all') params.set('status', status);
+  if(type) params.set('type', type);
+  const q=params.toString();
+  return q ? `admin_requests.html?${q}` : 'admin_requests.html';
+}
+function updateRequestsBackLinks(){
+  const href=buildRequestsReturnUrl();
+  document.querySelectorAll('.hero a.btn[href="admin_requests_dashboard.html"]').forEach((link)=>{
+    link.setAttribute('href', href);
+    link.setAttribute('title', 'العودة إلى إدارة الطلبات مع آخر فلتر');
+  });
+}
+function clearLastRequestsFilters(){
+  try{window.sessionStorage.removeItem(REQUESTS_LAST_FILTERS_KEY);}catch(_e){}
+}
+function typeToSelectValue(typeId){
+  const map={player:'لاعب',guardian:'ولي أمر',coach:'مدرب',supporter:'داعم',staff:'كادر',academy_member:'عضو أكاديمية'};
+  return map[String(typeId||'').trim()]||'';
+}
+function setSelectToDefault(selectEl, matchText){
+  if(!selectEl||!selectEl.options.length) return;
+  const opts=[...selectEl.options];
+  const hit=opts.find(o=>String(o.value||o.textContent||'').includes(matchText));
+  selectEl.value=(hit||opts[0]).value;
+}
+function resetRequestsFilters(){
+  clearLastRequestsFilters();
+  const search=$('searchInput'); if(search) search.value='';
+  setSelectToDefault($('typeFilter'),'كل أنواع');
+  setSelectToDefault($('dateFilter'),'الكل');
+  const sort=$('sortFilter');
+  if(sort){
+    const newest=[...sort.options].find(o=>/newest|الأحدث/i.test(String(o.value||o.textContent||'')));
+    if(newest) sort.value=newest.value;
+  }
+  ['guardianGoalFilter','staffDomainFilter','supporterTypeFilter','supporterMethodFilter','memberInterestFilter'].forEach(id=>{
+    const el=$(id); if(el) el.value='';
+  });
+  applyStatusFilterFromStat('all');
+  try{
+    if(!window.REQUEST_TYPE&&window.location.pathname.includes('admin_requests')){
+      const clean=window.location.pathname.split('/').pop()||'admin_requests.html';
+      window.history.replaceState({},'',clean);
+    }
+  }catch(_e){}
+  updateRequestsBackLinks();
+  showToast('تمت إعادة تعيين الفلاتر.','success');
+}
+function ensureResetFiltersButton(){
+  if($('resetRequestsFiltersBtn')) return;
+  const host=$('applyFiltersBtn')?.parentElement||document.querySelector('.filters')||document.querySelector('.toolbar');
+  if(!host||!$('statusFilter')) return;
+  const btn=document.createElement('button');
+  btn.type='button';
+  btn.className=host.classList.contains('filters')?'btn btn-secondary':'btn';
+  btn.id='resetRequestsFiltersBtn';
+  btn.textContent='إعادة تعيين الفلاتر';
+  btn.title='مسح الفلاتر المحفوظة والعودة للعرض الافتراضي';
+  host.appendChild(btn);
+}
 
 function ensureConfirmDialog(){
   if(document.getElementById('smartConfirmOverlay')) return;
@@ -230,8 +323,85 @@ async function loadRequests(type=null){
   if($('requestsCards')) await loadAcademyMembers();
   if($('requestsTableBody')) renderTable(type);
   if($('requestsCards')) renderDashboard();
+  updateRequestStatsUI();
+}
+function syncStatCardFromDropdown(){
+  const v=normalizeStatusFilterValue($('statusFilter')?.value||'');
+  setActiveStatCard(v||'all');
 }
 function countsFor(type){const arr=requests.filter(r=>!type||r.request_type===type);return {all:arr.length,new:arr.filter(r=>getStatusLabel(r.status||'new')==='جديد').length,review:arr.filter(r=>getStatusLabel(r.status)==='جاهز للمراجعة').length,approved:arr.filter(r=>getStatusLabel(r.status)==='مقبول').length,pending:arr.filter(r=>getStatusLabel(r.status)==='بانتظار استكمال').length,active:arr.filter(isActive).length}}
+function updateRequestStatsUI(){
+  const c=countsFor(window.REQUEST_TYPE||null);
+  const set=(id,val)=>{const el=$(id);if(el)el.textContent=val;};
+  set('statAll',c.all);
+  set('statNew',c.new);
+  set('statReview',c.review);
+  set('statApproved',c.approved);
+  set('statPending',c.pending);
+}
+function setActiveStatCard(filter){
+  document.querySelectorAll('.stat-link[data-stat-filter]').forEach(el=>{
+    el.classList.toggle('is-active', String(el.dataset.statFilter||'')===String(filter||'all'));
+  });
+}
+function resolveStatusSelectValue(filter){
+  const sf=$('statusFilter');
+  if(!sf) return '';
+  const options=[...sf.options].map(o=>String(o.value||'').trim());
+  const byFilter={
+    all:['all','كل الحالات'],
+    active:['active','الطلبات النشطة'],
+    new:['new','جديد'],
+    review:['review','جاهز للمراجعة','تحت المراجعة'],
+    approved:['approved','مقبول'],
+    rejected:['rejected','مرفوض'],
+    pending:['pending','بانتظار استكمال']
+  };
+  const candidates=byFilter[String(filter||'all')]||['all','كل الحالات'];
+  return candidates.find(v=>options.includes(v))||candidates[0];
+}
+function applyStatusFilterFromStat(filter, options){
+  const sf=$('statusFilter');
+  if(!sf) return;
+  sf.value=resolveStatusSelectValue(filter);
+  setActiveStatCard(filter);
+  renderTable(window.REQUEST_TYPE||null);
+  saveLastRequestsFilters();
+  updateRequestStatsUI();
+  if(options && options.toast){
+    const labels={all:'تم عرض كل الطلبات',new:'تم عرض الطلبات الجديدة',review:'تم عرض الجاهز للمراجعة',approved:'تم عرض المعتمدة',pending:'تم عرض بانتظار الاستكمال',active:'تم عرض الطلبات النشطة'};
+    showToast(labels[filter]||'تم تطبيق الفلتر.','success');
+  }
+  const table=$('requestsTableBody');
+  if(table) table.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+function bindStatsCards(){
+  if(!document.getElementById('requests-stat-link-style')){
+    const st=document.createElement('style');
+    st.id='requests-stat-link-style';
+    st.textContent='.stat-link{cursor:pointer;transition:transform .15s ease,box-shadow .2s ease}.stat-link:hover{transform:translateY(-2px)}.stat-link:focus-visible{outline:2px solid rgba(212,175,55,.65);outline-offset:2px}.stat-link.is-active{box-shadow:0 0 0 1px rgba(212,175,55,.4) inset}';
+    document.head.appendChild(st);
+  }
+  if(!document.querySelector('.stat-link[data-stat-filter]')){
+    const order=['all','new','review','approved','pending'];
+    document.querySelectorAll('.stats .stat').forEach((el,idx)=>{
+      const filter=order[idx];
+      if(!filter) return;
+      el.classList.add('stat-link');
+      if(!el.dataset.statFilter) el.dataset.statFilter=filter;
+      if(!el.hasAttribute('role')) el.setAttribute('role','button');
+      if(!el.hasAttribute('tabindex')) el.setAttribute('tabindex','0');
+      if(filter==='all'&&!document.querySelector('.stat-link.is-active')) el.classList.add('is-active');
+    });
+  }
+  document.querySelectorAll('.stat-link[data-stat-filter]').forEach(el=>{
+    const filter=String(el.dataset.statFilter||'all');
+    el.addEventListener('click',()=>applyStatusFilterFromStat(filter));
+    el.addEventListener('keydown',(e)=>{
+      if(e.key==='Enter'||e.key===' '){e.preventDefault();applyStatusFilterFromStat(filter);}
+    });
+  });
+}
 function renderDashboard(){
   const cards=$('requestsCards'); if(!cards)return;
   const total=countsFor(null); const grandTotal={all:total.all,new:total.new,review:total.review,approved:total.approved};
@@ -240,7 +410,7 @@ function renderDashboard(){
 }
 function filtered(){
   const search=($('searchInput')?.value||'').trim().toLowerCase();
-  const status=normalizeStatusFilterValue($('statusFilter')?.value||(window.REQUEST_TYPE?'all':'active'));
+  const status=normalizeStatusFilterValue($('statusFilter')?.value||(window.REQUEST_TYPE?'all':'all'));
   const sortRaw=$('sortFilter')?.value||'newest';
   const sort=sortRaw==='الأقدم أولاً'||sortRaw==='oldest'?'oldest':'newest';
   const typeWant=normalizeTypeFilterValue($('typeFilter')?.value||'');
@@ -278,7 +448,7 @@ function filtered(){
 function renderTable(type){
   const tbody=$('requestsTableBody'); const cfg=TYPE_CONFIG[type]||null; if(!tbody)return;
   if(cfg){$('pageTitle').textContent=cfg.title; $('pageDesc').textContent=cfg.desc; $('typeIcon').textContent=cfg.icon; const heads=$('typeColumns'); if(heads) heads.innerHTML=cfg.cols.map(c=>`<th>${c}</th>`).join('');}
-  const c=countsFor(type); if($('statAll')){$('statAll').textContent=c.all;$('statNew').textContent=c.new;$('statReview').textContent=c.review;$('statApproved').textContent=c.approved;}
+  updateRequestStatsUI();
   const colLabels=cfg?['','',...cfg.cols,'الحالة','تاريخ الإرسال','الإجراءات']:['','النوع','الحالة','بيانات التواصل','تاريخ الإرسال','الإجراءات'];
   const rows=filtered().map(r=>{
     const actionHtml=buildRowActions(r);
@@ -290,6 +460,8 @@ function renderTable(type){
     return `<tr>${cells.join('')}</tr>`;
   }).join('');
   const colspan=cfg?cfg.cols.length+5:7; tbody.innerHTML=rows||`<tr><td colspan="${colspan}" class="empty-cell">لا توجد طلبات مطابقة حاليًا.</td></tr>`;
+  saveLastRequestsFilters();
+  updateRequestsBackLinks();
 }
 function getRequestSummary(r){if(r.request_type==='player')return r.position||r.age_category||'-'; if(r.request_type==='guardian')return goalLabel(r.guardian_goal); if(r.request_type==='staff'){const m=staffMeta(r);return m.roleLabel||'-'} if(r.request_type==='academy_member'){const m=memberMeta(r);return m.hasLegacyGoal?(m.legacyGoalLabel||'طلب قديم'):shortText(m.interestsLabel,32);} if(r.request_type==='coach')return r.coach_specialty||r.coach_job_title||'-'; if(r.request_type==='supporter'){const m=supporterMeta(r);return m.methodLabel||'-'} return '-'}
 function findReq(id){return requests.find(r=>String(r.id)===String(id))}
@@ -348,7 +520,7 @@ function fileStatusClass(status){const s=String(status||'pending'); if(s==='appr
 function safeUrl(url){const v=String(url||'').trim(); if(!v)return ''; if(/^https?:\/\//i.test(v) || v.startsWith('./') || v.startsWith('../') || v.startsWith('/')) return v; return v;}
 function isImageUrl(url){return /\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/i.test(String(url||''))}
 function isPdfUrl(url){return /\.pdf(\?.*)?$/i.test(String(url||''))}
-function completionIsFullyApproved(completion){
+function resolveCompletionIsFullyApproved(completion){
   if(!completion) return false;
   const ctx=reviewContext();
   if(typeof window.completionIsFullyApproved==='function'){
@@ -357,7 +529,7 @@ function completionIsFullyApproved(completion){
   const files=getCurrentReviewFiles();
   return files.filter(f=>f.required).every(f=>String(completion[f.status]||'pending')==='approved' && String(completion[f.url]||'').trim());
 }
-function reviewMissingItems(completion){
+function resolveReviewMissingItems(completion){
   if(!completion) return ['لم يتم استكمال المرفقات لهذا الطلب حتى الآن.'];
   const ctx=reviewContext();
   if(typeof window.reviewMissingItems==='function'){
@@ -1032,6 +1204,14 @@ async function approveSideEffect(r){
   if(r.request_type==='guardian') return await approveGuardianRequest(r);
   if(r.request_type==='academy_member') return await approveAcademyMemberRequest(r);
 }
+function humanizeAdminError(err){
+  const msg=String(err?.message||err||'').trim();
+  if(!msg) return 'تعذر تنفيذ العملية.';
+  if(/duplicate key|23505/i.test(msg)) return 'السجل موجود مسبقاً — تم تجاهل التكرار.';
+  if(/permission|policy|42501|not allowed|forbidden/i.test(msg)) return 'لا توجد صلاحية كافية لتنفيذ هذه العملية.';
+  if(/network|fetch|timeout|failed to fetch/i.test(msg)) return 'تعذر الاتصال بالخادم. تحقق من الإنترنت وحاول مرة أخرى.';
+  return msg;
+}
 async function updateStatus(id,status){
   const r=findReq(id); if(!r)return;
   const actionIcon = status==='approved' ? '✅' : (status==='rejected' ? '⛔' : '📝');
@@ -1045,16 +1225,30 @@ async function updateStatus(id,status){
   try{
     if(status==='approved' && approvalRequiresAttachments(r)){
       if(!currentCompletion || String(currentCompletion.request_id)!==String(id)) await loadCompletionForRequest(id);
-      const missing=reviewMissingItems(currentCompletion);
+      const missing=resolveReviewMissingItems(currentCompletion);
       if(missing.length){
         showToast('لا يمكن اعتماد الطلب قبل قبول كل المرفقات الإجبارية المطلوبة.','error');
         if($('attachmentsReviewSummary')) $('attachmentsReviewSummary').innerHTML += `<div class="review-lock">المتبقي: ${escapeHtml(missing.join('، '))}</div>`;
         return;
       }
-      if(currentCompletion) await setFinalReview('approved','تم اعتماد جميع المرفقات الإجبارية المطلوبة.');
+      if(currentCompletion){
+        try{
+          await setFinalReview('approved','تم اعتماد جميع المرفقات الإجبارية المطلوبة.');
+        }catch(reviewErr){
+          console.warn(reviewErr);
+          showToast('تم تجاوز تحديث حالة المرفقات النهائية مؤقتاً، وسيتم متابعة الاعتماد.', 'warn');
+        }
+      }
     }
     let sideResult=null;
-    if(status==='approved') sideResult=await approveSideEffect(r);
+    if(status==='approved'){
+      try{
+        sideResult=await approveSideEffect(r);
+      }catch(sideErr){
+        console.warn(sideErr);
+        showToast('تم اعتماد الطلب، لكن فشل إجراء جانبي: '+humanizeAdminError(sideErr), 'warn');
+      }
+    }
     const upd={status,reviewed_at:new Date().toISOString(),updated_at:new Date().toISOString()};
     const {error}=await supabaseClient.from('join_requests').update(upd).eq('id',id);
     if(error)throw error;
@@ -1066,23 +1260,62 @@ async function updateStatus(id,status){
     showToast(okMsg, status==='rejected'?'error':'success');
   }catch(e){
     console.error(e);
-    showToast('تعذر تنفيذ العملية.','error')
+    showToast('تعذر تنفيذ العملية: '+humanizeAdminError(e),'error')
   }
 }
 function exportCsv(){const rows=[['رقم المرجع','الاسم','النوع','الحالة','الجوال','البريد','المدينة','التاريخ','التفاصيل','الملاحظات']]; filtered().forEach(r=>rows.push([refCode(r),r.full_name||'',getTypeLabel(r.request_type),getStatusLabel(r.status||'new'),r.phone||'',r.email||'',r.city||'',`${formatDate(r.created_at)} ${formatTime(r.created_at)}`,getRequestSummary(r),notes(r)])); const csv=rows.map(row=>row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n'); const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}); const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='academy_requests.csv';document.body.appendChild(a);a.click();a.remove();showToast('تم التصدير بنجاح')}
 
 window.openRequest=openRequest;
 window.loadCompletionForRequest=loadCompletionForRequest;
+function applyFiltersFromUrl(){
+  try{
+    const p=new URLSearchParams(window.location.search||'');
+    const status=p.get('status');
+    if(status && $('statusFilter')) applyStatusFilterFromStat(normalizeStatusFilterValue(status));
+    const type=p.get('type');
+    if(type && $('typeFilter')){
+      const opt=typeToSelectValue(type)||type;
+      const tf=$('typeFilter');
+      if([...tf.options].some(o=>o.value===opt||o.textContent===opt)) tf.value=opt;
+    }
+    if(!status && !type){
+      const saved=loadLastRequestsFilters();
+      if(saved?.status && saved.status!=='all' && $('statusFilter')){
+        applyStatusFilterFromStat(saved.status);
+      }
+      if(saved?.type && $('typeFilter')){
+        const opt=typeToSelectValue(saved.type)||saved.type;
+        const tf=$('typeFilter');
+        if([...tf.options].some(o=>o.value===opt||o.textContent===opt)) tf.value=opt;
+      }
+    }
+  }catch(_e){}
+}
+function focusNewRequests(){
+  applyStatusFilterFromStat('new',{toast:true});
+}
 document.addEventListener('DOMContentLoaded',()=>{
   ensureFileReviewUi();
   ensureChatUi();
+  bindStatsCards();
+  ensureResetFiltersButton();
+  $('resetRequestsFiltersBtn')?.addEventListener('click',resetRequestsFilters);
+  const reviewBtn=$('reviewNewRequestsBtn');
+  if(reviewBtn) reviewBtn.addEventListener('click',focusNewRequests);
+  applyFiltersFromUrl();
+  syncStatCardFromDropdown();
+  updateRequestsBackLinks();
   if($('requestsCards')) renderDashboard();
   $('closeModal')?.addEventListener('click',closeRequest); $('closeModal2')?.addEventListener('click',closeRequest); $('requestModal')?.addEventListener('click',e=>{if(e.target===$('requestModal'))closeRequest()}); $('closeFilePreview')?.addEventListener('click',closeFilePreview); $('filePreviewModal')?.addEventListener('click',e=>{if(e.target===$('filePreviewModal'))closeFilePreview()}); document.addEventListener('keydown',e=>{if(e.key==='Escape'){ if($('filePreviewModal')?.classList.contains('show')) closeFilePreview(); else closeRequest(); }});
   $('modalAcceptBtn')?.addEventListener('click',()=>currentRequestId&&updateStatus(currentRequestId,'approved')); $('modalRejectBtn')?.addEventListener('click',()=>currentRequestId&&updateStatus(currentRequestId,'rejected')); $('modalCompleteBtn')?.addEventListener('click',()=>currentRequestId&&updateStatus(currentRequestId,'pending'));
   const statusFilterEl = $('statusFilter');
   if (window.REQUEST_TYPE && statusFilterEl) statusFilterEl.value = 'all';
-  ['searchInput','statusFilter','sortFilter','typeFilter','dateFilter','guardianGoalFilter','staffDomainFilter','supporterTypeFilter','supporterMethodFilter','memberInterestFilter'].forEach(id=>$(id)?.addEventListener(id==='searchInput'?'input':'change',()=>renderTable(window.REQUEST_TYPE||null)));
-  $('applyFiltersBtn')?.addEventListener('click',()=>renderTable(window.REQUEST_TYPE||null));
+  ['searchInput','statusFilter','sortFilter','typeFilter','dateFilter','guardianGoalFilter','staffDomainFilter','supporterTypeFilter','supporterMethodFilter','memberInterestFilter'].forEach(id=>$(id)?.addEventListener(id==='searchInput'?'input':'change',()=>{
+    if(id==='statusFilter') syncStatCardFromDropdown();
+    renderTable(window.REQUEST_TYPE||null);
+  }));
+  $('applyFiltersBtn')?.addEventListener('click',()=>{syncStatCardFromDropdown();renderTable(window.REQUEST_TYPE||null);});
   $('exportBtn')?.addEventListener('click',exportCsv);
+  $('exportRequestsBtn')?.addEventListener('click',exportCsv);
   loadRequests(window.REQUEST_TYPE||null);
 });
