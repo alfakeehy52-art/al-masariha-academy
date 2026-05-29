@@ -33,6 +33,7 @@ document.addEventListener("DOMContentLoaded", () => {
     {
       id: "members",
       title: "الأعضاء والمنتسبون",
+      panelDomain: "members",
       items: [
         {
           href: "admin_members_dashboard.html",
@@ -56,6 +57,7 @@ document.addEventListener("DOMContentLoaded", () => {
       id: "requests",
       title: "الطلبات والمراجعة",
       badgeKey: "pendingRequests",
+      panelDomain: "requests",
       items: [
         {
           href: "admin_requests_dashboard.html",
@@ -64,12 +66,12 @@ document.addEventListener("DOMContentLoaded", () => {
           icon: "inbox",
           match: ["admin_requests_dashboard.html", "admin_requests.html"],
           children: [
-            { href: "players_requests.html", label: "طلبات اللاعبين", icon: "ball", match: ["players_requests.html"] },
-            { href: "coaches_requests.html", label: "طلبات المدربين", icon: "coach", match: ["coaches_requests.html"] },
-            { href: "guardians_requests.html", label: "طلبات أولياء الأمور", icon: "family", match: ["guardians_requests.html"] },
-            { href: "supporters_requests.html", label: "طلبات الداعمين", icon: "heart", match: ["supporters_requests.html"] },
-            { href: "staff_requests.html", label: "طلبات الكوادر", icon: "coach", match: ["staff_requests.html"] },
-            { href: "academy_members_requests.html", label: "طلبات عضوية الأكاديمية", icon: "star", match: ["academy_members_requests.html"] },
+            { href: "players_requests.html", label: "طلبات اللاعبين", icon: "ball", badgeKey: "newRequestsPlayer", match: ["players_requests.html"] },
+            { href: "coaches_requests.html", label: "طلبات المدربين", icon: "coach", badgeKey: "newRequestsCoach", match: ["coaches_requests.html"] },
+            { href: "guardians_requests.html", label: "طلبات أولياء الأمور", icon: "family", badgeKey: "newRequestsGuardian", match: ["guardians_requests.html"] },
+            { href: "supporters_requests.html", label: "طلبات الداعمين", icon: "heart", badgeKey: "newRequestsSupporter", match: ["supporters_requests.html"] },
+            { href: "staff_requests.html", label: "طلبات الكوادر", icon: "coach", badgeKey: "newRequestsStaff", match: ["staff_requests.html"] },
+            { href: "academy_members_requests.html", label: "طلبات عضوية الأكاديمية", icon: "star", badgeKey: "newRequestsAcademyMember", match: ["academy_members_requests.html"] },
             { href: "admin_completion_dashboard.html", label: "استكمال الطلبات", icon: "clip", match: ["admin_completion_dashboard.html"] }
           ]
         }
@@ -78,6 +80,7 @@ document.addEventListener("DOMContentLoaded", () => {
     {
       id: "ops",
       title: "التشغيل الرياضي",
+      panelDomain: "ops",
       items: [
         { href: "teams_categories_dashboard.html", label: "الفرق والفئات", desc: "تنظيم الفرق", icon: "stadium", match: ["teams_categories_dashboard.html"] },
         { href: "matches_dashboard.html", label: "المباريات", desc: "جدول المباريات العام", icon: "stadium", match: ["matches_dashboard.html"] },
@@ -85,11 +88,19 @@ document.addEventListener("DOMContentLoaded", () => {
       ]
     },
     {
-      id: "commerce",
-      title: "التجارة والمحتوى",
+      id: "store",
+      title: "المتجر",
+      panelDomain: "store",
       items: [
         { href: "store_products_dashboard.html", label: "إدارة المتجر", desc: "المنتجات والعروض", icon: "cart", match: ["store_products_dashboard.html"] },
-        { href: "store_orders_dashboard.html", label: "طلبات المتجر", desc: "طلبات الزوار", icon: "cart", match: ["store_orders_dashboard.html", "store_order_status.html"] },
+        { href: "store_orders_dashboard.html", label: "طلبات المتجر", desc: "طلبات الزوار", icon: "cart", match: ["store_orders_dashboard.html", "store_order_status.html"] }
+      ]
+    },
+    {
+      id: "media",
+      title: "الإعلام والمحتوى",
+      panelDomain: "media",
+      items: [
         { href: "news_dashboard.html", label: "الأخبار", desc: "أخبار الواجهة العامة", icon: "clip", match: ["news_dashboard.html"] },
         { href: "media_dashboard.html", label: "الإعلام", desc: "صور وفيديو", icon: "clip", match: ["media_dashboard.html"] }
       ]
@@ -101,19 +112,20 @@ document.addEventListener("DOMContentLoaded", () => {
         { href: "admin_notifications.html", label: "الإشعارات", desc: "تنبيهات الإدارة", icon: "bell", match: ["admin_notifications.html"] },
         {
           href: "admin_permissions_dashboard.html",
-          label: "صلاحيات الدخول",
-          desc: "أدوار لوحة الإدارة",
+          label: "الموظفون والصلاحيات",
+          desc: "أدوار ونطاقات العمل",
           icon: "settings",
           match: ["admin_permissions_dashboard.html"],
           navRole: "admin"
         },
-        { href: "academy_settings_dashboard.html", label: "الإعدادات", desc: "إعدادات الأكاديمية", icon: "settings", match: ["academy_settings_dashboard.html"] }
+        { href: "academy_settings_dashboard.html", label: "الإعدادات", desc: "إعدادات الأكاديمية", icon: "settings", panelDomain: "system", match: ["academy_settings_dashboard.html"] }
       ]
     },
     {
       id: "support",
       title: "الدعم والتواصل",
       badgeKey: "supportTotal",
+      panelDomain: "support",
       items: [
         {
           href: "communications_dashboard.html",
@@ -161,11 +173,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const active = isChild ? isChildActive(item) : isItemActive(item) && !(item.children && item.children.length && !isChild);
     const desc = item.desc ? `<span class="nav-desc">${item.desc}</span>` : "";
     const navRoleAttr = item.navRole ? ` data-nav-role="${item.navRole}"` : "";
+    const panelDomainAttr = item.panelDomain ? ` data-panel-domain="${item.panelDomain}"` : "";
     const badge = item.badgeKey
       ? `<span class="nav-item-badge" data-badge="${item.badgeKey}" hidden aria-label="تنبيهات">0</span>`
       : "";
     return `
-      <a href="${item.href}" class="nav-link${isChild ? " nav-sublink" : ""}${active ? " active" : ""}"${navRoleAttr}>
+      <a href="${item.href}" class="nav-link${isChild ? " nav-sublink" : ""}${active ? " active" : ""}"${navRoleAttr}${panelDomainAttr}>
         ${iconHtml(item.icon)}
         <span class="nav-copy">
           <span class="nav-label">${item.label}</span>
@@ -198,7 +211,7 @@ document.addEventListener("DOMContentLoaded", () => {
         ${menuTree
           .map(
             (group) => `
-          <section class="menu-group${groupHasActive(group) ? " is-active-group" : ""}" data-group="${group.id}">
+          <section class="menu-group${groupHasActive(group) ? " is-active-group" : ""}" data-group="${group.id}"${group.panelDomain ? ` data-panel-domain="${group.panelDomain}"` : ""}>
             <div class="menu-group-head">
               <span class="menu-group-title">${group.title}</span>
               ${group.badgeKey ? `<span class="menu-group-badge" data-badge="${group.badgeKey}" hidden>0</span>` : ""}
@@ -211,6 +224,11 @@ document.addEventListener("DOMContentLoaded", () => {
           )
           .join("")}
         <div class="menu-bottom-actions">
+          <a href="admin_account.html" class="nav-link site-link">
+            ${iconHtml("settings")}
+            <span class="nav-copy"><span class="nav-label">حسابي</span><span class="nav-desc">الاسم والجوال</span></span>
+            <span class="nav-arrow">${ICONS.chevron}</span>
+          </a>
           <a href="index.html" class="nav-link site-link">
             ${iconHtml("globe")}
             <span class="nav-copy"><span class="nav-label">العودة إلى الموقع</span><span class="nav-desc">الواجهة العامة</span></span>
@@ -305,7 +323,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       if (!window.SUPABASE_CONFIG) await loadScriptOnce("supabase-config.js");
       if (!window.createSupabaseClient) await loadScriptOnce("js/supabase-client.js");
-      if (!window.PANEL_ROLES) await loadScriptOnce("js/panel-access.js");
+      if (!window.PanelRBAC) await loadScriptOnce("js/panel-rbac.js?v=20260529-rbac1");
+      if (!window.PANEL_ROLES) await loadScriptOnce("js/panel-access.js?v=20260529-rbac1");
       if (!window.loadAcademySettings) await loadScriptOnce("js/academy-settings.js");
       const s = await loadAcademySettings();
       applySidebarBrand(s);
@@ -472,7 +491,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const nameEl = document.getElementById("adminUserName");
     if (!card || !nameEl || typeof getAdminSession !== "function") return;
     try {
-      if (!window.PANEL_ROLES) await loadScriptOnce("js/panel-access.js");
+      if (!window.PanelRBAC) await loadScriptOnce("js/panel-rbac.js?v=20260529-rbac1");
+      if (!window.PANEL_ROLES) await loadScriptOnce("js/panel-access.js?v=20260529-rbac1");
       if (!window.ACADEMY_ROLES) await loadScriptOnce("js/academy-roles.js");
       if (!window.loadAcademySettings) await loadScriptOnce("js/academy-settings.js");
       const session = await getAdminSession();
@@ -522,10 +542,14 @@ document.addEventListener("DOMContentLoaded", () => {
     if (typeof createSupabaseClient !== "function") return;
     try {
       const sb = createSupabaseClient();
-      const [pendingRes, contactRes, chatRes] = await Promise.all([
+      const [pendingRes, newRowsRes, contactRes, chatRes] = await Promise.all([
         sb
           .from("join_requests")
           .select("id", { count: "exact", head: true })
+          .eq("status", "new"),
+        sb
+          .from("join_requests")
+          .select("request_type")
           .eq("status", "new"),
         sb
           .from("contact_messages")
@@ -539,6 +563,13 @@ document.addEventListener("DOMContentLoaded", () => {
       ]);
 
       const pending = pendingRes.error ? 0 : pendingRes.count || 0;
+      const rows = newRowsRes.error ? [] : Array.isArray(newRowsRes.data) ? newRowsRes.data : [];
+      const byType = rows.reduce((acc, row) => {
+        const t = String(row?.request_type || "").trim().toLowerCase();
+        if (!t) return acc;
+        acc[t] = (acc[t] || 0) + 1;
+        return acc;
+      }, {});
       const contactNew = contactRes.error ? 0 : contactRes.count || 0;
       const openChats = chatRes.error ? 0 : chatRes.count || 0;
 
@@ -556,6 +587,12 @@ document.addEventListener("DOMContentLoaded", () => {
       setBadgeCount("newContactMessages", contactNew);
       setBadgeCount("openChats", openChats);
       setBadgeCount("supportTotal", contactNew + openChats);
+      setBadgeCount("newRequestsPlayer", byType.player || 0);
+      setBadgeCount("newRequestsCoach", byType.coach || 0);
+      setBadgeCount("newRequestsGuardian", byType.guardian || 0);
+      setBadgeCount("newRequestsSupporter", byType.supporter || 0);
+      setBadgeCount("newRequestsStaff", byType.staff || byType.volunteer || 0);
+      setBadgeCount("newRequestsAcademyMember", byType.academy_member || 0);
     } catch (e) {}
   }
 

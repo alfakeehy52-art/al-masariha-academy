@@ -1319,6 +1319,15 @@ async function updateStatus(id,status){
     if(status==='approved'){
       try{
         sideResult=await approveSideEffect(r);
+        if(sideResult && typeof sideResult==='object' && sideResult.error){
+          const known={
+            legacy_goal:'لا يمكن اعتماد طلب عضوية قديم غير مدعوم.',
+            missing_interests:'لا يمكن اعتماد طلب العضوية بدون اهتمام واحد صالح على الأقل.',
+            missing_phone:'لا يمكن اعتماد الطلب قبل إدخال الجوال.',
+            missing_role:'لا يمكن اعتماد الطلب قبل تحديد المجال والدور.'
+          };
+          throw new Error(known[String(sideResult.error)]||'تعذر إكمال إجراء الاعتماد.');
+        }
       }catch(sideErr){
         throw new Error('تعذر إكمال إجراء الاعتماد: '+humanizeAdminError(sideErr));
       }

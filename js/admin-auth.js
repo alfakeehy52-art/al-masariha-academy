@@ -110,7 +110,17 @@
     clearLegacySession();
     try {
       const session = await getSession();
-      if (session && isPanelUser(session.user)) return true;
+      if (session && isPanelUser(session.user)) {
+        if (typeof fetchStaffProfileByEmail === "function") {
+          const profile = await fetchStaffProfileByEmail(session.user.email);
+          if (profile && String(profile.status || "").toLowerCase() === "suspended") {
+            await getAuthClient().auth.signOut();
+            window.location.replace(LOGIN_PAGE + "?suspended=1");
+            return false;
+          }
+        }
+        return true;
+      }
     } catch (e) {
       console.error("Admin auth check failed:", e);
     }
@@ -147,6 +157,13 @@
     if (!isPanelUser(data.user)) {
       await client.auth.signOut();
       throw new Error("هذا الحساب غير مصرح له بدخول لوحة الإدارة.");
+    }
+    if (typeof fetchStaffProfileByEmail === "function") {
+      const profile = await fetchStaffProfileByEmail(data.user.email);
+      if (profile && String(profile.status || "").toLowerCase() === "suspended") {
+        await client.auth.signOut();
+        throw new Error("تم إيقاف حسابك. تواصل مع المدير العام.");
+      }
     }
     return data;
   }

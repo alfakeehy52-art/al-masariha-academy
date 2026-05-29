@@ -1,17 +1,7 @@
 /**
- * إدارة صلاحيات دخول لوحة الإدارة — مرحلة R2-lite
+ * إدارة الموظفين والصلاحيات — RBAC v1
  */
 (function () {
-  function getRoleOptions() {
-    return (
-      window.PANEL_ROLE_OPTIONS || [
-        { value: "staff", label: "موظف" },
-        { value: "manager", label: "مدير عمليات" },
-        { value: "admin", label: "المدير العام" }
-      ]
-    );
-  }
-
   let staffRows = [];
 
   function $(id) {
@@ -26,6 +16,10 @@
       .replace(/"/g, "&quot;");
   }
 
+  function rbac() {
+    return window.PanelRBAC || {};
+  }
+
   function getAdminEmailList() {
     const cfg = window.SUPABASE_CONFIG || {};
     return (cfg.adminEmails || []).map((e) => String(e).trim().toLowerCase()).filter(Boolean);
@@ -35,20 +29,6 @@
     const list = getAdminEmailList();
     if (!list.length) return false;
     return list.includes(String(email || "").trim().toLowerCase());
-  }
-
-  function roleLabel(value) {
-    const labels = window.PANEL_ROLE_LABELS || {};
-    return labels[String(value || "").toLowerCase()] || value || "—";
-  }
-
-  function jobLabel(row) {
-    const AR = window.ACADEMY_ROLES;
-    if (AR && typeof AR.getRoleLabel === "function") {
-      const l = AR.getRoleLabel(row.staff_type);
-      if (l && l !== row.staff_type) return l;
-    }
-    return row.staff_type || "—";
   }
 
   function showStatus(message, type) {
@@ -65,28 +45,65 @@
     const emails = getAdminEmailList();
     if (!emails.length) {
       list.innerHTML =
-        '<li class="warn">لا توجد عناوين مسموحة حالياً — تواصل مع مطور الموقع لإضافة بريد المدير.</li>';
+        '<li class="warn">لا توجد عناوين مسموحة — أضف البريد في supabase-config.js ثم ارفع الموقع.</li>';
       return;
     }
     list.innerHTML = emails.map((e) => `<li><strong>${esc(e)}</strong> — مسموح بدخول لوحة الإدارة</li>`).join("");
   }
 
-  function roleSelectHtml(row) {
-    const current = String(row.role || "staff").toLowerCase();
+  function domainCheckboxes(row) {
+    const domains = rbac().normalizeDomains?.(row.panel_domains) || ["requests"];
+    const all = rbac().DOMAINS || {};
+    return Object.values(all)
+      .map(
+        (d) =>
+          `<label class="domain-chip"><input type="checkbox" class="perm-domain-cb" data-id="${esc(row.id)}" value="${esc(d.id)}"${
+            domains.includes("*") || domains.includes(d.id) ? " checked" : ""
+          } /> ${esc(d.label)}</label>`
+      )
+      .join("");
+  }
+
+  function templateSelectHtml(row) {
+    const templates = rbac().ROLE_TEMPLATES || [];
+    const cur = String(row.panel_template || "");
     return (
-      '<select class="perm-role-select" data-id="' +
+      '<select class="perm-template-select" data-id="' +
       esc(row.id) +
-      '" aria-label="صلاحية النظام">' +
-      getRoleOptions().map(
-        (o) =>
-          '<option value="' +
-          esc(o.value) +
-          '"' +
-          (o.value === current ? " selected" : "") +
-          ">" +
-          esc(o.label) +
-          "</option>"
-      ).join("") +
+      '">' +
+      '<option value="">— اختر قالبًا —</option>' +
+      templates
+        .map(
+          (t) =>
+            `<option value="${esc(t.id)}"${t.id === cur ? " selected" : ""}>${esc(t.label)}</option>`
+        )
+        .join("") +
+      "</select>"
+    );
+  }
+
+  function levelSelectHtml(row) {
+    const levels = rbac().LEVELS || {};
+    const cur = String(row.panel_level || "L4").toUpperCase();
+    return (
+      '<select class="perm-level-select" data-id="' +
+      esc(row.id) +
+      '">' +
+      Object.values(levels)
+        .map((l) => `<option value="${esc(l.id)}"${l.id === cur ? " selected" : ""}>${esc(l.label)}</option>`)
+        .join("") +
+      "</select>"
+    );
+  }
+
+  function statusSelectHtml(row) {
+    const st = String(row.status || "active").toLowerCase();
+    return (
+      '<select class="perm-status-select" data-id="' +
+      esc(row.id) +
+      '">' +
+      `<option value="active"${st === "active" ? " selected" : ""}>نشط</option>` +
+      `<option value="suspended"${st === "suspended" ? " selected" : ""}>موقوف</option>` +
       "</select>"
     );
   }
@@ -101,16 +118,11 @@
     let rows = staffRows.slice();
     if (filter === "panel") rows = rows.filter((r) => hasPanelAccess(r.email));
     if (filter === "no_panel") rows = rows.filter((r) => r.email && !hasPanelAccess(r.email));
+    if (filter === "suspended") rows = rows.filter((r) => String(r.status || "").toLowerCase() === "suspended");
     if (q) {
       rows = rows.filter((r) => {
-        const hay = [
-          r.full_name,
-          r.email,
-          r.phone,
-          r.role,
-          jobLabel(r),
-          r.staff_category
-        ]
+        const hay = [r.full_name, r.email, r.phone, r.job_title_ar, r.panel_template, r.role]
+          .concat(rbac().normalizeDomains?.(r.panel_domains) || [])
           .join(" ")
           .toLowerCase();
         return hay.includes(q);
@@ -120,7 +132,7 @@
     if (!tbody) return;
     if (!rows.length) {
       tbody.innerHTML =
-        '<tr><td colspan="6" class="empty-cell">لا توجد سجلات. أضف كوادر من «الكوادر (موحّد)» أو طلبات الانضمام.</td></tr>';
+        '<tr><td colspan="8" class="empty-cell">لا توجد سجلات. أضف كوادر من «الكوادر (موحّد)» أو طلبات الانضمام.</td></tr>';
       return;
     }
 
@@ -128,19 +140,28 @@
       .map((row) => {
         const access = hasPanelAccess(row.email);
         const authOk = !!row.auth_user_id;
+        const title = row.job_title_ar || row.job_title || "—";
         return (
           "<tr>" +
           "<td><strong>" +
           esc(row.full_name) +
-          "</strong></td>" +
+          "</strong><div class=\"subtext\">" +
+          esc(title) +
+          "</div></td>" +
           "<td>" +
           esc(row.email || "—") +
           "</td>" +
           "<td>" +
-          esc(jobLabel(row)) +
+          templateSelectHtml(row) +
           "</td>" +
           "<td>" +
-          roleSelectHtml(row) +
+          levelSelectHtml(row) +
+          "</td>" +
+          '<td><div class="domain-wrap">' +
+          domainCheckboxes(row) +
+          "</div></td>" +
+          "<td>" +
+          statusSelectHtml(row) +
           "</td>" +
           '<td><span class="tag ' +
           (access ? "tag-ok" : "tag-muted") +
@@ -150,7 +171,7 @@
           '<td><span class="tag ' +
           (authOk ? "tag-ok" : "tag-warn") +
           '">' +
-          (authOk ? "حساب مفعّل" : "بانتظار التفعيل") +
+          (authOk ? "مفعّل" : "بانتظار") +
           "</span></td>" +
           "</tr>"
         );
@@ -160,9 +181,10 @@
 
   async function loadStaff() {
     const sb = createSupabaseClient();
+    const fields = rbac().staffSelectFields?.() || "id,full_name,email,phone,role,status,auth_user_id";
     const { data, error } = await sb
       .from("academy_staff")
-      .select("id,full_name,email,phone,staff_type,staff_category,role,status,auth_user_id")
+      .select(fields)
       .not("email", "is", null)
       .order("full_name", { ascending: true });
     if (error) throw error;
@@ -172,43 +194,83 @@
     renderTable();
   }
 
-  async function saveRole(staffId, role) {
+  async function saveStaffRow(staffId, patch) {
     const sb = createSupabaseClient();
-    const { error } = await sb
-      .from("academy_staff")
-      .update({ role: role, updated_at: new Date().toISOString() })
-      .eq("id", staffId);
+    const payload = { ...patch, updated_at: new Date().toISOString() };
+    const { error } = await sb.from("academy_staff").update(payload).eq("id", staffId);
     if (error) throw error;
-    const row = staffRows.find((r) => r.id === staffId);
-    if (row) row.role = role;
+    const row = staffRows.find((r) => String(r.id) === String(staffId));
+    if (row) Object.assign(row, patch);
+  }
+
+  function domainsFromRowCheckboxes(staffId) {
+    const boxes = document.querySelectorAll(`.perm-domain-cb[data-id="${staffId}"]`);
+    const selected = [];
+    boxes.forEach((cb) => {
+      if (cb.checked) selected.push(cb.value);
+    });
+    return selected.length ? selected : ["requests"];
+  }
+
+  function applyTemplateToRow(staffId, templateId) {
+    const tpl = rbac().templateById?.(templateId);
+    if (!tpl) return null;
+    return {
+      panel_template: tpl.id,
+      panel_level: tpl.level,
+      panel_domains: tpl.domains,
+      job_title_ar: tpl.jobTitle,
+      role: tpl.legacyRole || "staff"
+    };
   }
 
   function bindTableEvents() {
     const tbody = $("permTableBody");
     if (!tbody) return;
+
     tbody.addEventListener("change", async function (e) {
-      const sel = e.target.closest(".perm-role-select");
-      if (!sel) return;
-      const id = sel.getAttribute("data-id");
-      const role = sel.value;
-      sel.disabled = true;
+      const tpl = e.target.closest(".perm-template-select");
+      const lvl = e.target.closest(".perm-level-select");
+      const st = e.target.closest(".perm-status-select");
+      const dom = e.target.closest(".perm-domain-cb");
+      if (!tpl && !lvl && !st && !dom) return;
+
+      const el = tpl || lvl || st || dom;
+      const id = el.getAttribute("data-id");
+      if (!id) return;
+
+      el.disabled = true;
       showStatus("جاري الحفظ...", "ok");
       try {
-        await saveRole(id, role);
-        showStatus("تم حفظ الصلاحية. القائمة الجانبية تتحدث عند إعادة تسجيل الدخول.", "ok");
+        if (tpl) {
+          const patch = applyTemplateToRow(id, tpl.value);
+          if (patch) {
+            await saveStaffRow(id, patch);
+            renderTable();
+            showStatus("تم تطبيق القالب وحفظ الصلاحيات.", "ok");
+            return;
+          }
+        }
+        if (lvl) {
+          await saveStaffRow(id, { panel_level: lvl.value });
+        }
+        if (st) {
+          await saveStaffRow(id, { status: st.value });
+        }
+        if (dom) {
+          await saveStaffRow(id, { panel_domains: domainsFromRowCheckboxes(id) });
+        }
+        showStatus("تم الحفظ. اطلب من الموظف إعادة تسجيل الدخول لتحديث القائمة.", "ok");
       } catch (err) {
         console.error(err);
         const msg = String(err.message || "");
-        if (/academy_staff_role_check/i.test(msg)) {
-          showStatus(
-            "النظام لا يقبل هذا الدور بعد. اطلب تنفيذ سكربت توسيع الأدوار (STAFF_PANEL_ROLES) ثم أعد المحاولة.",
-            "error"
-          );
+        if (/panel_level|panel_domains|column/i.test(msg)) {
+          showStatus("نفّذ سكربت RBAC_PANEL_GRANTS.sql في Supabase ثم أعد المحاولة.", "error");
         } else {
-          showStatus("تعذر الحفظ: " + (msg || "تحقق من RLS والاتصال"), "error");
+          showStatus("تعذر الحفظ: " + (msg || "تحقق من RLS"), "error");
         }
       } finally {
-        sel.disabled = false;
+        el.disabled = false;
       }
     });
   }

@@ -1,7 +1,9 @@
 /**
- * صلاحيات لوحة الإدارة — مرحلة R1 (عرض + تصفية القائمة)
+ * صلاحيات لوحة الإدارة — RBAC v1 (Level × Domain)
  */
 (function () {
+  const RBAC = () => window.PanelRBAC;
+
   const PANEL_ROLE_LABELS = {
     admin: "المدير العام",
     manager: "مدير العمليات",
@@ -22,14 +24,13 @@
     { value: "admin", label: "المدير العام (كامل)" }
   ];
 
-  /** مجموعات القائمة الجانبية المخفية حسب الدور */
   const NAV_HIDDEN_GROUPS = {
     admin: [],
-    manager: ["system"],
-    supervisor: ["system"],
-    staff: ["system", "commerce", "ops", "members"],
-    coach: ["system", "commerce", "ops", "members", "requests"],
-    viewer: ["system", "commerce", "ops", "members"]
+    manager: [],
+    supervisor: [],
+    staff: ["store", "media", "ops", "members"],
+    coach: ["store", "media", "ops", "members", "requests"],
+    viewer: ["store", "media", "ops", "members"]
   };
 
   function normalizeEmail(value) {
@@ -38,11 +39,10 @@
 
   function staffJobTitle(profile) {
     if (!profile || typeof profile !== "object") return "";
+    if (profile.job_title_ar) return String(profile.job_title_ar).trim();
     const AR = window.ACADEMY_ROLES;
     const fromRole =
-      AR && typeof AR.getRoleLabel === "function"
-        ? AR.getRoleLabel(profile.staff_type)
-        : "";
+      AR && typeof AR.getRoleLabel === "function" ? AR.getRoleLabel(profile.staff_type) : "";
     if (fromRole && fromRole !== profile.staff_type) return fromRole;
     if (profile.job_title) return String(profile.job_title).trim();
     if (profile.staff_type) return String(profile.staff_type).trim();
@@ -59,11 +59,9 @@
   }
 
   function getPanelRoleLabel(role, profile) {
+    const job = staffJobTitle(profile);
+    if (job) return job;
     const key = String(role || "").toLowerCase();
-    if (key === "staff" && profile) {
-      const job = staffJobTitle(profile);
-      if (job) return job;
-    }
     if (key === "admin" || !key) return PANEL_ROLE_LABELS.admin;
     return PANEL_ROLE_LABELS[key] || PANEL_ROLE_LABELS.staff;
   }
@@ -78,63 +76,14 @@
     return PANEL_ROLES.has(dbRole) ? dbRole : "";
   }
 
-  async function resolveEffectivePanelRole(user) {
-    if (!user) return "";
-    if (typeof isAdminUser === "function" && isAdminUser(user)) return "admin";
-    const profile = await fetchStaffProfileByEmail(user.email);
-    const fromDb = roleFromStaffProfile(profile);
-    if (fromDb) return fromDb;
-    const authRole = authRoleFromUser(user);
-    if (PANEL_ROLES.has(authRole)) return authRole;
-    return "staff";
-  }
-
-  function buildDisplayIdentity(user, profile, effectiveRole) {
-    const role = effectiveRole || roleFromStaffProfile(profile) || authRoleFromUser(user) || "staff";
-    const title = getPanelRoleLabel(role, profile);
-    const email = user && user.email ? String(user.email).trim() : "";
-    const subtitle =
-      profile && (role === "staff" || role === "coach")
-        ? [staffDomainLabel(profile), staffJobTitle(profile)].filter(Boolean).join(" · ")
-        : "";
-    return { title, email, subtitle, role };
-  }
-
-  function getNavHiddenGroups(role) {
-    const key = String(role || "").toLowerCase();
-    if (typeof isAdminUser === "function" && key === "admin") return [];
-    return NAV_HIDDEN_GROUPS[key] || NAV_HIDDEN_GROUPS.staff;
-  }
-
-  async function applyPanelNavPolicy(user) {
-    const menu = document.querySelector(".admin-pro-menu");
-    if (!menu) return;
-    menu.querySelectorAll("[data-nav-role]").forEach((el) => el.removeAttribute("hidden"));
-    const role = await resolveEffectivePanelRole(user);
-    window.__effectivePanelRole = role;
-    const isFullAdmin = typeof isAdminUser === "function" && isAdminUser(user);
-    if (!isFullAdmin) {
-      getNavHiddenGroups(role).forEach((groupId) => {
-        const group = menu.querySelector(`[data-group="${groupId}"]`);
-        if (group) group.setAttribute("hidden", "");
-      });
-      menu.querySelectorAll('[data-nav-role="admin"]').forEach((el) => {
-        el.setAttribute("hidden", "");
-      });
-    }
-  }
-
   async function fetchStaffProfileByEmail(email) {
     if (typeof createSupabaseClient !== "function") return null;
     const normalized = normalizeEmail(email);
     if (!normalized) return null;
+    const fields = RBAC()?.staffSelectFields?.() || "id,full_name,email,staff_type,staff_category,job_title,role,status";
     try {
       const sb = createSupabaseClient();
-      const { data, error } = await sb
-        .from("academy_staff")
-        .select("id,full_name,email,staff_type,staff_category,job_title,role,status")
-        .ilike("email", normalized)
-        .maybeSingle();
+      const { data, error } = await sb.from("academy_staff").select(fields).ilike("email", normalized).maybeSingle();
       if (error) {
         console.warn("[panel-access] staff profile:", error.message);
         return null;
@@ -146,14 +95,134 @@
     }
   }
 
+  async function resolvePanelAccessContext(user) {
+    const fullAdmin = typeof isAdminUser === "function" && user && isAdminUser(user);
+    const profile = await fetchStaffProfileByEmail(user?.email);
+    const rbac = RBAC();
+    if (rbac && typeof rbac.resolveFromProfile === "function") {
+      return rbac.resolveFromProfile(profile, fullAdmin);
+    }
+    return {
+      level: fullAdmin ? "L1" : "L4",
+      domains: fullAdmin ? ["*"] : ["requests"],
+      jobTitle: fullAdmin ? "المدير العام" : "موظف",
+      status: profile?.status || "active",
+      isFullAdmin: !!fullAdmin
+    };
+  }
+
+  async function resolveEffectivePanelRole(user) {
+    if (!user) return "";
+    if (typeof isAdminUser === "function" && isAdminUser(user)) return "admin";
+    const profile = await fetchStaffProfileByEmail(user.email);
+    if (profile && String(profile.status || "").toLowerCase() === "suspended") return "suspended";
+    const fromDb = roleFromStaffProfile(profile);
+    if (fromDb) return fromDb;
+    const authRole = authRoleFromUser(user);
+    if (PANEL_ROLES.has(authRole)) return authRole;
+    return "staff";
+  }
+
+  function buildDisplayIdentity(user, profile, effectiveRole) {
+    const ctx = RBAC()?.resolveFromProfile?.(
+      profile,
+      typeof isAdminUser === "function" && user && isAdminUser(user)
+    );
+    const role = effectiveRole || roleFromStaffProfile(profile) || authRoleFromUser(user) || "staff";
+    const title = ctx?.jobTitle || getPanelRoleLabel(role, profile);
+    const email = user && user.email ? String(user.email).trim() : "";
+    const subtitle =
+      profile && !ctx?.isFullAdmin
+        ? [staffDomainLabel(profile), ctx?.level ? "مستوى " + ctx.level : ""].filter(Boolean).join(" · ")
+        : ctx?.level === "L1"
+          ? "المدير العام"
+          : "";
+    return { title, email, subtitle, role, level: ctx?.level || "" };
+  }
+
+  function getNavHiddenGroups(role) {
+    const key = String(role || "").toLowerCase();
+    if (typeof isAdminUser === "function" && key === "admin") return [];
+    return NAV_HIDDEN_GROUPS[key] || NAV_HIDDEN_GROUPS.staff;
+  }
+
+  function applyDomainNavVisibility(ctx) {
+    const menu = document.querySelector(".admin-pro-menu");
+    if (!menu || !ctx) return;
+    menu.querySelectorAll("[data-panel-domain]").forEach((el) => {
+      const domain = el.getAttribute("data-panel-domain");
+      const rbac = RBAC();
+      const show = rbac ? rbac.hasDomain(ctx.domains, domain) || ctx.isFullAdmin : true;
+      if (show) el.removeAttribute("hidden");
+      else el.setAttribute("hidden", "");
+    });
+    menu.querySelectorAll("section[data-group]").forEach((group) => {
+      const domain = group.getAttribute("data-panel-domain");
+      if (!domain) return;
+      const rbac = RBAC();
+      const showGroup = rbac ? rbac.hasDomain(ctx.domains, domain) || ctx.isFullAdmin : true;
+      if (!showGroup) {
+        group.setAttribute("hidden", "");
+        return;
+      }
+      const visibleChild = group.querySelector(".nav-link:not([hidden]), .nav-parent:not([hidden])");
+      if (!visibleChild) group.setAttribute("hidden", "");
+      else group.removeAttribute("hidden");
+    });
+  }
+
+  async function applyPanelNavPolicy(user) {
+    const menu = document.querySelector(".admin-pro-menu");
+    if (!menu) return;
+    menu.querySelectorAll("[data-nav-role]").forEach((el) => el.removeAttribute("hidden"));
+    menu.querySelectorAll("[data-panel-domain]").forEach((el) => el.removeAttribute("hidden"));
+    menu.querySelectorAll("section[data-group][hidden]").forEach((g) => {
+      if (g.hasAttribute("data-panel-domain")) g.removeAttribute("hidden");
+    });
+
+    const ctx = await resolvePanelAccessContext(user);
+    window.__panelAccessContext = ctx;
+    window.__effectivePanelRole = await resolveEffectivePanelRole(user);
+
+    const isFullAdmin = ctx.isFullAdmin;
+    if (!isFullAdmin) {
+      getNavHiddenGroups(window.__effectivePanelRole).forEach((groupId) => {
+        const group = menu.querySelector(`[data-group="${groupId}"]`);
+        if (group && !group.hasAttribute("data-panel-domain")) group.setAttribute("hidden", "");
+      });
+      menu.querySelectorAll('[data-nav-role="admin"]').forEach((el) => {
+        el.setAttribute("hidden", "");
+      });
+    }
+    applyDomainNavVisibility(ctx);
+  }
+
   async function resolvePanelIdentity(user) {
     if (!user) return buildDisplayIdentity(null, null, "");
     const effectiveRole = await resolveEffectivePanelRole(user);
     if (typeof isAdminUser === "function" && isAdminUser(user)) {
-      return buildDisplayIdentity(user, null, "admin");
+      const profile = await fetchStaffProfileByEmail(user.email);
+      return buildDisplayIdentity(user, profile, "admin");
     }
     const profile = await fetchStaffProfileByEmail(user.email);
     return buildDisplayIdentity(user, profile, effectiveRole);
+  }
+
+  async function canPanel(domain, action) {
+    const session = typeof getAdminSession === "function" ? await getAdminSession() : null;
+    const user = session?.user;
+    if (!user) return false;
+    const ctx = window.__panelAccessContext || (await resolvePanelAccessContext(user));
+    const rbac = RBAC();
+    return rbac ? rbac.canAccess(ctx, domain, action) : false;
+  }
+
+  async function requirePanelPermission(domain, action, redirectTo) {
+    const ok = await canPanel(domain, action);
+    if (ok) return true;
+    alert("لا توجد صلاحية كافية لهذا الإجراء.");
+    if (redirectTo) window.location.replace(redirectTo);
+    return false;
   }
 
   window.PANEL_ROLE_LABELS = PANEL_ROLE_LABELS;
@@ -166,5 +235,8 @@
   window.fetchStaffProfileByEmail = fetchStaffProfileByEmail;
   window.resolvePanelIdentity = resolvePanelIdentity;
   window.resolveEffectivePanelRole = resolveEffectivePanelRole;
+  window.resolvePanelAccessContext = resolvePanelAccessContext;
   window.getStaffJobTitle = staffJobTitle;
+  window.canPanel = canPanel;
+  window.requirePanelPermission = requirePanelPermission;
 })();

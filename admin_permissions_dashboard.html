@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>صلاحيات الدخول | أكاديمية المسارحة</title>
+  <title>الموظفون والصلاحيات | أكاديمية المسارحة</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet" />
@@ -15,14 +15,17 @@
     .perm-card p,.perm-card li{color:var(--admin-muted);line-height:1.85;font-size:14px}
     .perm-card ul{margin:10px 0 0;padding:0 18px 0 0}
     .perm-card li.warn{color:#ffe79c}
-    .perm-card code{font-size:12px;color:var(--admin-gold-soft)}
     .toolbar{display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px;align-items:center}
     .toolbar input,.toolbar select{min-height:46px;min-width:200px;border-radius:14px;border:1px solid var(--admin-line);background:#0a1811;color:var(--admin-text);padding:10px 14px;font:inherit}
     .perm-table-wrap{overflow:auto;border:1px solid var(--admin-line);border-radius:20px}
-    table{width:100%;border-collapse:collapse;min-width:920px}
-    th,td{padding:12px 14px;border-bottom:1px solid var(--admin-line);text-align:right;vertical-align:middle}
+    table{width:100%;border-collapse:collapse;min-width:1180px}
+    th,td{padding:12px 14px;border-bottom:1px solid var(--admin-line);text-align:right;vertical-align:top}
     th{color:var(--admin-gold-soft);font-size:13px}
-    .perm-role-select{min-width:200px}
+    .perm-template-select,.perm-level-select,.perm-status-select{min-width:180px}
+    .domain-wrap{display:flex;flex-wrap:wrap;gap:6px;max-width:320px}
+    .domain-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 8px;border-radius:999px;border:1px solid var(--admin-line);font-size:11px;font-weight:800;color:var(--admin-muted)}
+    .domain-chip input{width:14px;height:14px}
+    .subtext{display:block;color:var(--admin-muted);font-size:12px;margin-top:4px}
     .tag{display:inline-flex;padding:6px 12px;border-radius:999px;font-weight:800;font-size:12px;border:1px solid var(--admin-line)}
     .tag-ok{color:#caffdd;background:rgba(21,145,95,.14)}
     .tag-warn{color:#ffe79c;background:rgba(213,177,90,.13)}
@@ -32,15 +35,17 @@
     .status-bar.ok{display:block;background:rgba(13,108,72,.2);border:1px solid rgba(13,108,72,.4);color:#d4ffe8}
     .status-bar.err{display:block;background:rgba(183,66,66,.16);color:#ffd8d8}
     .hero-stat{font-weight:900;color:var(--admin-gold-soft)}
+    .hero-actions{display:flex;gap:10px;flex-wrap:wrap}
     @media(max-width:900px){.perm-grid{grid-template-columns:1fr}}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/academy-roles.js"></script>
-  <script src="js/panel-access.js"></script>
+  <script src="js/panel-rbac.js?v=20260529-rbac1"></script>
+  <script src="js/panel-access.js?v=20260529-rbac1"></script>
   <script src="js/admin-auth.js"></script>
-  <script src="js/admin-permissions.js"></script>
+  <script src="js/admin-permissions.js?v=20260529-rbac1"></script>
   <script>
     requireAdmin().then(function (ok) {
       if (!ok) return;
@@ -58,18 +63,22 @@
   <div class="layout">
     <aside class="sidebar">
       <div class="brand">
-        <h1>صلاحيات الدخول</h1>
-        <p>من يدخل لوحة الإدارة وماذا يرى في القائمة — للمدير العام فقط.</p>
+        <h1>الموظفون والصلاحيات</h1>
+        <p>تعيين الأدوار والنطاقات — للمدير العام فقط.</p>
       </div>
       <div id="admin-sidebar"></div>
     </aside>
     <main class="main">
       <section class="hero">
         <div>
-          <h2>صلاحيات الدخول</h2>
-          <p>اضبط دور كل كادر له بريد إلكتروني. الصلاحية تُحفظ في سجل الكادر وتُطبَّق على القائمة الجانبية بعد تسجيل الدخول.</p>
+          <h2>الموظفون والصلاحيات</h2>
+          <p>اختر قالبًا (مدير طلبات، موظف دعم، مصور…) ثم عدّل النطاقات والمستوى. الموظف الموقوف لا يستطيع الدخول.</p>
         </div>
-        <div class="hero-stat"><span id="permCount">0</span> كادر</div>
+        <div class="hero-actions">
+          <div class="hero-stat"><span id="permCount">0</span> كادر</div>
+          <a class="btn" href="docs/RBAC_OFFICIAL_STRUCTURE_V1.md" download="RBAC_OFFICIAL_STRUCTURE_V1.md">تحميل مستند الصلاحيات</a>
+          <a class="btn" href="admin_staff_dashboard.html">إدارة الكوادر</a>
+        </div>
       </section>
 
       <div id="saveStatus" class="status-bar" role="status"></div>
@@ -77,55 +86,48 @@
       <div class="perm-grid">
         <div class="perm-card">
           <h3>① البريد المسموح بدخول الإدارة</h3>
-          <p>يجب أن يكون بريد الموظف ضمن القائمة المعتمدة في إعدادات النظام (يُحدَّث من المطور عند النشر):</p>
           <ul id="adminEmailsList"></ul>
-          <p class="hint" style="margin-top:12px">لإضافة بريد جديد: حدّث قائمة المسؤولين في المشروع ثم ارفع الموقع.</p>
+          <p style="margin-top:12px">يجب إضافة بريد الموظف في <code>supabase-config.js</code> ثم رفع الموقع.</p>
         </div>
         <div class="perm-card">
-          <h3>② توسيع أدوار الكادر (مرة واحدة)</h3>
-          <p>إذا فشل الحفظ برسالة «قيمة غير مقبولة»، نفّذ سكربت <strong>STAFF_PANEL_ROLES</strong> في Supabase (مرجع: ملف المشروع أو رسالة المطور).</p>
-          <p>بعد الحفظ: اطلب من الموظف <strong>خروج ثم دخول</strong> لتحديث القائمة الجانبية.</p>
+          <h3>② تفعيل قاعدة البيانات (مرة واحدة)</h3>
+          <p>نفّذ <strong>docs/RBAC_PANEL_GRANTS.sql</strong> في Supabase قبل أول حفظ للقوالب.</p>
+          <p>بعد الحفظ: اطلب من الموظف <strong>خروج ثم دخول</strong>.</p>
         </div>
         <div class="perm-card" style="grid-column:1/-1">
-          <h3>③ ماذا يظهر لكل دور في القائمة؟</h3>
-          <ul>
-            <li><strong>المدير العام</strong> — كل الأقسام بما فيها الإعدادات وصلاحيات الدخول.</li>
-            <li><strong>مدير عمليات / مشرف</strong> — بدون قسم «النظام».</li>
-            <li><strong>موظف</strong> — الطلبات والمراجعة فقط.</li>
-            <li><strong>مدرب</strong> — تشغيل رياضي (مباريات، إحصائيات…) بدون طلبات الانضمام.</li>
-            <li><strong>مشاهدة فقط</strong> — عرض محدود.</li>
-          </ul>
+          <h3>③ قوالب جاهزة (20+ مسمى)</h3>
+          <p>مدير عام · نائب · مدير/نائب/موظف طلبات · متجر · إعلام · <strong>دعم فني</strong> · تشغيل رياضي… — راجع المستند الرسمي للتفاصيل.</p>
         </div>
       </div>
 
       <section class="panel">
-        <div class="panel-head">
-          <h3>أدوار الكوادر</h3>
-          <a class="btn" href="admin_staff_dashboard.html">إدارة الكوادر</a>
-        </div>
+        <div class="panel-head"><h3>جدول الصلاحيات</h3></div>
         <div class="panel-body">
           <div class="toolbar">
             <input type="search" id="permSearch" placeholder="بحث بالاسم أو البريد..." />
             <select id="permFilter" aria-label="تصفية">
               <option value="all">كل من لديه بريد</option>
-              <option value="panel">مسموحون بدخول الإدارة فقط</option>
+              <option value="panel">مسموحون بدخول الإدارة</option>
               <option value="no_panel">غير مضافين لقائمة الإدارة</option>
+              <option value="suspended">موقوفون</option>
             </select>
           </div>
           <div class="perm-table-wrap">
             <table>
               <thead>
                 <tr>
-                  <th>الاسم</th>
+                  <th>الاسم / المسمى</th>
                   <th>البريد</th>
-                  <th>الوظيفة</th>
-                  <th>صلاحية لوحة الإدارة</th>
+                  <th>القالب</th>
+                  <th>المستوى</th>
+                  <th>النطاقات</th>
+                  <th>الحالة</th>
                   <th>دخول الإدارة</th>
-                  <th>حساب Auth</th>
+                  <th>Auth</th>
                 </tr>
               </thead>
               <tbody id="permTableBody">
-                <tr><td colspan="6" class="empty-cell">جاري التحميل...</td></tr>
+                <tr><td colspan="8" class="empty-cell">جاري التحميل...</td></tr>
               </tbody>
             </table>
           </div>

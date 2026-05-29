@@ -27,6 +27,19 @@
     .tag-closed{background:rgba(255,255,255,.08);color:#dce5f4}
     .tag-archived{background:rgba(255,255,255,.05);color:#9fb0d1}
     .btn{display:inline-flex;padding:10px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:#fff;font-weight:900;cursor:pointer;font-family:inherit;text-decoration:none}
+    .mini-btn{display:inline-flex;align-items:center;justify-content:center;padding:8px 10px;border-radius:10px;border:1px solid var(--line);background:rgba(255,255,255,.05);color:#fff;font-weight:800;font-family:inherit;cursor:pointer}
+    .mini-btn.close{border-color:rgba(197,82,82,.35);color:#ffd7d7}
+    .room-actions{display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap}
+    .toast-wrap{position:fixed;left:18px;bottom:18px;display:flex;flex-direction:column;gap:8px;z-index:11000}
+    .toast{padding:11px 14px;border-radius:12px;border:1px solid var(--line);background:rgba(10,18,30,.96);color:#fff;font-weight:800}
+    .toast.error{border-color:rgba(197,82,82,.35);color:#ffd7d7}
+    .toast.success{border-color:rgba(39,174,96,.35);color:#ccffdf}
+    .confirm-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;align-items:center;justify-content:center;z-index:12000;padding:16px}
+    .confirm-overlay.show{display:flex}
+    .confirm-box{width:min(430px,100%);background:linear-gradient(180deg,#102217,#07130d);border:1px solid rgba(213,177,90,.24);border-radius:18px;padding:16px}
+    .confirm-box h3{margin:0 0 8px;font-size:20px;color:var(--gold2)}
+    .confirm-box p{margin:0;color:#dce5f4;line-height:1.8}
+    .confirm-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:14px}
     @media(max-width:1000px){.layout{grid-template-columns:1fr}.sidebar{border-left:none;border-bottom:1px solid var(--line)}}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -64,7 +77,7 @@
               <th>النوع</th>
               <th>الحالة</th>
               <th>آخر رسالة</th>
-              <th>فتح</th>
+              <th>الإجراء</th>
             </tr>
           </thead>
           <tbody id="roomsBody">
@@ -78,12 +91,24 @@
       </p>
     </main>
   </div>
+  <div class="toast-wrap" id="toastWrap"></div>
+  <div class="confirm-overlay" id="confirmOverlay" aria-hidden="true">
+    <div class="confirm-box" role="dialog" aria-modal="true">
+      <h3 id="confirmTitle">تأكيد الإجراء</h3>
+      <p id="confirmText">هل تريد المتابعة؟</p>
+      <div class="confirm-actions">
+        <button type="button" class="mini-btn" id="confirmCancelBtn">إلغاء</button>
+        <button type="button" class="mini-btn close" id="confirmOkBtn">تأكيد</button>
+      </div>
+    </div>
+  </div>
   <script src="admin_sidebar.js"></script>
   <script src="js/chat-room-sync.js"></script>
   <script src="js/chat-drawer.js"></script>
   <script>
     const sb = createSupabaseClient();
     const body = document.getElementById("roomsBody");
+    const toastWrap = document.getElementById("toastWrap");
 
     const ROOM_TYPE_AR = {
       join_request: "طلب انضمام",
@@ -128,25 +153,102 @@
       const table = tr.dataset.table;
       const entity = tr.dataset.entity;
       const title = tr.dataset.title || "طلب";
+      const status = String(tr.dataset.status || "open");
+      if (status !== "open") {
+        showToast("لا يمكن فتح محادثة مغلقة. افتح غرفة نشطة من الطلب.", "error");
+        return;
+      }
       if (table !== "join_requests" || !entity) {
-        alert("هذه الغرفة غير مرتبطة بطلب انضمام. افتحها من سياق الطلب المناسب.");
+        showToast("هذه الغرفة غير مرتبطة بطلب انضمام.", "error");
         return;
       }
       if (!window.ChatDrawer) {
-        alert("وحدة المحادثة غير متوفرة. حدّث الصفحة.");
+        showToast("وحدة المحادثة غير متوفرة. حدّث الصفحة.", "error");
         return;
       }
       ChatDrawer.openForJoinRequest({ joinRequestId: entity, fullName: title });
     }
 
+    function showToast(message, type = "success") {
+      if (!toastWrap) return;
+      const el = document.createElement("div");
+      el.className = `toast ${type}`;
+      el.textContent = message;
+      toastWrap.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = "0";
+        el.style.transform = "translateY(6px)";
+        el.style.transition = ".2s ease";
+        setTimeout(() => el.remove(), 220);
+      }, 2500);
+    }
+
+    function smartConfirm(message) {
+      return new Promise((resolve) => {
+        const overlay = document.getElementById("confirmOverlay");
+        const txt = document.getElementById("confirmText");
+        const ok = document.getElementById("confirmOkBtn");
+        const cancel = document.getElementById("confirmCancelBtn");
+        txt.textContent = message;
+        const cleanup = (result) => {
+          overlay.classList.remove("show");
+          ok.onclick = null;
+          cancel.onclick = null;
+          overlay.onclick = null;
+          resolve(result);
+        };
+        ok.onclick = () => cleanup(true);
+        cancel.onclick = () => cleanup(false);
+        overlay.onclick = (e) => {
+          if (e.target === overlay) cleanup(false);
+        };
+        overlay.classList.add("show");
+      });
+    }
+
+    async function closeRoomById(roomId) {
+      const rid = String(roomId || "").trim();
+      if (!rid) return;
+      const ok = await smartConfirm("هل تريد إغلاق هذه المحادثة الآن؟");
+      if (!ok) return;
+      const { error } = await sb
+        .from("chat_rooms")
+        .update({ status: "closed", updated_at: new Date().toISOString() })
+        .eq("id", rid);
+      if (error) {
+        showToast("تعذر إغلاق المحادثة. حاول مرة أخرى.", "error");
+        return;
+      }
+      showToast("تم إغلاق المحادثة.", "success");
+      await loadRooms();
+      if (typeof window.refreshAdminSidebarBadges === "function") window.refreshAdminSidebarBadges();
+    }
+
     function bindRoomRows() {
       body.querySelectorAll(".room-row").forEach((tr) => {
-        tr.addEventListener("click", () => openRoomRow(tr));
+        tr.addEventListener("click", (e) => {
+          if (e.target.closest(".room-action-btn")) return;
+          openRoomRow(tr);
+        });
         tr.addEventListener("keydown", (e) => {
           if (e.key === "Enter" || e.key === " ") {
             e.preventDefault();
             openRoomRow(tr);
           }
+        });
+      });
+      body.querySelectorAll(".open-room-btn").forEach((btn) => {
+        btn.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const tr = e.currentTarget.closest(".room-row");
+          if (tr) openRoomRow(tr);
+        });
+      });
+      body.querySelectorAll(".close-room-btn").forEach((btn) => {
+        btn.addEventListener("click", async (e) => {
+          e.stopPropagation();
+          btn.disabled = true;
+          await closeRoomById(btn.dataset.roomId);
         });
       });
     }
@@ -168,16 +270,41 @@
           '<tr><td colspan="5" style="text-align:center;color:var(--muted);padding:24px">لا توجد محادثات بعد. عندما يضغط الزائر «تواصل مع الدعم» من صفحة الانضمام أو زر «تواصل» في الطلبات، ستظهر هنا.</td></tr>';
         return;
       }
+      const deduped = [];
+      const seen = new Set();
+      data.forEach((r) => {
+        const key = `${String(r.related_entity_table || "")}|${String(r.related_entity_id || "")}|${String(
+          r.room_type || ""
+        )}`;
+        if (seen.has(key)) return;
+        seen.add(key);
+        deduped.push(r);
+      });
 
-      body.innerHTML = data
+      body.innerHTML = deduped
         .map(
           (r) => `<tr class="room-row" tabindex="0" role="button" aria-label="فتح محادثة ${esc(r.title_ar)}"
-        data-table="${esc(r.related_entity_table || "")}" data-entity="${esc(r.related_entity_id || "")}" data-title="${esc(r.title_ar)}">
+        data-table="${esc(r.related_entity_table || "")}" data-entity="${esc(r.related_entity_id || "")}" data-title="${esc(r.title_ar)}" data-status="${esc(
+            r.status || "open"
+          )}">
         <td><strong>${esc(r.title_ar)}</strong></td>
         <td><span class="tag tag-type">${esc(roomTypeLabel(r.room_type))}</span></td>
         <td><span class="tag ${statusClass(r.status)}">${esc(statusLabel(r.status))}</span></td>
         <td>${esc(fmt(r.last_message_at))}</td>
-        <td>اضغط لفتح ←</td>
+        <td>
+          <div class="room-actions">
+            ${
+              String(r.status || "open") === "open"
+                ? '<button type="button" class="mini-btn room-action-btn open-room-btn">فتح</button>'
+                : ""
+            }
+            ${
+              String(r.status || "open") === "open"
+                ? `<button type="button" class="mini-btn close room-action-btn close-room-btn" data-room-id="${esc(r.id)}">إغلاق</button>`
+                : '<span style="color:var(--muted);font-size:12px">مغلقة</span>'
+            }
+          </div>
+        </td>
       </tr>`
         )
         .join("");
