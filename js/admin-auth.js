@@ -78,7 +78,7 @@
 
   const PANEL_ROLE_SET = new Set(["admin", "manager", "supervisor", "staff", "coach", "viewer"]);
 
-  function isPanelUser(user) {
+  function isPanelUserLegacy(user) {
     if (!user) return false;
     if (isAdminUser(user)) return true;
     const role = getAdminRole(user);
@@ -88,6 +88,33 @@
     const email = String(user.email || "").trim().toLowerCase();
     if (!emails.length) return false;
     return emails.indexOf(email) !== -1;
+  }
+
+  function isPanelUser(user) {
+    return isPanelUserLegacy(user);
+  }
+
+  async function canAccessAdminPanel(user) {
+    if (!user) return false;
+    if (isAdminUser(user)) return true;
+
+    const email = String(user.email || "").trim().toLowerCase();
+    if (!email) return false;
+
+    if (typeof fetchStaffProfileByEmail === "function") {
+      try {
+        const profile = await fetchStaffProfileByEmail(email);
+        if (profile) {
+          const st = String(profile.status || "").toLowerCase();
+          if (st === "suspended") return false;
+          if (st === "active") return true;
+        }
+      } catch (e) {
+        console.warn("[admin-auth] staff panel check:", e);
+      }
+    }
+
+    return isPanelUserLegacy(user);
   }
 
   async function getSession() {
@@ -110,7 +137,7 @@
     clearLegacySession();
     try {
       const session = await getSession();
-      if (session && isPanelUser(session.user)) {
+      if (session && (await canAccessAdminPanel(session.user))) {
         if (typeof fetchStaffProfileByEmail === "function") {
           const profile = await fetchStaffProfileByEmail(session.user.email);
           if (profile && String(profile.status || "").toLowerCase() === "suspended") {
@@ -154,7 +181,7 @@
       wrapped.cause = error;
       throw wrapped;
     }
-    if (!isPanelUser(data.user)) {
+    if (!(await canAccessAdminPanel(data.user))) {
       await client.auth.signOut();
       throw new Error("هذا الحساب غير مصرح له بدخول لوحة الإدارة.");
     }
@@ -187,7 +214,7 @@
   async function isPanelLoggedIn() {
     try {
       const session = await getSession();
-      return !!(session && isPanelUser(session.user));
+      return !!(session && (await canAccessAdminPanel(session.user)));
     } catch (e) {
       return false;
     }
@@ -209,6 +236,7 @@
   window.ADMIN_ROLE_LABELS = ADMIN_ROLE_LABELS;
   window.isAdminUser = isAdminUser;
   window.isPanelUser = isPanelUser;
+  window.canAccessAdminPanel = canAccessAdminPanel;
   window.isPanelLoggedIn = isPanelLoggedIn;
   window.isAdminLoggedIn = isAdminLoggedIn;
   window.requireAdmin = requireAdmin;

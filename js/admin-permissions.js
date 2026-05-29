@@ -26,9 +26,13 @@
   }
 
   function hasPanelAccess(email) {
+    const normalized = String(email || "").trim().toLowerCase();
+    if (!normalized) return false;
+    const row = staffRows.find((r) => String(r.email || "").trim().toLowerCase() === normalized);
+    if (row && String(row.status || "").toLowerCase() === "active") return true;
     const list = getAdminEmailList();
     if (!list.length) return false;
-    return list.includes(String(email || "").trim().toLowerCase());
+    return list.includes(normalized);
   }
 
   function showStatus(message, type) {
