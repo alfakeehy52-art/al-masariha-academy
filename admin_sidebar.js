@@ -108,8 +108,16 @@ document.addEventListener("DOMContentLoaded", () => {
     {
       id: "system",
       title: "النظام",
+      panelDomain: "system",
       items: [
-        { href: "admin_notifications.html", label: "الإشعارات", desc: "تنبيهات الإدارة", icon: "bell", match: ["admin_notifications.html"] },
+        {
+          href: "admin_notifications.html",
+          label: "الإشعارات",
+          desc: "تنبيهات الإدارة",
+          icon: "bell",
+          match: ["admin_notifications.html"],
+          requireSystemRead: true
+        },
         {
           href: "admin_permissions_dashboard.html",
           label: "الموظفون والصلاحيات",
@@ -119,7 +127,15 @@ document.addEventListener("DOMContentLoaded", () => {
           navRole: "admin",
           requireSystemUpdate: true
         },
-        { href: "academy_settings_dashboard.html", label: "الإعدادات", desc: "إعدادات الأكاديمية", icon: "settings", panelDomain: "system", match: ["academy_settings_dashboard.html"] }
+        {
+          href: "academy_settings_dashboard.html",
+          label: "الإعدادات",
+          desc: "إعدادات الأكاديمية",
+          icon: "settings",
+          panelDomain: "system",
+          requireSystemRead: true,
+          match: ["academy_settings_dashboard.html"]
+        }
       ]
     },
     {
@@ -176,11 +192,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const navRoleAttr = item.navRole ? ` data-nav-role="${item.navRole}"` : "";
     const panelDomainAttr = item.panelDomain ? ` data-panel-domain="${item.panelDomain}"` : "";
     const systemPermAttr = item.requireSystemUpdate ? ` data-require-system-update="true"` : "";
+    const systemReadAttr = item.requireSystemRead ? ` data-require-system-read="true"` : "";
     const badge = item.badgeKey
       ? `<span class="nav-item-badge" data-badge="${item.badgeKey}" hidden aria-label="تنبيهات">0</span>`
       : "";
     return `
-      <a href="${item.href}" class="nav-link${isChild ? " nav-sublink" : ""}${active ? " active" : ""}"${navRoleAttr}${panelDomainAttr}${systemPermAttr}>
+      <a href="${item.href}" class="nav-link${isChild ? " nav-sublink" : ""}${active ? " active" : ""}"${navRoleAttr}${panelDomainAttr}${systemPermAttr}${systemReadAttr}>
         ${iconHtml(item.icon)}
         <span class="nav-copy">
           <span class="nav-label">${item.label}</span>
@@ -209,7 +226,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function menuHtml() {
     return `
-      <nav class="menu admin-pro-menu" aria-label="القائمة الجانبية للإدارة">
+      <nav class="menu admin-pro-menu nav-policy-pending" aria-label="القائمة الجانبية للإدارة">
         ${menuTree
           .map(
             (group) => `
@@ -521,7 +538,9 @@ document.addEventListener("DOMContentLoaded", () => {
       card.hidden = false;
       if (typeof applyPanelNavPolicy === "function") await applyPanelNavPolicy(user);
       else applyAdminNavPolicy(user);
-    } catch (e) {}
+    } catch (e) {
+      document.querySelector(".admin-pro-menu")?.classList.remove("nav-policy-pending");
+    }
   }
 
   function applyAdminNavPolicy(user) {
@@ -637,11 +656,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   ensureThemeLink();
   injectStyles();
-  const sidebarRoot = mountSidebar();
-  ensureMobileToggle();
-  if (sidebarRoot) bindInteractions(sidebarRoot);
-  bootstrapSidebarBrand();
-  loadAdminIdentity();
-  loadSidebarBadges();
+
+  (async function bootSidebar() {
+    try {
+      if (!window.supabase) await loadScriptOnce("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2");
+      if (!window.SUPABASE_CONFIG) await loadScriptOnce("supabase-config.js");
+      if (!window.createSupabaseClient) await loadScriptOnce("js/supabase-client.js");
+      if (!window.PanelRBAC) await loadScriptOnce("js/panel-rbac.js?v=20260529-rbac2");
+      if (!window.canPanel) await loadScriptOnce("js/panel-access.js?v=20260529-rbac2");
+    } catch (e) {
+      console.warn("[admin-sidebar] rbac preload:", e);
+    }
+
+    const sidebarRoot = mountSidebar();
+    ensureMobileToggle();
+    if (sidebarRoot) bindInteractions(sidebarRoot);
+    bootstrapSidebarBrand();
+    loadAdminIdentity();
+    loadSidebarBadges();
+  })();
+
   window.refreshAdminSidebarBadges = loadSidebarBadges;
 });

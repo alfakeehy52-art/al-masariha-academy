@@ -11,8 +11,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="js/supabase-client.js"></script>
-  <script src="js/panel-rbac.js?v=20260529-exec1"></script>
-  <script src="js/panel-access.js?v=20260529-exec1"></script>
+  <script src="js/panel-rbac.js?v=20260529-rbac2"></script>
+  <script src="js/panel-access.js?v=20260529-rbac2"></script>
   <script src="js/admin-auth.js"></script>
   <script>requireAdmin();</script>
   <style>
@@ -38,6 +38,12 @@
     .exec-meta{color:var(--admin-muted);font-size:12px;font-weight:800}
     @media(max-width:1100px){.exec-stats{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:640px){.exec-stats{grid-template-columns:1fr}}
+    .panel-denied-banner{
+      margin:0 0 18px;padding:14px 18px;border-radius:16px;font-weight:800;
+      background:rgba(183,66,66,.16);border:1px solid rgba(183,66,66,.35);color:#ffd8d8
+    }
+    .panel-denied-banner[hidden]{display:none!important}
+    .quick-link[hidden],.btn[hidden]{display:none!important}
   </style>
 </head>
 <body>
@@ -50,6 +56,7 @@
     <div id="admin-sidebar"></div>
   </aside>
   <main class="main">
+    <div id="panelDeniedBanner" class="panel-denied-banner" hidden role="alert"></div>
     <div class="topbar">
       <div class="title-box">
         <h2>لوحة الإدارة</h2>
@@ -57,7 +64,7 @@
       </div>
       <div class="actions">
         <a class="btn btn-primary" href="admin_requests.html?status=new">مراجعة الطلبات الجديدة</a>
-        <a class="btn btn-secondary" href="admin_permissions_dashboard.html">الموظفون والصلاحيات</a>
+        <a class="btn btn-secondary" href="admin_permissions_dashboard.html" data-require-system-update>الموظفون والصلاحيات</a>
       </div>
     </div>
 
@@ -135,8 +142,8 @@
             <a class="quick-link" href="media_dashboard.html"><strong>الإعلام</strong>صور وفيديو</a>
             <a class="quick-link" href="store_orders_dashboard.html"><strong>طلبات المتجر</strong>معالجة الطلبات</a>
             <a class="quick-link" href="players_list_dashboard.html"><strong>قائمة اللاعبين</strong>عرض السجلات</a>
-            <a class="quick-link" href="admin_permissions_dashboard.html"><strong>الموظفون</strong>الصلاحيات والأدوار</a>
-            <a class="quick-link" href="academy_settings_dashboard.html"><strong>الإعدادات</strong>إعدادات الأكاديمية</a>
+            <a class="quick-link" href="admin_permissions_dashboard.html" data-require-system-update><strong>الموظفون</strong>الصلاحيات والأدوار</a>
+            <a class="quick-link" href="academy_settings_dashboard.html" data-require-system-read><strong>الإعدادات</strong>إعدادات الأكاديمية</a>
           </div>
         </div>
       </div>
@@ -246,10 +253,24 @@
     }
   }
 
+  async function applyDashboardAccessUI() {
+    if (typeof showPanelDeniedBanner === "function") showPanelDeniedBanner("panelDeniedBanner");
+    if (typeof canPanel !== "function") return;
+    const canUpdate = await canPanel("system", "update");
+    const canRead = await canPanel("system", "read");
+    document.querySelectorAll("[data-require-system-update]").forEach((el) => {
+      if (!canUpdate) el.setAttribute("hidden", "");
+    });
+    document.querySelectorAll("[data-require-system-read]").forEach((el) => {
+      if (!canRead) el.setAttribute("hidden", "");
+    });
+  }
+
   document.addEventListener("DOMContentLoaded", () => {
     bindStatCards();
     loadDashboard();
     if (typeof bootExecutiveDashboard === "function") bootExecutiveDashboard();
+    applyDashboardAccessUI();
   });
 </script>
 </body>

@@ -1,3 +1,112 @@
+/**
+ * حماية صفحات لوحة الإدارة — إخفاء فوري + تحقق النطاق
+ */
+(function panelPageGuardsModule() {
+  const PANEL_PAGE_GUARDS = {
+    "academy_settings_dashboard.html": { domain: "system", action: "read" },
+    "admin_permissions_dashboard.html": { domain: "system", action: "update" },
+    "admin_notifications.html": { domain: "system", action: "read" },
+    "admin_members_dashboard.html": { domain: "members", action: "read" },
+    "players_list_dashboard.html": { domain: "members", action: "read" },
+    "players_add_dashboard.html": { domain: "members", action: "create" },
+    "player_view_dashboard.html": { domain: "members", action: "read" },
+    "edit_player_dashboard.html": { domain: "members", action: "update" },
+    "coaches_dashboard.html": { domain: "members", action: "read" },
+    "coaches_add_dashboard.html": { domain: "members", action: "create" },
+    "coach_view_dashboard.html": { domain: "members", action: "read" },
+    "guardians_dashboard.html": { domain: "members", action: "read" },
+    "supporters_dashboard.html": { domain: "members", action: "read" },
+    "admin_staff_dashboard.html": { domain: "members", action: "read" },
+    "academy_members_dashboard.html": { domain: "members", action: "read" },
+    "admin_requests_dashboard.html": { domain: "requests", action: "read" },
+    "admin_requests.html": { domain: "requests", action: "read" },
+    "admin_completion_dashboard.html": { domain: "requests", action: "read" },
+    "players_requests.html": { domain: "requests", action: "read" },
+    "coaches_requests.html": { domain: "requests", action: "read" },
+    "guardians_requests.html": { domain: "requests", action: "read" },
+    "supporters_requests.html": { domain: "requests", action: "read" },
+    "staff_requests.html": { domain: "requests", action: "read" },
+    "academy_members_requests.html": { domain: "requests", action: "read" },
+    "volunteers_requests.html": { domain: "requests", action: "read" },
+    "teams_categories_dashboard.html": { domain: "ops", action: "read" },
+    "matches_dashboard.html": { domain: "ops", action: "read" },
+    "stats_dashboard.html": { domain: "ops", action: "read" },
+    "store_products_dashboard.html": { domain: "store", action: "read" },
+    "store_orders_dashboard.html": { domain: "store", action: "read" },
+    "news_dashboard.html": { domain: "media", action: "read" },
+    "media_dashboard.html": { domain: "media", action: "read" },
+    "communications_dashboard.html": { domain: "support", action: "read" },
+    "contact_messages_dashboard.html": { domain: "support", action: "read" }
+  };
+
+  const PANEL_DENIED_MSG_KEY = "panel_denied_message";
+  const PANEL_DENIED_DEFAULT = "حسابك لايملك الصلاحيات للدخول لهذه الصفحة";
+
+  function currentPage() {
+    return (window.location.pathname.split("/").pop() || "").toLowerCase();
+  }
+
+  function injectLockStyle() {
+    if (document.getElementById("panel-page-lock-style")) return;
+    const style = document.createElement("style");
+    style.id = "panel-page-lock-style";
+    style.textContent =
+      "html.panel-page-locked,html.panel-page-locked body{visibility:hidden!important;background:#041009!important}" +
+      ".admin-pro-menu.nav-policy-pending{visibility:hidden!important}" +
+      ".admin-pro-menu [hidden],.menu-group[hidden],.nav-parent[hidden],.nav-link[hidden]{display:none!important}";
+    (document.head || document.documentElement).appendChild(style);
+  }
+
+  function lockPanelContent() {
+    injectLockStyle();
+    document.documentElement.classList.add("panel-page-locked");
+  }
+
+  function unlockPanelContent() {
+    document.documentElement.classList.remove("panel-page-locked");
+  }
+
+  function flashPanelDenied(message) {
+    try {
+      sessionStorage.setItem(PANEL_DENIED_MSG_KEY, String(message || PANEL_DENIED_DEFAULT).trim());
+    } catch (_e) {}
+  }
+
+  function consumePanelDeniedFlash() {
+    try {
+      const msg = sessionStorage.getItem(PANEL_DENIED_MSG_KEY);
+      if (msg) sessionStorage.removeItem(PANEL_DENIED_MSG_KEY);
+      return msg || "";
+    } catch (_e) {
+      return "";
+    }
+  }
+
+  function showPanelDeniedBanner(containerId) {
+    const el = document.getElementById(containerId || "panelDeniedBanner");
+    if (!el) return;
+    const msg = consumePanelDeniedFlash();
+    if (!msg) return;
+    el.textContent = msg;
+    el.hidden = false;
+  }
+
+  function getPageGuard(page) {
+    return PANEL_PAGE_GUARDS[String(page || currentPage()).toLowerCase()] || null;
+  }
+
+  if (getPageGuard()) lockPanelContent();
+
+  window.PANEL_PAGE_GUARDS = PANEL_PAGE_GUARDS;
+  window.PANEL_DENIED_DEFAULT = PANEL_DENIED_DEFAULT;
+  window.getPanelPageGuard = getPageGuard;
+  window.lockPanelContent = lockPanelContent;
+  window.unlockPanelContent = unlockPanelContent;
+  window.flashPanelDenied = flashPanelDenied;
+  window.consumePanelDeniedFlash = consumePanelDeniedFlash;
+  window.showPanelDeniedBanner = showPanelDeniedBanner;
+})();
+
 (function () {
   const LOGIN_PAGE = "admin_login.html";
   const LEGACY_SESSION_KEY = "adminLoggedIn";
@@ -133,10 +242,50 @@
     }
   }
 
+  function loadScriptOnce(src) {
+    return new Promise((resolve, reject) => {
+      const base = String(src).split("?")[0];
+      if (document.querySelector(`script[src^="${base}"]`)) return resolve();
+      const el = document.createElement("script");
+      el.src = src;
+      el.onload = () => resolve();
+      el.onerror = () => reject(new Error("Failed: " + src));
+      document.head.appendChild(el);
+    });
+  }
+
+  async function ensurePanelAccessLoaded() {
+    if (!window.PanelRBAC) await loadScriptOnce("js/panel-rbac.js?v=20260529-rbac2");
+    if (typeof window.canPanel !== "function") await loadScriptOnce("js/panel-access.js?v=20260529-rbac2");
+  }
+
+  async function checkPageDomainAccess() {
+    const guard =
+      typeof getPanelPageGuard === "function"
+        ? getPanelPageGuard()
+        : window.PANEL_PAGE_GUARDS && window.PANEL_PAGE_GUARDS[(location.pathname.split("/").pop() || "").toLowerCase()];
+    if (!guard) return true;
+    if (typeof lockPanelContent === "function") lockPanelContent();
+    await ensurePanelAccessLoaded();
+    const session = await getSession();
+    if (session?.user && typeof resolvePanelAccessContext === "function") {
+      window.__panelAccessContext = await resolvePanelAccessContext(session.user);
+    }
+    const ok = typeof canPanel === "function" ? await canPanel(guard.domain, guard.action) : false;
+    if (!ok) {
+      if (typeof flashPanelDenied === "function") flashPanelDenied(window.PANEL_DENIED_DEFAULT);
+      window.location.replace("admin_dashboard.html");
+      return false;
+    }
+    if (typeof unlockPanelContent === "function") unlockPanelContent();
+    return true;
+  }
+
   async function requireAdmin() {
     clearLegacySession();
     try {
       const session = await getSession();
+      if (session?.user) await ensurePanelAccessLoaded();
       if (session && (await canAccessAdminPanel(session.user))) {
         if (typeof fetchStaffProfileByEmail === "function") {
           const profile = await fetchStaffProfileByEmail(session.user.email);
@@ -146,7 +295,8 @@
             return false;
           }
         }
-        return true;
+        const domainOk = await checkPageDomainAccess();
+        return domainOk;
       }
     } catch (e) {
       console.error("Admin auth check failed:", e);

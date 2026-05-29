@@ -152,62 +152,77 @@
     return NAV_HIDDEN_GROUPS[key] || NAV_HIDDEN_GROUPS.staff;
   }
 
+  function domainVisible(ctx, domain) {
+    const rbac = RBAC();
+    if (!rbac || !ctx) return false;
+    if (ctx.isFullAdmin) return true;
+    return rbac.hasDomain(ctx.domains, domain);
+  }
+
+  function syncGroupVisibility(menu) {
+    menu.querySelectorAll("section[data-group]").forEach((group) => {
+      const visible = group.querySelector(
+        ".nav-link:not([hidden]), .nav-parent:not([hidden])"
+      );
+      if (!visible) group.setAttribute("hidden", "");
+      else group.removeAttribute("hidden");
+    });
+    menu.querySelectorAll("[data-nav-parent]").forEach((parent) => {
+      const visibleChild = parent.querySelector(".nav-sublink:not([hidden])");
+      if (!visibleChild) parent.setAttribute("hidden", "");
+      else parent.removeAttribute("hidden");
+    });
+  }
+
   function applyDomainNavVisibility(ctx) {
     const menu = document.querySelector(".admin-pro-menu");
     if (!menu || !ctx) return;
-    menu.querySelectorAll("[data-panel-domain]").forEach((el) => {
-      const domain = el.getAttribute("data-panel-domain");
-      const rbac = RBAC();
-      const show = rbac ? rbac.hasDomain(ctx.domains, domain) || ctx.isFullAdmin : true;
-      if (show) el.removeAttribute("hidden");
-      else el.setAttribute("hidden", "");
-    });
+
     menu.querySelectorAll("section[data-group]").forEach((group) => {
       const domain = group.getAttribute("data-panel-domain");
       if (!domain) return;
-      const rbac = RBAC();
-      const showGroup = rbac ? rbac.hasDomain(ctx.domains, domain) || ctx.isFullAdmin : true;
-      if (!showGroup) {
-        group.setAttribute("hidden", "");
-        return;
-      }
-      const visibleChild = group.querySelector(".nav-link:not([hidden]), .nav-parent:not([hidden])");
-      if (!visibleChild) group.setAttribute("hidden", "");
-      else group.removeAttribute("hidden");
+      if (domainVisible(ctx, domain)) group.removeAttribute("hidden");
+      else group.setAttribute("hidden", "");
     });
+
+    menu.querySelectorAll("[data-panel-domain]").forEach((el) => {
+      const domain = el.getAttribute("data-panel-domain");
+      if (domainVisible(ctx, domain)) el.removeAttribute("hidden");
+      else el.setAttribute("hidden", "");
+    });
+
+    syncGroupVisibility(menu);
   }
 
   async function applyPanelNavPolicy(user) {
     const menu = document.querySelector(".admin-pro-menu");
     if (!menu) return;
-    menu.querySelectorAll("[data-nav-role]").forEach((el) => el.removeAttribute("hidden"));
-    menu.querySelectorAll("[data-panel-domain]").forEach((el) => el.removeAttribute("hidden"));
-    menu.querySelectorAll("section[data-group][hidden]").forEach((g) => {
-      if (g.hasAttribute("data-panel-domain")) g.removeAttribute("hidden");
-    });
+    menu.classList.add("nav-policy-pending");
 
     const ctx = await resolvePanelAccessContext(user);
     window.__panelAccessContext = ctx;
     window.__effectivePanelRole = await resolveEffectivePanelRole(user);
 
-    const isFullAdmin = ctx.isFullAdmin;
-    if (!isFullAdmin) {
-      getNavHiddenGroups(window.__effectivePanelRole).forEach((groupId) => {
-        const group = menu.querySelector(`[data-group="${groupId}"]`);
-        if (group && !group.hasAttribute("data-panel-domain")) group.setAttribute("hidden", "");
-      });
-      menu.querySelectorAll('[data-nav-role="admin"]').forEach((el) => {
-        el.setAttribute("hidden", "");
-      });
-    }
     applyDomainNavVisibility(ctx);
 
-    const canManageStaff =
-      typeof canPanel === "function" ? await canPanel("system", "update") : !!isFullAdmin;
+    const canManageStaff = ctx.isFullAdmin || (RBAC() && RBAC().canAccess(ctx, "system", "update"));
+    const canReadSystem = ctx.isFullAdmin || (RBAC() && RBAC().canAccess(ctx, "system", "read"));
+
     menu.querySelectorAll("[data-require-system-update]").forEach((el) => {
       if (!canManageStaff) el.setAttribute("hidden", "");
       else el.removeAttribute("hidden");
     });
+    menu.querySelectorAll("[data-require-system-read]").forEach((el) => {
+      if (!canReadSystem) el.setAttribute("hidden", "");
+      else el.removeAttribute("hidden");
+    });
+    menu.querySelectorAll('[data-nav-role="admin"]').forEach((el) => {
+      if (!canManageStaff) el.setAttribute("hidden", "");
+      else el.removeAttribute("hidden");
+    });
+
+    syncGroupVisibility(menu);
+    menu.classList.remove("nav-policy-pending");
   }
 
   async function resolvePanelIdentity(user) {
@@ -263,10 +278,28 @@
     return data;
   }
 
+  async function requirePanelPage(domain, action, redirectTo) {
+    if (typeof lockPanelContent === "function") lockPanelContent();
+    const loggedIn = typeof requireAdmin === "function" ? await requireAdmin() : false;
+    if (!loggedIn) return false;
+    const ok = await canPanel(domain, action);
+    if (ok) {
+      if (typeof unlockPanelContent === "function") unlockPanelContent();
+      return true;
+    }
+    if (typeof flashPanelDenied === "function") {
+      flashPanelDenied(window.PANEL_DENIED_DEFAULT);
+    }
+    window.location.replace(redirectTo || "admin_dashboard.html");
+    return false;
+  }
+
   async function requirePanelPermission(domain, action, redirectTo) {
     const ok = await canPanel(domain, action);
     if (ok) return true;
-    alert("لا توجد صلاحية كافية لهذا الإجراء.");
+    if (typeof flashPanelDenied === "function") {
+      flashPanelDenied("لا توجد صلاحية كافية لهذا الإجراء.");
+    }
     if (redirectTo) window.location.replace(redirectTo);
     return false;
   }
@@ -286,4 +319,5 @@
   window.getStaffJobTitle = staffJobTitle;
   window.canPanel = canPanel;
   window.requirePanelPermission = requirePanelPermission;
+  window.requirePanelPage = requirePanelPage;
 })();

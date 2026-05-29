@@ -42,25 +42,13 @@
   <script src="supabase-config.js"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/academy-roles.js"></script>
-  <script src="js/panel-rbac.js?v=20260529-rbac1"></script>
-  <script src="js/panel-access.js?v=20260529-rbac1"></script>
+  <script src="js/panel-rbac.js?v=20260529-rbac2"></script>
+  <script src="js/panel-access.js?v=20260529-rbac2"></script>
   <script src="js/admin-auth.js"></script>
   <script src="js/admin-permissions.js?v=20260529-rbac1"></script>
   <script>
-    requireAdmin().then(async function (ok) {
-      if (!ok) return;
-      const session = await getAdminSession();
-      const user = session && session.user;
-      const allowed =
-        typeof canPanel === "function"
-          ? await canPanel("system", "update")
-          : user && typeof isAdminUser === "function" && isAdminUser(user);
-      if (!allowed) {
-        alert("هذا القسم للمدير العام فقط (مستوى L1).");
-        window.location.replace("admin_dashboard.html");
-        return;
-      }
-      if (typeof adminPermissionsBoot === "function") adminPermissionsBoot();
+    requireAdmin().then(function (ok) {
+      if (ok && typeof adminPermissionsBoot === "function") adminPermissionsBoot();
     });
   </script>
 </head>

@@ -69,7 +69,6 @@
   <script src="js/site-seo.js"></script>
   <script src="js/academy-media-upload.js"></script>
   <script src="js/admin-auth.js"></script>
-  <script>requireAdmin();</script>
 </head>
 <body>
   <div class="layout">
@@ -605,12 +604,17 @@
       }
     }
 
+    function bootSettingsPage() {
     form.addEventListener("input", updateLaunchChecklist);
     form.addEventListener("change", updateLaunchChecklist);
     document.getElementById("reloadBtn").addEventListener("click", loadForm);
     document.getElementById("recommendedBtn").addEventListener("click", applyRecommendedCopy);
 
     document.getElementById("saveBtn").addEventListener("click", async () => {
+      if (typeof canPanel === "function" && !(await canPanel("system", "update"))) {
+        showStatus("حسابك لايملك الصلاحيات لتعديل الإعدادات.", false);
+        return;
+      }
       try {
         const saved = await saveAcademySettings(readForm());
         fillForm(saved);
@@ -620,7 +624,24 @@
       }
     });
 
+    if (typeof canPanel === "function") {
+      canPanel("system", "update").then(function (canEdit) {
+        if (canEdit) return;
+        ["saveBtn", "recommendedBtn", "logoBrowseBtn", "logoResetBtn", "heroBrowseBtn", "heroClearBtn", "addCustomRoleBtn"].forEach(function (id) {
+          const el = document.getElementById(id);
+          if (!el) return;
+          el.disabled = true;
+          el.title = "عرض فقط — لا توجد صلاحية تعديل";
+        });
+      });
+    }
+
     loadForm();
+  }
+
+  requireAdmin().then(function (ok) {
+    if (ok) bootSettingsPage();
+  });
   </script>
 </body>
 </html>
