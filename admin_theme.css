@@ -129,7 +129,36 @@ body.has-unified-admin-sidebar .layout{grid-template-columns:332px minmax(0,1fr)
 .topbar,.page-intro{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;margin-bottom:24px;flex-wrap:wrap}
 .title-box h2,.page-intro h1{margin:0;font-size:30px;font-weight:900;color:var(--admin-text)}
 .title-box p,.page-intro p{margin:8px 0 0;color:var(--admin-muted);font-size:14px;line-height:1.9;max-width:900px}
-.actions,.header-actions{display:flex;gap:12px;flex-wrap:wrap}
+.actions,.header-actions{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.export-actions{
+  display:inline-flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+  flex-shrink:0;
+}
+.export-actions .btn,
+.export-actions .btn-secondary,
+.export-actions select{
+  flex-shrink:0;
+}
+.panel-head .export-actions,
+.card-head .export-actions{
+  margin-inline-start:auto;
+}
+.panel-head,
+.card-head{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:12px;
+  flex-wrap:wrap;
+}
+.panel-head > :first-child:not(.export-actions),
+.card-head > :first-child:not(.export-actions){
+  flex:1 1 auto;
+  min-width:min(100%, 220px);
+}
 .stats,.cards{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;margin-bottom:22px}
 .stat,.stat-card{padding:18px;border-radius:20px}
 .stat span,.stat-label{display:block;color:var(--admin-muted);font-size:13px;margin-bottom:8px;font-weight:700}

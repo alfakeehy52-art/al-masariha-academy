@@ -1,11 +1,56 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>استكمال الطلبات | الإدارة</title><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
-<style>:root{--gold:#d5b15a;--gold2:#f0d58f;--text:#f3f4ef;--muted:#b6c1b8;--line:rgba(255,255,255,.08);--shadow:0 22px 55px rgba(0,0,0,.24);--ok:#2ecc71;--warn:#ffe79c}*{box-sizing:border-box}body{margin:0;font-family:'Cairo',system-ui,sans-serif;background:#041009;color:var(--text)}.layout{display:grid;grid-template-columns:318px 1fr;min-height:100vh}.sidebar{background:linear-gradient(180deg,rgba(213,177,90,.10),rgba(255,255,255,.02));border-left:1px solid var(--line);padding:20px 16px;position:sticky;top:0;height:100vh;overflow:hidden}.brand{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:var(--shadow);margin-bottom:18px}.brand h1{margin:0;color:var(--gold2);font-weight:900;font-size:26px}.brand p{margin:8px 0 0;color:var(--muted);line-height:1.9}.main{padding:30px}.card{border:1px solid var(--line);border-radius:28px;background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.02));box-shadow:var(--shadow);padding:24px;margin-bottom:20px}.hero h1{font-size:42px;margin:0}.hero p{color:var(--muted);line-height:1.8}.note{margin-top:12px;padding:12px 14px;border-radius:14px;background:rgba(213,177,90,.08);border:1px solid rgba(213,177,90,.22);color:var(--warn);font-weight:800;font-size:14px}table{width:100%;border-collapse:collapse;min-width:1100px}th,td{padding:14px;border-bottom:1px solid rgba(255,255,255,.07);text-align:right;vertical-align:middle}th{color:var(--gold2)}.wrap{overflow:auto}.btn{min-height:42px;border:1px solid var(--line);border-radius:13px;padding:0 14px;background:rgba(255,255,255,.05);color:#fff;font:inherit;font-weight:900;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}.gold{background:linear-gradient(180deg,#e4c36f,#d5b15a);color:#08110b}.gold:disabled{opacity:.45;cursor:not-allowed}.actions{display:flex;gap:8px;flex-wrap:wrap}.progress-ok{color:var(--ok);font-weight:900}.progress-warn{color:var(--warn);font-weight:900}.toast{position:fixed;left:20px;bottom:20px;max-width:560px;padding:14px 16px;border-radius:16px;background:#102217;color:#ffe79c;font-weight:900;display:none;z-index:10;line-height:1.7}.toast.show{display:block}.toast.error{color:#ffd7d7;border:1px solid rgba(197,82,82,.35)}@media(max-width:1100px){.layout{grid-template-columns:1fr}.sidebar{height:auto;position:relative}}</style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="js/supabase-client.js"></script><script src="js/admin-auth.js"></script><script>requireAdmin();</script></head>
+<style>:root{--gold:#d5b15a;--gold2:#f0d58f;--text:#f3f4ef;--muted:#b6c1b8;--line:rgba(255,255,255,.08);--shadow:0 22px 55px rgba(0,0,0,.24);--ok:#2ecc71;--warn:#ffe79c}*{box-sizing:border-box}body{margin:0;font-family:'Cairo',system-ui,sans-serif;background:#041009;color:var(--text)}.layout{display:grid;grid-template-columns:318px 1fr;min-height:100vh}.sidebar{background:linear-gradient(180deg,rgba(213,177,90,.10),rgba(255,255,255,.02));border-left:1px solid var(--line);padding:20px 16px;position:sticky;top:0;height:100vh;overflow:hidden}.brand{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:var(--shadow);margin-bottom:18px}.brand h1{margin:0;color:var(--gold2);font-weight:900;font-size:26px}.brand p{margin:8px 0 0;color:var(--muted);line-height:1.9}.main{padding:30px}.card{border:1px solid var(--line);border-radius:28px;background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.02));box-shadow:var(--shadow);padding:24px;margin-bottom:20px}.hero h1{font-size:42px;margin:0}.hero p{color:var(--muted);line-height:1.8}.note{margin-top:12px;padding:12px 14px;border-radius:14px;background:rgba(213,177,90,.08);border:1px solid rgba(213,177,90,.22);color:var(--warn);font-weight:800;font-size:14px}table{width:100%;border-collapse:collapse;min-width:1100px}th,td{padding:14px;border-bottom:1px solid rgba(255,255,255,.07);text-align:right;vertical-align:middle}th{color:var(--gold2)}.wrap{overflow:auto}.btn{min-height:42px;border:1px solid var(--line);border-radius:13px;padding:0 14px;background:rgba(255,255,255,.05);color:#fff;font:inherit;font-weight:900;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}.gold{background:linear-gradient(180deg,#e4c36f,#d5b15a);color:#08110b}.gold:disabled{opacity:.45;cursor:not-allowed}.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-start}.actions .btn{white-space:nowrap}.progress-ok{color:var(--ok);font-weight:900}.progress-warn{color:var(--warn);font-weight:900}.status-done{color:var(--ok);font-weight:900}.toast{position:fixed;left:20px;bottom:20px;max-width:560px;padding:14px 16px;border-radius:16px;background:#102217;color:#ffe79c;font-weight:900;display:none;z-index:10;line-height:1.7}.toast.show{display:block}.toast.error{color:#ffd7d7;border:1px solid rgba(197,82,82,.35)}@media(max-width:1100px){.layout{grid-template-columns:1fr}.sidebar{height:auto;position:relative}}</style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="js/supabase-client.js"></script><script src="js/admin-auth.js"></script><script>requireAdmin();</script></head>
 <body><div class="layout"><aside class="sidebar"><div class="brand"><h1>أكاديمية كرة القدم</h1><p>مراجعة استكمال البيانات والمرفقات.</p></div><div id="admin-sidebar"></div></aside><main class="main"><section class="card hero"><h1>استكمال الطلبات</h1><p>نظرة سريعة على المرفقات. الاعتماد النهائي يتطلب قبول كل الملفات الإجبارية — نفس شرط <a href="admin_requests.html" style="color:var(--gold2)">إدارة الطلبات</a>.</p><div class="note">ولي أمر · داعم · كادر · لاعب: راجع كل ملف من «مراجعة تفصيلية». عضوية الأكاديمية بدون مرفقات. العمود «ملف إضافي» يختلف حسب النوع (عقد، كشف، نموذج ربط…).</div></section><section class="card"><div class="wrap"><table><thead><tr><th>الاسم</th><th>النوع</th><th>الجوال</th><th>الحالة</th><th>تقدم المراجعة</th><th>الهوية</th><th>الصورة</th><th>ملف إضافي</th><th>الإجراء</th></tr></thead><tbody id="tbody"><tr><td colspan="9">جاري التحميل...</td></tr></tbody></table></div></section></main></div><div class="toast" id="toast"></div>
-<script src="admin_sidebar.js"></script><script src="js/guardian-goals.js"></script><script src="js/academy-roles.js"></script><script src="js/supporter-profile.js"></script><script src="js/academy-member-profile.js"></script><script src="js/join-attachments-catalog.js"></script><script src="js/request-completion-review.js"></script><script>
+<script src="admin_sidebar.js"></script><script src="js/guardian-goals.js"></script><script src="js/academy-roles.js"></script><script src="js/supporter-profile.js"></script><script src="js/academy-member-profile.js"></script><script src="js/join-attachments-catalog.js"></script><script src="js/request-completion-review.js"></script><script src="js/chat-room-sync.js"></script><script>
 const sb = createSupabaseClient();
 const $ = id => document.getElementById(id);
 let completions = [];
+/** request_id → { href, label } */
+const entityByRequestId = Object.create(null);
+
+const ENTITY_PROFILE = {
+  player: (id) => ({ href: `player_view_dashboard.html?id=${encodeURIComponent(id)}`, label: "عرض ملف اللاعب" }),
+  coach: (id) => ({ href: `coach_view_dashboard.html?id=${encodeURIComponent(id)}`, label: "عرض ملف المدرب" }),
+  guardian: (id) => ({ href: `guardians_dashboard.html`, label: "أولياء الأمور" }),
+  supporter: (id) => ({ href: `supporters_dashboard.html`, label: "عرض ملف الداعم" }),
+  staff: (id) => ({ href: `admin_staff_dashboard.html`, label: "عرض ملف الكادر" }),
+  volunteer: (id) => ({ href: `admin_staff_dashboard.html`, label: "عرض ملف المتطوع" }),
+  academy_member: (id) => ({ href: `academy_members_dashboard.html`, label: "عرض العضوية" })
+};
+
+const TYPE_REQUEST_PAGE = {
+  player: "players_requests.html",
+  coach: "coaches_requests.html",
+  guardian: "guardians_requests.html",
+  supporter: "supporters_requests.html",
+  staff: "staff_requests.html",
+  volunteer: "staff_requests.html",
+  academy_member: "academy_members_requests.html"
+};
+
+function reviewDetailHref(requestId, requestType) {
+  if (!requestId) return "admin_requests.html";
+  const base = TYPE_REQUEST_PAGE[String(requestType || "").toLowerCase()] || "admin_requests.html";
+  return `${base}?request=${encodeURIComponent(requestId)}`;
+}
+
+function isCompletionFinalized(row) {
+  const joinSt = String(row.join_status || "").toLowerCase();
+  const compSt = String(row.status || "").toLowerCase();
+  if (joinSt === "approved" || joinSt === "rejected") return true;
+  if (compSt === "approved" || compSt === "rejected") return true;
+  return false;
+}
+
+function entityProfileLink(requestId, requestType) {
+  const ent = entityByRequestId[String(requestId || "")];
+  if (!ent?.id) return "";
+  const prof = ENTITY_PROFILE[String(requestType || "").toLowerCase()];
+  if (!prof) return "";
+  const { href, label } = prof(ent.id);
+  return `<a class="btn" href="${escAttr(href)}">${escAttr(label)}</a>`;
+}
 
 function toast(msg, type = "success") {
   const el = $("toast");
@@ -14,12 +59,30 @@ function toast(msg, type = "success") {
   setTimeout(() => { el.classList.remove("show"); el.classList.remove("error"); }, 4200);
 }
 
+function safeUrl(url) {
+  const raw = String(url || "").trim();
+  if (!raw) return "";
+  try {
+    const parsed = new URL(raw, window.location.origin);
+    if (!/^https?:$/i.test(parsed.protocol)) return "";
+    return parsed.href;
+  } catch (_e) {
+    return "";
+  }
+}
+
 function link(url) {
-  return url ? `<a class="btn" href="${url}" target="_blank" rel="noopener">عرض</a>` : "-";
+  const safe = safeUrl(url);
+  return safe ? `<a class="btn" href="${escAttr(safe)}" target="_blank" rel="noopener noreferrer">عرض</a>` : "-";
 }
 
 function escAttr(v) {
-  return String(v ?? "").replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/'/g, "&#039;");
+  return String(v ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
 }
 
 function progressClass(completion, type) {
@@ -38,25 +101,73 @@ function renderRow(r) {
   const ready = !needsAtt || completionIsFullyApproved(r, r.request_type, r);
   const progress = needsAtt ? reviewProgressLabel(r, r.request_type, r) : "بدون مرفقات";
   const extraUrl = needsAtt ? primaryExtraFileUrl(r, r.request_type, r) : null;
-  const approveDisabled = ready ? "" : " disabled title=\"يجب قبول كل المرفقات الإجبارية أولاً\"";
-  const approveBtn = needsAtt
-    ? `<button class="btn gold" onclick="approve('${escAttr(r.id)}','${escAttr(r.request_id)}')"${approveDisabled}>اعتماد نهائي</button>`
-    : `<button class="btn gold" onclick="approveMemberOnly('${escAttr(r.id)}','${escAttr(r.request_id)}')">اعتماد (بدون مرفقات)</button>`;
+  const finalized = isCompletionFinalized(r);
+  const rid = r.request_id || "";
+  const detail = `<a class="btn" href="${escAttr(reviewDetailHref(rid, r.request_type))}">مراجعة تفصيلية</a>`;
+  const profile = entityProfileLink(rid, r.request_type);
+
+  let actionHtml;
+  if (finalized) {
+    actionHtml = `${detail}${profile}`;
+  } else {
+    const approveDisabled = ready ? "" : " disabled title=\"يجب قبول كل المرفقات الإجبارية أولاً\"";
+    const approveBtn = needsAtt
+      ? `<button class="btn gold" onclick="approve('${escAttr(r.id)}','${escAttr(rid)}')"${approveDisabled}>اعتماد نهائي</button>`
+      : `<button class="btn gold" onclick="approveMemberOnly('${escAttr(r.id)}','${escAttr(rid)}')">اعتماد (بدون مرفقات)</button>`;
+    const reviewBtn =
+      String(r.status || "").toLowerCase() === "reviewing"
+        ? ""
+        : `<button class="btn" type="button" onclick="setReview('${escAttr(r.id)}')">تحت المراجعة</button>`;
+    actionHtml = `${detail}${approveBtn}${reviewBtn}${profile}`;
+  }
+
+  const statusLabel = finalized
+    ? (String(r.join_status || r.status || "").toLowerCase() === "rejected" ? "مرفوض" : "معتمد")
+    : escAttr(r.status || "-");
+  const statusClass = finalized ? "status-done" : "";
+
   return `<tr>
     <td>${escAttr(r.full_name || "-")}</td>
     <td>${escAttr(typeLabel(r.request_type, r))}</td>
     <td>${escAttr(r.phone || "-")}</td>
-    <td>${escAttr(r.status || "-")}</td>
-    <td class="${progressClass(r, r.request_type)}">${progress}</td>
+    <td class="${statusClass}">${statusLabel}</td>
+    <td class="${progressClass(r, r.request_type)}">${escAttr(progress)}</td>
     <td>${link(r.id_document_url)}</td>
     <td>${link(r.personal_photo_url)}</td>
     <td>${link(extraUrl)}</td>
-    <td><div class="actions">
-      <a class="btn" href="admin_requests.html">مراجعة تفصيلية</a>
-      ${approveBtn}
-      <button class="btn" onclick="setReview('${escAttr(r.id)}')">تحت المراجعة</button>
-    </div></td>
+    <td><div class="actions">${actionHtml}</div></td>
   </tr>`;
+}
+
+async function loadEntityProfilesForRequests(requestIds) {
+  Object.keys(entityByRequestId).forEach((k) => delete entityByRequestId[k]);
+  const ids = [...new Set((requestIds || []).map((id) => String(id || "").trim()).filter(Boolean))];
+  if (!ids.length) return;
+
+  const tables = [
+    { table: "players", type: "player" },
+    { table: "coaches", type: "coach" },
+    { table: "guardians", type: "guardian" },
+    { table: "supporters", type: "supporter" },
+    { table: "volunteers", type: "volunteer" },
+    { table: "academy_members", type: "academy_member" }
+  ];
+
+  await Promise.all(
+    tables.map(async ({ table }) => {
+      const { data } = await sb.from(table).select("id,source_request_id").in("source_request_id", ids);
+      (data || []).forEach((row) => {
+        const reqId = String(row.source_request_id || "");
+        if (reqId && !entityByRequestId[reqId]) entityByRequestId[reqId] = { id: row.id };
+      });
+    })
+  );
+
+  const staffRes = await sb.from("academy_staff").select("id,join_request_id").in("join_request_id", ids);
+  (staffRes.data || []).forEach((row) => {
+    const reqId = String(row.join_request_id || "");
+    if (reqId && !entityByRequestId[reqId]) entityByRequestId[reqId] = { id: row.id, type: "staff" };
+  });
 }
 
 async function approveMemberOnly(id, requestId) {
@@ -75,6 +186,7 @@ async function approveMemberOnly(id, requestId) {
     return;
   }
   toast("تم اعتماد الطلب (عضوية بدون مرفقات).");
+  if (typeof window.refreshAdminSidebarBadges === "function") window.refreshAdminSidebarBadges();
   load();
 }
 
@@ -82,7 +194,7 @@ async function load() {
   const { data, error } = await sb
     .from("request_completions")
     .select(
-      "*, join_requests(guardian_goal,support_type,support_level,support_method,entity_name,volunteer_field,coach_specialty,notes,guardian_notes)"
+      "*, join_requests(status,guardian_goal,support_type,support_level,support_method,entity_name,volunteer_field,coach_specialty,notes,guardian_notes)"
     )
     .order("created_at", { ascending: false });
   if (error) {
@@ -97,6 +209,7 @@ async function load() {
     if (!j) return rest;
     return {
       ...rest,
+      join_status: j.status || rest.join_status,
       guardian_goal: j.guardian_goal || rest.guardian_goal,
       support_type: j.support_type || rest.support_type,
       support_level: j.support_level || rest.support_level,
@@ -108,10 +221,13 @@ async function load() {
       guardian_notes: j.guardian_notes || rest.guardian_notes
     };
   });
+  completions = completions.filter((row) => !isCompletionFinalized(row));
+
   if (!completions.length) {
-    $("tbody").innerHTML = '<tr><td colspan="9">لا توجد استكمالات حالياً.</td></tr>';
+    $("tbody").innerHTML = '<tr><td colspan="9">لا توجد طلبات تحتاج استكمال حالياً.</td></tr>';
     return;
   }
+  await loadEntityProfilesForRequests(completions.map((c) => c.request_id));
   $("tbody").innerHTML = completions.map(renderRow).join("");
 }
 
@@ -162,7 +278,12 @@ async function approve(id, requestId) {
     return;
   }
 
+  if (window.ChatRoomSync) {
+    await ChatRoomSync.closeChatRoomsForJoinRequest(sb, requestId, "approved");
+  }
+
   toast("تم الاعتماد النهائي — كل المرفقات الإجبارية مقبولة.");
+  if (typeof window.refreshAdminSidebarBadges === "function") window.refreshAdminSidebarBadges();
   load();
 }
 

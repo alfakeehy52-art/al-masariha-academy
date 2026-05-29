@@ -24,6 +24,8 @@
     .toolbar{display:grid;grid-template-columns:1fr 170px 170px 190px auto auto;gap:12px;margin-bottom:16px}
     .panel{border:1px solid var(--line);border-radius:26px;background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.02));box-shadow:var(--shadow);overflow:hidden}
     .panel-head{padding:18px 20px;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+    .export-actions{display:inline-flex;align-items:center;gap:10px;flex-wrap:nowrap;flex-shrink:0}
+    .export-actions .btn{min-height:46px;padding:0 16px}
     .panel-head h3{margin:0;font-size:24px}.subtext{display:block;color:var(--muted);font-size:12px;line-height:1.7;margin-top:4px}
     .panel-body{padding:20px}
     input,select,button,textarea{font:inherit}
@@ -98,7 +100,10 @@
             <h3>سجل الكوادر</h3>
             <span class="subtext">كل الأدوار في جدول واحد — رياضي، طبي، إداري، تشغيلي، إعلامي.</span>
           </div>
-          <button class="btn gold" type="button" id="exportBtn">تصدير CSV</button>
+          <div class="export-actions">
+            <button class="btn btn-secondary" type="button" id="exportExcelBtn">تصدير Excel</button>
+            <button class="btn gold" type="button" id="exportPdfBtn">تصدير PDF</button>
+          </div>
         </div>
         <div class="panel-body">
           <div class="toolbar">
@@ -170,6 +175,8 @@
 
   <div class="toast-wrap" id="toastWrap"></div>
 
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="js/admin-export.js"></script>
   <script src="admin_sidebar.js"></script>
   <script src="js/academy-roles.js"></script>
   <script>window.ENTITY_TYPE = "academy_staff";</script>

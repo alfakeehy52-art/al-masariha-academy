@@ -138,7 +138,8 @@ function esc(value) {
 }
 
 function normalizeStatus(value) {
-  const raw = String(value || "active").trim();
+  const raw = String(value ?? "").trim();
+  if (!raw) return "unknown";
   const map = {
     active: "active",
     approved: "active",
@@ -154,7 +155,7 @@ function normalizeStatus(value) {
     "محذوف": "deleted",
     "مؤرشف": "deleted"
   };
-  return map[raw] || raw || "active";
+  return map[raw] || raw;
 }
 
 function statusLabel(value) {
@@ -163,6 +164,7 @@ function statusLabel(value) {
   if (st === "inactive") return "معطل";
   if (st === "suspended") return "موقوف";
   if (st === "deleted") return "محذوف/مؤرشف";
+  if (st === "unknown") return "غير محدد";
   return st;
 }
 
@@ -221,6 +223,29 @@ function isAcademyStaffPage() {
   return window.ENTITY_TYPE === "academy_staff";
 }
 
+function isValidEntityRow(row) {
+  if (!row || row.id == null || String(row.id).trim() === "") return false;
+  const name = String(row.full_name || "").trim();
+  const phone = String(row.phone || "").trim();
+  return !!(name || phone);
+}
+
+/** سجلات معتمدة تظهر في الجدول (بدون محذوف/فارغ) */
+function registryRows() {
+  return rows.filter((row) => isValidEntityRow(row) && normalizeStatus(row.status) !== "deleted");
+}
+
+function ensureDefaultFilters() {
+  const sf = $("statusFilter");
+  if (sf && [...sf.options].some((o) => o.value === "all")) sf.value = "all";
+  const cf = $("categoryFilter");
+  if (cf && [...cf.options].some((o) => o.value === "all")) cf.value = "all";
+  const af = $("authFilter");
+  if (af && [...af.options].some((o) => o.value === "all")) af.value = "all";
+  const si = $("searchInput");
+  if (si) si.value = "";
+}
+
 function authLinkLabel(row) {
   return row && row.auth_user_id ? "مفعّل" : "بانتظار التفعيل";
 }
@@ -272,13 +297,20 @@ function filtered() {
   const status = $("statusFilter")?.value || "all";
   const category = $("categoryFilter")?.value || "all";
   const authLink = $("authFilter")?.value || "all";
-  return rows.filter((row) => {
+  const source =
+    status === "deleted"
+      ? rows.filter((row) => isValidEntityRow(row) && normalizeStatus(row.status) === "deleted")
+      : registryRows();
+  return source.filter((row) => {
     const matchesSearch = !query || searchableText(row).includes(query);
     const matchesStatus = status === "all" || normalizeStatus(row.status) === status;
-    const matchesCategory = category === "all" || String(row.staff_category || "") === category;
+    let matchesCategory = true;
     let matchesAuth = true;
-    if (authLink === "linked") matchesAuth = !!row.auth_user_id;
-    if (authLink === "pending") matchesAuth = !row.auth_user_id;
+    if (isAcademyStaffPage()) {
+      matchesCategory = category === "all" || String(row.staff_category || "") === category;
+      if (authLink === "linked") matchesAuth = !!row.auth_user_id;
+      if (authLink === "pending") matchesAuth = !row.auth_user_id;
+    }
     return matchesSearch && matchesStatus && matchesCategory && matchesAuth;
   });
 }
@@ -309,18 +341,30 @@ async function loadEntities() {
   }
 
   rows = Array.isArray(data) ? data : [];
-  console.log(`${cfg.table} rows:`, rows);
+  ensureDefaultFilters();
   render();
 }
 
 function renderStats() {
-  if ($("statAll")) $("statAll").textContent = rows.length;
-  if ($("statActive")) $("statActive").textContent = rows.filter((r) => normalizeStatus(r.status) === "active").length;
-  if ($("statInactive")) $("statInactive").textContent = rows.filter((r) => normalizeStatus(r.status) === "inactive").length;
-  if ($("statSuspended")) $("statSuspended").textContent = rows.filter((r) => normalizeStatus(r.status) === "suspended").length;
-  if ($("statDeleted")) $("statDeleted").textContent = rows.filter((r) => normalizeStatus(r.status) === "deleted").length;
+  const visible = filtered();
+  const registry = registryRows();
+  if ($("statAll")) $("statAll").textContent = visible.length;
+  if ($("statActive")) {
+    $("statActive").textContent = visible.filter((r) => normalizeStatus(r.status) === "active").length;
+  }
+  if ($("statInactive")) {
+    $("statInactive").textContent = registry.filter((r) => normalizeStatus(r.status) === "inactive").length;
+  }
+  if ($("statSuspended")) {
+    $("statSuspended").textContent = registry.filter((r) => normalizeStatus(r.status) === "suspended").length;
+  }
+  if ($("statDeleted")) {
+    $("statDeleted").textContent = rows.filter(
+      (r) => isValidEntityRow(r) && normalizeStatus(r.status) === "deleted"
+    ).length;
+  }
   if ($("statPendingAuth")) {
-    $("statPendingAuth").textContent = rows.filter(
+    $("statPendingAuth").textContent = registry.filter(
       (r) => !r.auth_user_id && normalizeStatus(r.status) === "active"
     ).length;
   }
@@ -638,14 +682,9 @@ function confirmBox(title, message, okText = "تأكيد") {
   });
 }
 
-function exportCsv() {
+function buildEntityExportRows() {
   const cfg = config();
   const data = filtered();
-  if (!data.length) {
-    showToast("لا توجد بيانات للتصدير.", "warn");
-    return;
-  }
-
   const headers = cfg.columns.map(([, label]) => label).concat(["تاريخ الإنشاء"]);
   const lines = data.map((row) =>
     cfg.columns
@@ -656,15 +695,49 @@ function exportCsv() {
       })
       .concat([fmtDate(row.created_at)])
   );
-  const csv = [headers, ...lines].map((line) => line.map((value) => `"${String(value).replace(/"/g, '""')}"`).join(",")).join("\n");
-  const blob = new Blob(["\ufeff" + csv], { type: "text/csv;charset=utf-8;" });
-  const link = document.createElement("a");
-  link.href = URL.createObjectURL(blob);
-  link.download = `${cfg.table}.csv`;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  showToast("تم تصدير البيانات بنجاح.", "success");
+  return { cfg, data, rows: [headers, ...lines] };
+}
+
+function exportPdf() {
+  const { cfg, data, rows } = buildEntityExportRows();
+  if (!data.length) {
+    showToast("لا توجد بيانات للتصدير.", "warn");
+    return;
+  }
+  const AE = window.AdminExport;
+  if (!AE) {
+    showToast("وحدة التصدير غير متوفرة.", "error");
+    return;
+  }
+  const stamp = AE.exportDateStamp();
+  const pdf = AE.openPdfPrint({
+    title: cfg.title || cfg.table,
+    fileBase: `${cfg.table}_${stamp}`,
+    headers: rows[0],
+    bodyRows: rows.slice(1),
+    mainColCount: Math.min(6, rows[0].length),
+    stampLabel: `ختم ${cfg.title || "السجلات"}`
+  });
+  if (!pdf.ok) {
+    showToast("تعذر فتح نافذة PDF. اسمح بالنوافذ المنبثقة.", "warn");
+    return;
+  }
+  showToast(`تم تجهيز PDF (${data.length} سجل).`, "success");
+}
+
+function exportExcel() {
+  const { cfg, data, rows } = buildEntityExportRows();
+  if (!data.length) {
+    showToast("لا توجد بيانات للتصدير.", "warn");
+    return;
+  }
+  const AE = window.AdminExport;
+  const stamp = AE ? AE.exportDateStamp() : String(Date.now());
+  if (AE && AE.downloadExcel(`${cfg.table}_${stamp}.xlsx`, rows)) {
+    showToast(`تم تصدير ${data.length} سجل إلى Excel.`, "success");
+    return;
+  }
+  showToast("مكتبة Excel غير متاحة.", "error");
 }
 
 window.setEntityStatus = setEntityStatus;
@@ -675,7 +748,9 @@ document.addEventListener("DOMContentLoaded", () => {
   $("statusFilter")?.addEventListener("change", render);
   $("categoryFilter")?.addEventListener("change", render);
   $("authFilter")?.addEventListener("change", render);
-  $("exportBtn")?.addEventListener("click", exportCsv);
+  $("exportPdfBtn")?.addEventListener("click", exportPdf);
+  $("exportExcelBtn")?.addEventListener("click", exportExcel);
+  $("exportBtn")?.addEventListener("click", exportPdf);
   $("closeEntityModal")?.addEventListener("click", closeModal);
   $("entityModal")?.addEventListener("click", (event) => {
     if (event.target === $("entityModal")) closeModal();

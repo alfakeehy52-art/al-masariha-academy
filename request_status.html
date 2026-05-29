@@ -94,7 +94,10 @@
       return ['player','guardian','staff','coach','supporter'].includes(String(row?.request_type||'').toLowerCase());
     }
     function shouldComplete(s){return !isApprovedStatus(s) && !isRejectedStatus(s) && (['pending','needs_completion'].includes(String(s||'')) || statusLabel(s)==='بانتظار استكمال')}
-    function canPrepareAttachments(row){return requestNeedsAttachments(row) && !isApprovedStatus(row.status) && !isRejectedStatus(row.status) && ['new','review','reviewing'].includes(String(row.status||''))}
+    function canPrepareAttachments(row){
+      if(!row) return false;
+      return requestNeedsAttachments(row) && !isApprovedStatus(row.status) && !isRejectedStatus(row.status) && ['new','review','reviewing'].includes(String(row.status||''));
+    }
     function canRequestCompletion(row){return requestNeedsAttachments(row) && shouldComplete(row.status)}
     function completionUrl(row){return `request_completion.html?request_id=${encodeURIComponent(row.id)}&ref=${encodeURIComponent(row.reference_code||'')}&phone=${encodeURIComponent(row.phone||'')}`}
     function renderRequest(row){
@@ -197,7 +200,7 @@
       if(!data){
         const hint=shouldComplete(row.status)
           ? 'لم يتم رفع المرفقات بعد. استخدم زر «استكمال البيانات والمرفقات» أعلاه لرفع الملفات.'
-          : canPrepareAttachments(row.status)
+          : canPrepareAttachments(row)
             ? 'لم يتم رفع المرفقات بعد. يمكنك البدء بتحميل النماذج والمرفقات من الزر أعلاه، أو انتظار طلب الإدارة للاستكمال.'
             : 'لم يتم استكمال المرفقات بعد.';
         box.innerHTML=`<h3>مراجعة المرفقات</h3><div class="review-list"><div class="review-item warn">${hint}</div></div>`;

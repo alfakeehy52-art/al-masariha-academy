@@ -95,7 +95,10 @@
       </div>
       <div class="actions">
         <button class="btn btn-primary" type="button" id="refreshStatsBtn">تحديث الأرقام</button>
-        <button class="btn btn-secondary" type="button" id="exportStatsBtn">تصدير التقرير</button>
+        <div class="export-actions">
+          <button class="btn btn-secondary" type="button" id="exportStatsExcelBtn">تصدير Excel</button>
+          <button class="btn btn-secondary" type="button" id="exportStatsPdfBtn">تصدير PDF</button>
+        </div>
       </div>
     </div>
 
@@ -170,6 +173,8 @@
 <div class="toast-wrap" id="toastWrap"></div>
 
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="js/admin-export.js"></script>
 <script src="admin_sidebar.js"></script>
 <script src="supabase-config.js"></script>
 <script src="js/supabase-client.js"></script>
@@ -393,8 +398,8 @@
     }).join("");
   }
 
-  function exportReport(){
-    const rows = [
+  function buildStatsExportRows(){
+    return [
       ["البند","القيمة"],
       ["إجمالي اللاعبين", players.length],
       ["إجمالي المدربين", coaches.length],
@@ -404,16 +409,37 @@
       ["ملفات مكتملة", players.filter(isComplete).length],
       ["ملفات تحتاج مراجعة", Math.max(players.length - players.filter(isComplete).length, 0)]
     ];
+  }
 
-    const csv = rows.map(row => row.map(value => `"${String(value).replace(/"/g,'""')}"`).join(",")).join("\n");
-    const blob = new Blob(["\ufeff" + csv], {type: "text/csv;charset=utf-8;"});
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = "academy_stats_report.csv";
-    document.body.appendChild(link);
-    link.click();
-    link.remove();
-    showToast("تم تصدير تقرير الإحصائيات بنجاح.", "success");
+  function exportStatsExcel(){
+    const rows = buildStatsExportRows();
+    const AE = window.AdminExport;
+    const stamp = AE ? AE.exportDateStamp() : String(Date.now());
+    if (AE && AE.downloadExcel(`academy_stats_report_${stamp}.xlsx`, rows, [{wch:28},{wch:14}], "الإحصائيات")) {
+      showToast("تم تصدير تقرير الإحصائيات (Excel).", "success");
+      return;
+    }
+    showToast("تعذر تصدير Excel.", "error");
+  }
+
+  function exportStatsPdf(){
+    const rows = buildStatsExportRows();
+    const AE = window.AdminExport;
+    const stamp = AE ? AE.exportDateStamp() : String(Date.now());
+    if (!AE) {
+      showToast("وحدة التصدير غير متوفرة.", "error");
+      return;
+    }
+    const pdf = AE.openPdfPrint({
+      title: "تقرير الإحصائيات",
+      fileBase: `academy_stats_report_${stamp}`,
+      headers: rows[0],
+      bodyRows: rows.slice(1),
+      twoRow: false,
+      stampLabel: "ختم تقرير الإحصائيات"
+    });
+    if (pdf.ok) showToast("تم تجهيز PDF للإحصائيات.", "success");
+    else showToast("تعذر فتح نافذة PDF.", "warn");
   }
 
   async function refreshDashboard(){
@@ -422,7 +448,8 @@
   }
 
   document.getElementById("refreshStatsBtn").addEventListener("click", refreshDashboard);
-  document.getElementById("exportStatsBtn").addEventListener("click", exportReport);
+  document.getElementById("exportStatsExcelBtn").addEventListener("click", exportStatsExcel);
+  document.getElementById("exportStatsPdfBtn").addEventListener("click", exportStatsPdf);
 
   loadDashboardData();
 </script>

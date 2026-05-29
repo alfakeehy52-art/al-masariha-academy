@@ -79,6 +79,7 @@
     </main>
   </div>
   <script src="admin_sidebar.js"></script>
+  <script src="js/chat-room-sync.js"></script>
   <script src="js/chat-drawer.js"></script>
   <script>
     const sb = createSupabaseClient();
@@ -183,7 +184,15 @@
       bindRoomRows();
     }
 
-    loadRooms();
+    async function initRooms() {
+      if (window.ChatRoomSync) {
+        const { closed } = await ChatRoomSync.syncOpenChatRoomsForFinishedRequests(sb);
+        if (closed > 0) console.info("تم إغلاق", closed, "محادثة منتهية.");
+      }
+      await loadRooms();
+    }
+
+    initRooms();
   </script>
 </body>
 </html>

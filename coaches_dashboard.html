@@ -14,12 +14,11 @@
       <div class="brand"><h1>أكاديمية كرة القدم</h1><p>إدارة شاملة للمدربين مع البحث والفلترة والمعاينة والحذف والتصدير وعدد اللاعبين المرتبطين بكل مدرب.</p></div>
       <div id="admin-sidebar"></div>
     </aside>
-<main class="main"><div class="topbar"><div class="title-box"><h2>قائمة المدربين</h2><p>السجل الفعلي للمدربين مرتبط ببيانات محفوظة وقابل للتوسعة لاحقًا.</p></div><div class="actions"><button class="btn btn-secondary" type="button" id="exportCoachesBtn">تصدير القائمة</button><a class="btn btn-primary" href="coaches_add_dashboard.html">+ إضافة مدرب جديد</a></div></div>
+<main class="main"><div class="topbar"><div class="title-box"><h2>قائمة المدربين</h2><p>السجل الفعلي للمدربين مرتبط ببيانات محفوظة وقابل للتوسعة لاحقًا.</p></div><div class="actions"><div class="export-actions"><button class="btn btn-secondary" type="button" id="exportCoachesExcel">تصدير Excel</button><button class="btn btn-secondary" type="button" id="exportCoachesPdf">تصدير PDF</button></div><a class="btn btn-primary" href="coaches_add_dashboard.html">+ إضافة مدرب جديد</a></div></div>
 <section class="stats"><div class="stat"><span>إجمالي المدربين</span><strong id="statTotalCoaches">0</strong></div><div class="stat"><span>التخصص الأعلى</span><strong id="statTopSpecialty">-</strong></div><div class="stat"><span>ملفات مكتملة</span><strong id="statCompleteCoaches">0</strong></div><div class="stat"><span>ملفات تحتاج مراجعة</span><strong id="statNeedReview">0</strong></div></section>
 <section class="card"><div class="card-head"><h3>سجل المدربين</h3><p>ابحث بالاسم أو الكود أو الجوال، وصفِّ حسب الفئة والتخصص والحالة.</p></div><div class="card-body"><div class="filters"><div class="field"><input type="text" id="searchInput" placeholder="ابحث بالاسم أو الكود أو الجوال..."></div><div class="field"><select id="categoryFilter"><option>كل الفئات</option><option>براعم</option><option>ناشئين</option><option>شباب</option><option>فريق أول</option><option>كل الفئات</option></select></div><div class="field"><select id="specialtyFilter"><option>كل التخصصات</option><option>التدريب الفني</option><option>اللياقة البدنية</option><option>تدريب الحراس</option><option>التحليل الفني</option><option>الإعداد الذهني</option></select></div><div class="field"><select id="statusFilter"><option>كل الحالات</option><option>نشط</option><option>مكتمل</option><option>بانتظار المراجعة</option><option>موقوف</option></select></div><button class="btn btn-secondary" type="button" id="applyFiltersBtn">تصفية</button></div><div class="table-wrap"><table><thead><tr><th>المدرب</th><th>الكود</th><th>المسمى</th><th>التخصص</th><th>الفئة</th><th>الخبرة</th><th>الجوال</th><th>الحالة</th><th>عدد اللاعبين</th><th>اكتمال الملف</th><th>الإجراءات</th></tr></thead><tbody id="coachesTableBody"></tbody></table></div><div class="footer-bar"><div id="coachesCountText" style="color:var(--muted);font-size:13px;">لا يوجد مدربين حتى الآن</div></div><div class="hint">تم تحويل صفحة المدربين من واجهة ثابتة إلى صفحة ديناميكية مرتبطة ببيانات فعلية في المتصفح، بنفس منطق اللاعبين ولكن بشكل أنظف ومخصص للمدربين.</div></div></section></main></div>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-<script src="supabase-config.js"></script>
-<script src="js/supabase-client.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="js/admin-export.js"></script>
 <script src="admin_sidebar.js"></script>
 <script>
 const supabaseClient = createSupabaseClient();
@@ -116,12 +115,12 @@ function renderRows(cs){
     return`<tr><td><div class="coach-cell"><div class="avatar">${avatarHtml}</div><div><div class="coach-name">${fullName}</div><div class="coach-sub">${jobTitle} • ${category}</div></div></div></td><td>${code}</td><td>${jobTitle}</td><td><span class="badge badge-info">${specialty}</span></td><td>${category}</td><td>${experience}</td><td>${phone}</td><td><span class="badge ${statusClass}">${status}</span></td><td><span class="badge badge-info">${linkedPlayersCount} لاعب</span></td><td><span class="badge ${completeClass}">${complete}</span></td><td><div class="row-actions"><button class="icon-btn" type="button" onclick="viewCoach('${escapeHtml(id)}')">عرض</button><button class="icon-btn" type="button" onclick="editCoach('${escapeHtml(id)}')">تعديل</button><button class="icon-btn" type="button" onclick="deleteCoach('${escapeHtml(id)}')">حذف</button></div></td></tr>`;
   }).join('');
 }
-function applyFilters(){
+function getFilteredCoaches(){
   const search=document.getElementById('searchInput').value.trim().toLowerCase();
   const category=document.getElementById('categoryFilter').value;
   const specialty=document.getElementById('specialtyFilter').value;
   const status=document.getElementById('statusFilter').value;
-  const filtered=allCoaches.filter(c=>{
+  return allCoaches.filter(c=>{
     const name=String(c.full_name||'').toLowerCase();
     const code=String(coachCode(c)||'').toLowerCase();
     const phone=String(c.phone||'').toLowerCase();
@@ -130,15 +129,26 @@ function applyFilters(){
     const cstatus=normalizeStatus(c.status||'نشط');
     return(!search||[name,code,phone].some(v=>v.includes(search)))&&(category==='كل الفئات'||cc===category)&&(specialty==='كل التخصصات'||cspec===specialty)&&(status==='كل الحالات'||cstatus===status);
   });
+}
+function applyFilters(){
+  const filtered=getFilteredCoaches();
   renderStats(allCoaches); renderRows(filtered); renderCountText(filtered.length, allCoaches.length);
 }
-function exportCoaches(){
-  if(!allCoaches.length){alert('لا يوجد مدربين للتصدير');return}
+function exportCoaches(format){
+  const list=getFilteredCoaches();
+  if(!list.length){alert('لا يوجد مدربين مطابقين للتصدير');return;}
   const rows=[['الكود','الاسم','المسمى','التخصص','الفئة','الخبرة','الجوال','الحالة','الشهادة']];
-  allCoaches.forEach(c=>rows.push([coachCode(c),c.full_name||'',c.job_title||'',c.specialty||'',c.category||'',c.experience_years||'',c.phone||'',normalizeStatus(c.status),c.certification||'']));
-  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
-  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});
-  const link=document.createElement('a');link.href=URL.createObjectURL(blob);link.download='coaches_list.csv';document.body.appendChild(link);link.click();link.remove();
+  list.forEach(c=>rows.push([coachCode(c),c.full_name||'',c.job_title||'',c.specialty||'',c.category||'',c.experience_years||'',c.phone||'',normalizeStatus(c.status),c.certification||'']));
+  const AE=window.AdminExport;
+  const stamp=AE?AE.exportDateStamp():String(Date.now());
+  if(!AE){alert('وحدة التصدير غير متوفرة');return;}
+  if(format==='excel'){
+    if(AE.downloadExcel(`coaches_list_${stamp}.xlsx`,rows,[{wch:12},{wch:22},{wch:16},{wch:14},{wch:12},{wch:10},{wch:14},{wch:12},{wch:18}])) return;
+    alert('تعذر تصدير Excel');
+    return;
+  }
+  const pdf=AE.openPdfPrint({title:'قائمة المدربين',fileBase:`coaches_list_${stamp}`,headers:rows[0],bodyRows:rows.slice(1),mainColCount:6,stampLabel:'ختم قائمة المدربين'});
+  if(!pdf.ok) alert('تعذر فتح نافذة PDF');
 }
 async function deleteCoach(id){
   if(!id || !confirm('هل تريد حذف هذا المدرب ؟'))return;
@@ -156,7 +166,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   document.getElementById('categoryFilter').addEventListener('change',applyFilters);
   document.getElementById('specialtyFilter').addEventListener('change',applyFilters);
   document.getElementById('statusFilter').addEventListener('change',applyFilters);
-  document.getElementById('exportCoachesBtn').addEventListener('click',exportCoaches);
+  document.getElementById('exportCoachesPdf').addEventListener('click',()=>exportCoaches('pdf'));
+  document.getElementById('exportCoachesExcel').addEventListener('click',()=>exportCoaches('excel'));
   loadData();
 });
 </script>

@@ -233,23 +233,46 @@ async function updateMemberStatus(id,status){
   }
 }
 
-function exportCsv(){
+function buildMemberExportRows(){
+  const data=filtered();
   const rows=[["رمز العضوية","الاسم","الجوال","البريد","المدينة","الاهتمامات","الحالة","التاريخ","ملاحظات"]];
-  filtered().forEach(m=>rows.push([memberCode(m),m.full_name||"",m.phone||"",m.email||"",m.city||"",interestsText(m.interests),statusLabel(m.status),`${formatDate(m.created_at)} ${formatTime(m.created_at)}`,m.notes||""]));
-  const csv=rows.map(row=>row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(",")).join("\n");
-  const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8;"});
-  const a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="academy_members.csv";
-  document.body.appendChild(a);
-  a.click();
-  a.remove();
-  showToast("تم تصدير العضويات بنجاح.");
+  data.forEach(m=>rows.push([memberCode(m),m.full_name||"",m.phone||"",m.email||"",m.city||"",interestsText(m.interests),statusLabel(m.status),`${formatDate(m.created_at)} ${formatTime(m.created_at)}`,m.notes||""]));
+  return { data, rows };
+}
+function exportPdf(){
+  const { data, rows }=buildMemberExportRows();
+  if(!data.length){ showToast("لا توجد بيانات للتصدير.","warn"); return; }
+  const AE=window.AdminExport;
+  if(!AE){ showToast("وحدة التصدير غير متوفرة.","error"); return; }
+  const stamp=AE.exportDateStamp();
+  const pdf=AE.openPdfPrint({
+    title:"عضويات الأكاديمية",
+    fileBase:`academy_members_${stamp}`,
+    headers:rows[0],
+    bodyRows:rows.slice(1),
+    mainColCount:6,
+    stampLabel:"ختم عضويات الأكاديمية"
+  });
+  if(!pdf.ok){ showToast("تعذر فتح نافذة PDF.","warn"); return; }
+  showToast(`تم تجهيز PDF (${data.length} عضوية).`,"success");
+}
+function exportExcel(){
+  const { data, rows }=buildMemberExportRows();
+  if(!data.length){ showToast("لا توجد بيانات للتصدير.","warn"); return; }
+  const AE=window.AdminExport;
+  const stamp=AE?AE.exportDateStamp():String(Date.now());
+  if(AE && AE.downloadExcel(`academy_members_${stamp}.xlsx`, rows, [{wch:14},{wch:22},{wch:14},{wch:24},{wch:12},{wch:20},{wch:12},{wch:18},{wch:24}])){
+    showToast(`تم تصدير ${data.length} عضوية إلى Excel.`,"success");
+    return;
+  }
+  showToast("مكتبة Excel غير متاحة.","error");
 }
 
 document.addEventListener("DOMContentLoaded",()=>{
   ["searchInput","statusFilter","sortFilter"].forEach(id=>$(id)?.addEventListener(id==="searchInput"?"input":"change",renderTable));
-  $("exportBtn")?.addEventListener("click",exportCsv);
+  $("exportPdfBtn")?.addEventListener("click",exportPdf);
+  $("exportExcelBtn")?.addEventListener("click",exportExcel);
+  $("exportBtn")?.addEventListener("click",exportPdf);
   $("closeModal")?.addEventListener("click",closeMember);
   $("closeModal2")?.addEventListener("click",closeMember);
   $("modalApproveBtn")?.addEventListener("click",()=>currentMemberId&&updateMemberStatus(currentMemberId,"approved"));

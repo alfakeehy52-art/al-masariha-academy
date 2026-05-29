@@ -21,7 +21,11 @@
     .topbar{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:24px}
     .title-box h2{margin:0;font-size:32px;font-weight:900}
     .title-box p{margin:8px 0 0;color:var(--muted);font-size:14px;line-height:1.9}
-    .actions{display:flex;gap:12px;flex-wrap:wrap}
+    .actions{display:flex;gap:12px 14px;flex-wrap:wrap;align-items:center;justify-content:flex-end}
+    .export-actions{display:inline-flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+    .export-actions select{width:auto;min-width:min(220px,100%);max-width:100%;flex:0 1 auto}
+    .export-actions .btn{flex:0 0 auto}
+    #reviewNewRequestsBtn{flex:0 0 auto;white-space:nowrap}
     .btn{display:inline-flex;align-items:center;justify-content:center;padding:14px 18px;border-radius:16px;text-decoration:none;font-weight:900;border:1px solid var(--line);cursor:pointer;font-family:inherit;font-size:15px}
     .btn-primary{background:linear-gradient(135deg,var(--gold),var(--gold-2));color:#1a1a1a}
     .btn-secondary{background:rgba(255,255,255,.04);color:#fff}
@@ -91,10 +95,11 @@
     }
 
   </style>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="js/supabase-client.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="js/supabase-client.js"></script><script src="js/admin-auth.js"></script><script>requireAdmin();</script>
+  <script src="js/admin-auth.js"></script>
+  <script>requireAdmin();</script>
 </head>
 <body>
   <div class="layout">
@@ -113,7 +118,14 @@
           <p>هذه الصفحة تمثل نقطة التحويل بين الطلبات القادمة من صفحة "انضم إلينا" وبين العضويات الفعلية التي ستُعتمد لاحقًا داخل النظام.</p>
         </div>
         <div class="actions">
-          <button type="button" class="btn btn-secondary" id="exportRequestsBtn">تصدير الطلبات</button>
+          <div class="export-actions">
+            <select id="exportScopeSelect" title="نطاق التصدير">
+              <option value="filtered">تصدير النتائج المفلترة</option>
+              <option value="all">تصدير كل الطلبات</option>
+            </select>
+            <button type="button" class="btn btn-secondary" id="exportExcelBtn">تصدير Excel</button>
+            <button type="button" class="btn btn-secondary" id="exportPdfBtn">تصدير PDF</button>
+          </div>
           <button type="button" class="btn btn-primary" id="reviewNewRequestsBtn">مراجعة الطلبات الجديدة</button>
         </div>
       </div>
@@ -206,17 +218,19 @@
 
   <div class="toast-wrap" id="toastWrap"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js"></script>
-  <script src="js/supabase-client.js"></script>
   <script src="admin_sidebar.js"></script>
   <script src="js/chat-drawer.js"></script>
   <script src="js/guardian-goals.js"></script>
   <script src="js/academy-roles.js"></script>
   <script src="js/supporter-profile.js"></script>
   <script src="js/academy-member-profile.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="js/admin-export.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/jspdf-autotable@3.8.2/dist/jspdf.plugin.autotable.min.js"></script>
   <script src="js/join-attachments-catalog.js?v=20260522-reupload2"></script>
   <script src="js/request-completion-review.js?v=20260522-reviewfix"></script>
+  <script src="js/chat-room-sync.js"></script>
   <script src="admin_requests_app.js?v=20260527-resetfilters"></script>
 </body>
 </html>

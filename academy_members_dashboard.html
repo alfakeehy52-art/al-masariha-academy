@@ -63,7 +63,10 @@ input,select,button{font:inherit}input,select{width:100%;min-height:52px;padding
             <option value="newest">الأحدث أولاً</option>
             <option value="oldest">الأقدم أولاً</option>
           </select>
-          <button class="btn gold" id="exportBtn">تصدير CSV</button>
+          <div class="export-actions">
+            <button class="btn btn-secondary" type="button" id="exportExcelBtn">تصدير Excel</button>
+            <button class="btn btn-primary" type="button" id="exportPdfBtn">تصدير PDF</button>
+          </div>
         </div>
         <div class="table-wrap">
           <table>
@@ -127,6 +130,8 @@ input,select,button{font:inherit}input,select{width:100%;min-height:52px;padding
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script src="js/supabase-client.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<script src="js/admin-export.js"></script>
 <script src="admin_sidebar.js"></script>
 <script src="js/academy-member-profile.js"></script>
 <script src="academy_members_app.js"></script>

@@ -38,7 +38,10 @@
           <p>إدارة شاملة للاعبين مع البحث والفلترة والمعاينة السريعة وتحرير السجلات.</p>
         </div>
         <div class="actions">
-          <button class="btn btn-secondary" type="button" id="exportPlayersBtn">تصدير القائمة</button>
+          <div class="export-actions">
+            <button class="btn btn-secondary" type="button" id="exportPlayersExcel">تصدير Excel</button>
+            <button class="btn btn-secondary" type="button" id="exportPlayersPdf">تصدير PDF</button>
+          </div>
           <a class="btn btn-primary" href="players_add_dashboard.html">+ إضافة لاعب جديد</a>
         </div>
       </div>
@@ -150,9 +153,8 @@
   </div>
   <div class="toast-wrap" id="toastWrap"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js"></script>
-  <script src="js/supabase-client.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+  <script src="js/admin-export.js"></script>
   <script src="admin_sidebar.js"></script>
   <script>
     const supabaseClient = createSupabaseClient();
@@ -180,8 +182,74 @@
     function renderCountText(filtered,total){ document.getElementById("playersCountText").textContent=total===0?"لا يوجد لاعبين حتى الآن":`عرض ${filtered} من أصل ${total} لاعب`; }
     async function loadPlayers(){ const tbody=document.getElementById("playersTableBody"); tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--muted);font-weight:800">جاري تحميل اللاعبين ...</td></tr>'; const {data,error}=await supabaseClient.from("players").select("*").order("created_at",{ascending:false}); if(error){ console.error("Supabase players fetch error:",error); tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:32px;color:#ffd0d0;font-weight:800">تعذر تحميل اللاعبين. حاول إعادة التحميل.</td></tr>'; showToast("تعذر تحميل اللاعبين .","error"); return; } allPlayers=Array.isArray(data)?data:[]; applyFilters(); }
     function renderRows(players){ const tbody=document.getElementById("playersTableBody"); if(!players.length){ tbody.innerHTML='<tr><td colspan="9" style="text-align:center;padding:32px;color:var(--muted);font-weight:800">لا يوجد لاعبين مطابقين حاليًا</td></tr>'; return; } tbody.innerHTML=players.map(player=>{ const id=String(player.id||""); const fullName=escapeHtml(player.full_name||"-"); const code=escapeHtml(playerCode(player)); const category=escapeHtml(normalizeCategory(player.category)); const position=escapeHtml(player.position||"-"); const phone=escapeHtml(player.phone||"-"); const city=escapeHtml(player.city||"-"); const nationalId=escapeHtml(nationalIdLabel(player)); const birthHijri=escapeHtml(birthHijriLabel(player)); const requestRef=escapeHtml(requestRefLabel(player)); const statusText=escapeHtml(player.player_status||normalizeStatus(player.status)); const complete=completionLabel(player); const statusClass=getStatusBadgeClass(player.player_status||player.status); const completeClass=complete==="100%"?"badge-success":"badge-warn"; const avatarHtml=player.image?`<img src="${escapeHtml(player.image)}" alt="${fullName}">`:escapeHtml(getInitials(player.full_name||"")); return `<tr><td><div class="player-cell"><div class="avatar">${avatarHtml}</div><div><div class="player-name">${fullName}</div><div class="player-sub">${city} • الميلاد: ${birthHijri}</div><div class="player-sub">مرجع الطلب: ${requestRef}</div></div></div></td><td>${code}</td><td><span class="badge badge-info">${category}</span></td><td>${nationalId}</td><td>${position}</td><td>${phone}</td><td><span class="badge ${statusClass}">${statusText}</span></td><td><span class="badge ${completeClass}">${complete}</span></td><td><div class="row-actions"><button class="icon-btn" type="button" onclick="viewPlayer('${escapeHtml(id)}')">عرض</button><button class="icon-btn" type="button" onclick="editPlayer('${escapeHtml(id)}')">تعديل</button><button class="icon-btn" type="button" onclick="deletePlayer('${escapeHtml(id)}')">حذف</button></div></td></tr>`; }).join(""); }
-    function applyFilters(){ const search=document.getElementById("searchInput").value.trim().toLowerCase(); const category=document.getElementById("categoryFilter").value; const position=document.getElementById("positionFilter").value; const status=document.getElementById("statusFilter").value; const filtered=allPlayers.filter(player=>{ const name=String(player.full_name||"").toLowerCase(); const code=String(playerCode(player)||"").toLowerCase(); const phone=String(player.phone||"").toLowerCase(); const nationalId=String(player.national_id||"").toLowerCase(); const ref=String(player.reference_code||"").toLowerCase(); const playerCategory=normalizeCategory(player.category); const playerPosition=String(player.position||"").trim(); const playerStatus=normalizeStatus(player.player_status||player.status||"نشط"); let quickMatch=true; if(quickFilterMode==="top-category"){ quickMatch=topCategoryStat!=="-"&&playerCategory===topCategoryStat; } else if(quickFilterMode==="complete"){ quickMatch=isComplete(player); } else if(quickFilterMode==="need-review"){ quickMatch=!isComplete(player); } return (!search||[name,code,phone,nationalId,ref].some(v=>v.includes(search)))&&(category==="كل الفئات"||playerCategory===category)&&(position==="كل المراكز"||playerPosition===position)&&(status==="كل الحالات"||playerStatus===status)&&quickMatch; }); renderStats(allPlayers); renderRows(filtered); renderCountText(filtered.length,allPlayers.length); document.getElementById("playersPagination").innerHTML=""; }
-    function exportPlayers(){ if(!allPlayers.length){ showToast("لا يوجد لاعبين للتصدير","warn"); return; } const rows=[["الرقم","الاسم","الهوية","الميلاد الهجري","مرجع الطلب","الفئة","المركز","الجوال","الحالة","المدينة"]]; allPlayers.forEach(player=>rows.push([playerCode(player),player.full_name||"",nationalIdLabel(player),birthHijriLabel(player),requestRefLabel(player),normalizeCategory(player.category),player.position||"",player.phone||"",player.player_status||normalizeStatus(player.status),player.city||""])); const csv=rows.map(row=>row.map(value=>`"${String(value).replace(/"/g,'""')}"`).join(",")).join("\n"); const blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8;"}); const link=document.createElement("a"); link.href=URL.createObjectURL(blob); link.download="players_list.csv"; document.body.appendChild(link); link.click(); link.remove(); }
+    function getFilteredPlayers(){
+      const search=document.getElementById("searchInput").value.trim().toLowerCase();
+      const category=document.getElementById("categoryFilter").value;
+      const position=document.getElementById("positionFilter").value;
+      const status=document.getElementById("statusFilter").value;
+      return allPlayers.filter(player=>{
+        const name=String(player.full_name||"").toLowerCase();
+        const code=String(playerCode(player)||"").toLowerCase();
+        const phone=String(player.phone||"").toLowerCase();
+        const nationalId=String(player.national_id||"").toLowerCase();
+        const ref=String(player.reference_code||"").toLowerCase();
+        const playerCategory=normalizeCategory(player.category);
+        const playerPosition=String(player.position||"").trim();
+        const playerStatus=normalizeStatus(player.player_status||player.status||"نشط");
+        let quickMatch=true;
+        if(quickFilterMode==="top-category") quickMatch=topCategoryStat!=="-"&&playerCategory===topCategoryStat;
+        else if(quickFilterMode==="complete") quickMatch=isComplete(player);
+        else if(quickFilterMode==="need-review") quickMatch=!isComplete(player);
+        return (!search||[name,code,phone,nationalId,ref].some(v=>v.includes(search)))&&(category==="كل الفئات"||playerCategory===category)&&(position==="كل المراكز"||playerPosition===position)&&(status==="كل الحالات"||playerStatus===status)&&quickMatch;
+      });
+    }
+    function buildPlayerExportRows(players){
+      const rows=[["الرقم","الاسم","الهوية","الميلاد الهجري","مرجع الطلب","الفئة","المركز","الجوال","الحالة","المدينة"]];
+      players.forEach(player=>rows.push([
+        playerCode(player),
+        player.full_name||"",
+        nationalIdLabel(player),
+        birthHijriLabel(player),
+        requestRefLabel(player),
+        normalizeCategory(player.category),
+        player.position||"",
+        player.phone||"",
+        player.player_status||normalizeStatus(player.status),
+        player.city||""
+      ]));
+      return rows;
+    }
+    function exportPlayers(format){
+      const list=getFilteredPlayers();
+      if(!list.length){ showToast("لا يوجد لاعبين مطابقين للتصدير","warn"); return; }
+      const rows=buildPlayerExportRows(list);
+      const AE=window.AdminExport;
+      const stamp=AE?AE.exportDateStamp():String(Date.now());
+      if(!AE){ showToast("وحدة التصدير غير متوفرة.","error"); return; }
+      if(format==="excel"){
+        const ok=AE.downloadExcel(`players_list_${stamp}.xlsx`, rows, [{wch:14},{wch:24},{wch:14},{wch:14},{wch:18},{wch:12},{wch:12},{wch:14},{wch:14},{wch:12}]);
+        if(ok){ showToast(`تم تصدير ${list.length} لاعب (Excel).`,"success"); }
+        else showToast("تعذر تصدير Excel.","error");
+        return;
+      }
+      const pdf=AE.openPdfPrint({
+        title:"قائمة اللاعبين",
+        fileBase:`players_list_${stamp}`,
+        headers:rows[0],
+        bodyRows:rows.slice(1),
+        mainColCount:6,
+        stampLabel:"ختم قائمة اللاعبين"
+      });
+      if(pdf.ok) showToast(`تم تجهيز PDF (${list.length} لاعب).`,"success");
+      else showToast("تعذر فتح نافذة PDF.","warn");
+    }
+    function applyFilters(){
+      const filtered=getFilteredPlayers();
+      renderStats(allPlayers);
+      renderRows(filtered);
+      renderCountText(filtered.length,allPlayers.length);
+      document.getElementById("playersPagination").innerHTML="";
+    }
     async function deletePlayer(id){ if(!id) return; const ok=await askConfirm("هل تريد حذف هذا اللاعب ؟ لا يمكن التراجع عن هذه العملية."); if(!ok) return; const {error}=await supabaseClient.from("players").delete().eq("id",id); if(error){ console.error("Supabase delete player error:",error); showToast("تعذر حذف اللاعب.","error"); return; } allPlayers=allPlayers.filter(player=>String(player.id)!==String(id)); applyFilters(); showToast("تم حذف اللاعب بنجاح.","success"); }
     function viewPlayer(id){ if(!id) return; window.location.href=`player_view_dashboard.html?id=${encodeURIComponent(id)}`; }
     function editPlayer(id){ if(!id) return; window.location.href=`edit_player_dashboard.html?id=${encodeURIComponent(id)}`; }
@@ -205,7 +273,18 @@
         }
       }catch(_e){}
     }
-    document.addEventListener("DOMContentLoaded",()=>{ document.getElementById("applyFiltersBtn").addEventListener("click",applyFilters); document.getElementById("searchInput").addEventListener("input",applyFilters); document.getElementById("categoryFilter").addEventListener("change",applyFilters); document.getElementById("positionFilter").addEventListener("change",applyFilters); document.getElementById("statusFilter").addEventListener("change",applyFilters); document.getElementById("exportPlayersBtn").addEventListener("click",exportPlayers); bindStatCards(); applyFiltersFromUrl(); loadPlayers(); });
+    document.addEventListener("DOMContentLoaded",()=>{
+      document.getElementById("applyFiltersBtn").addEventListener("click",applyFilters);
+      document.getElementById("searchInput").addEventListener("input",applyFilters);
+      document.getElementById("categoryFilter").addEventListener("change",applyFilters);
+      document.getElementById("positionFilter").addEventListener("change",applyFilters);
+      document.getElementById("statusFilter").addEventListener("change",applyFilters);
+      document.getElementById("exportPlayersPdf").addEventListener("click",()=>exportPlayers("pdf"));
+      document.getElementById("exportPlayersExcel").addEventListener("click",()=>exportPlayers("excel"));
+      bindStatCards();
+      applyFiltersFromUrl();
+      loadPlayers();
+    });
   </script>
 </body>
 </html>

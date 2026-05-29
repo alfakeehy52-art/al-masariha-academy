@@ -526,7 +526,7 @@ document.addEventListener("DOMContentLoaded", () => {
         sb
           .from("join_requests")
           .select("id", { count: "exact", head: true })
-          .in("status", ["new", "review", "reviewing", "pending", "needs_completion"]),
+          .eq("status", "new"),
         sb
           .from("contact_messages")
           .select("id", { count: "exact", head: true })
@@ -543,6 +543,16 @@ document.addEventListener("DOMContentLoaded", () => {
       const openChats = chatRes.error ? 0 : chatRes.count || 0;
 
       setBadgeCount("pendingRequests", pending);
+      document.querySelectorAll('[data-badge="pendingRequests"]').forEach((el) => {
+        el.title =
+          pending > 0
+            ? `${pending} طلب جديد — افتح «إدارة الطلبات» واضغط «مراجعة الطلبات الجديدة»`
+            : "";
+        el.setAttribute(
+          "aria-label",
+          pending > 0 ? `${pending} طلبات جديدة تحتاج مراجعة` : "لا توجد طلبات جديدة"
+        );
+      });
       setBadgeCount("newContactMessages", contactNew);
       setBadgeCount("openChats", openChats);
       setBadgeCount("supportTotal", contactNew + openChats);
@@ -586,4 +596,5 @@ document.addEventListener("DOMContentLoaded", () => {
   bootstrapSidebarBrand();
   loadAdminIdentity();
   loadSidebarBadges();
+  window.refreshAdminSidebarBadges = loadSidebarBadges;
 });

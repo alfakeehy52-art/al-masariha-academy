@@ -114,7 +114,7 @@ function displayNotes(r){
   return lines.join('\n')||'-';
 }
 function buildRowActions(r){
-  const id=r.id;
+  const id=escapeInlineJsString(r.id);
   let html=`<button class="mini-btn review" onclick="openRequest('${id}')">عرض</button><button class="mini-btn chat" type="button" onclick="openChatForRequest('${id}')">تواصل</button>`;
   if(getStatusLabel(r.status)!=='مقبول') html+=`<button class="mini-btn accept" onclick="updateStatus('${id}','approved')">قبول</button>`;
   if(getStatusLabel(r.status)!=='مرفوض') html+=`<button class="mini-btn reject" onclick="updateStatus('${id}','rejected')">رفض</button>`;
@@ -306,6 +306,28 @@ async function loadAcademyMembers(){
   academyMembers=Array.isArray(data)?data:[];
 }
 
+function getDeepLinkRequestId(){
+  try{
+    const p=new URLSearchParams(window.location.search||'');
+    return String(p.get('request')||p.get('open')||'').trim();
+  }catch(_e){ return ''; }
+}
+function openRequestFromUrl(){
+  const id=getDeepLinkRequestId();
+  if(!id) return;
+  const row=requests.find(r=>String(r.id)===String(id));
+  if(!row){
+    showToast('لم يُعثر على الطلب المطلوب في هذه القائمة.','warn');
+    return;
+  }
+  openRequest(id);
+  try{
+    const url=new URL(window.location.href);
+    url.searchParams.delete('request');
+    url.searchParams.delete('open');
+    window.history.replaceState({},'',url.pathname+(url.search||'')+url.hash);
+  }catch(_e){}
+}
 async function loadRequests(type=null){
   const tbody=$('requestsTableBody'); if(tbody) tbody.innerHTML=`<tr><td colspan="8" class="empty-cell">جاري تحميل الطلبات...</td></tr>`;
   let q=supabaseClient.from('join_requests').select('*').order('created_at',{ascending:false});
@@ -324,6 +346,7 @@ async function loadRequests(type=null){
   if($('requestsTableBody')) renderTable(type);
   if($('requestsCards')) renderDashboard();
   updateRequestStatsUI();
+  if(getDeepLinkRequestId()) openRequestFromUrl();
 }
 function syncStatCardFromDropdown(){
   const v=normalizeStatusFilterValue($('statusFilter')?.value||'');
@@ -338,6 +361,16 @@ function updateRequestStatsUI(){
   set('statReview',c.review);
   set('statApproved',c.approved);
   set('statPending',c.pending);
+  set('totalAll',c.all);
+  set('totalNew',c.new);
+  set('totalReview',c.review);
+  set('totalApproved',c.approved);
+}
+function navigateToRequestsWithFilter(filter){
+  const params=new URLSearchParams();
+  if(filter && filter!=='all') params.set('status', filter);
+  const q=params.toString();
+  window.location.href=q?`admin_requests.html?${q}`:'admin_requests.html';
 }
 function setActiveStatCard(filter){
   document.querySelectorAll('.stat-link[data-stat-filter]').forEach(el=>{
@@ -376,6 +409,8 @@ function applyStatusFilterFromStat(filter, options){
   if(table) table.scrollIntoView({behavior:'smooth',block:'nearest'});
 }
 function bindStatsCards(){
+  if(window.__adminStatsCardsBound) return;
+  window.__adminStatsCardsBound=true;
   if(!document.getElementById('requests-stat-link-style')){
     const st=document.createElement('style');
     st.id='requests-stat-link-style';
@@ -394,13 +429,40 @@ function bindStatsCards(){
       if(filter==='all'&&!document.querySelector('.stat-link.is-active')) el.classList.add('is-active');
     });
   }
-  document.querySelectorAll('.stat-link[data-stat-filter]').forEach(el=>{
-    const filter=String(el.dataset.statFilter||'all');
-    el.addEventListener('click',()=>applyStatusFilterFromStat(filter));
-    el.addEventListener('keydown',(e)=>{
-      if(e.key==='Enter'||e.key===' '){e.preventDefault();applyStatusFilterFromStat(filter);}
-    });
+  const activateStat=(filter)=>{
+    if(!$('statusFilter')) navigateToRequestsWithFilter(filter);
+    else applyStatusFilterFromStat(filter,{toast:true});
+  };
+  document.body.addEventListener('click',(e)=>{
+    const el=e.target.closest('.stat-link[data-stat-filter]');
+    if(!el) return;
+    activateStat(String(el.dataset.statFilter||'all'));
   });
+  document.body.addEventListener('keydown',(e)=>{
+    const el=e.target.closest('.stat-link[data-stat-filter]');
+    if(!el) return;
+    if(e.key==='Enter'||e.key===' '){
+      e.preventDefault();
+      activateStat(String(el.dataset.statFilter||'all'));
+    }
+  });
+}
+async function closeChatRoomsForRequest(requestId, finalStatus){
+  if(window.ChatRoomSync?.closeChatRoomsForJoinRequest){
+    await window.ChatRoomSync.closeChatRoomsForJoinRequest(supabaseClient, requestId, finalStatus);
+    return;
+  }
+  if(!requestId) return;
+  const roomStatus=finalStatus==='rejected'?'archived':'closed';
+  try{
+    const {error}=await supabaseClient.from('chat_rooms').update({
+      status:roomStatus,
+      updated_at:new Date().toISOString()
+    }).eq('related_entity_table','join_requests').eq('related_entity_id',requestId).eq('status','open');
+    if(error) console.warn('chat room close', error);
+  }catch(e){
+    console.warn('chat room close', e);
+  }
 }
 function renderDashboard(){
   const cards=$('requestsCards'); if(!cards)return;
@@ -517,7 +579,20 @@ window.openChatForRequest=openChatForRequest;
 
 function getFileStatusLabel(status){return FILE_STATUS_LABELS[String(status||'pending')]||status||'قيد المراجعة'}
 function fileStatusClass(status){const s=String(status||'pending'); if(s==='approved')return 'status-approved'; if(s==='rejected')return 'status-rejected'; if(s==='reupload')return 'status-pending'; return 'status-review'}
-function safeUrl(url){const v=String(url||'').trim(); if(!v)return ''; if(/^https?:\/\//i.test(v) || v.startsWith('./') || v.startsWith('../') || v.startsWith('/')) return v; return v;}
+function escapeInlineJsString(value){
+  return String(value ?? '').replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/\r/g,'').replace(/\n/g,'');
+}
+function safeUrl(url){
+  const v=String(url||'').trim();
+  if(!v) return '';
+  try{
+    const parsed=new URL(v, window.location.origin);
+    if(!/^https?:$/i.test(parsed.protocol)) return '';
+    return parsed.href;
+  }catch(_e){
+    return '';
+  }
+}
 function isImageUrl(url){return /\.(png|jpe?g|gif|webp|bmp|svg)(\?.*)?$/i.test(String(url||''))}
 function isPdfUrl(url){return /\.pdf(\?.*)?$/i.test(String(url||''))}
 function resolveCompletionIsFullyApproved(completion){
@@ -574,7 +649,7 @@ function ensureFileReviewUi(){
 
 function completionLoadErrorHtml(msg, requestId){
   const rid=escapeHtml(String(requestId||''));
-  return `<div class="review-lock">${escapeHtml(msg||'تعذر تحميل المرفقات.')}</div><div class="attachment-actions" style="margin-top:10px"><button type="button" class="mini-btn review" onclick="loadCompletionForRequest('${rid}')">إعادة المحاولة</button></div>`;
+  return `<div class="review-lock">${escapeHtml(msg||'تعذر تحميل المرفقات.')}</div><div class="attachment-actions" style="margin-top:10px"><button type="button" class="mini-btn review" onclick="loadCompletionForRequest('${escapeInlineJsString(rid)}')">إعادة المحاولة</button></div>`;
 }
 async function loadCompletionForRequest(requestId){
   ensureFileReviewUi();
@@ -1245,15 +1320,17 @@ async function updateStatus(id,status){
       try{
         sideResult=await approveSideEffect(r);
       }catch(sideErr){
-        console.warn(sideErr);
-        showToast('تم اعتماد الطلب، لكن فشل إجراء جانبي: '+humanizeAdminError(sideErr), 'warn');
+        throw new Error('تعذر إكمال إجراء الاعتماد: '+humanizeAdminError(sideErr));
       }
     }
     const upd={status,reviewed_at:new Date().toISOString(),updated_at:new Date().toISOString()};
     const {error}=await supabaseClient.from('join_requests').update(upd).eq('id',id);
     if(error)throw error;
     Object.assign(r,upd);
+    if(status==='approved'||status==='rejected') await closeChatRoomsForRequest(id, status);
     renderTable(window.REQUEST_TYPE||null);
+    updateRequestStatsUI();
+    if(typeof window.refreshAdminSidebarBadges==='function') window.refreshAdminSidebarBadges();
     closeRequest();
     let okMsg=status==='approved'?'تم قبول الطلب وتنفيذ الإجراء المناسب.':`تم تحديث الحالة إلى ${getStatusLabel(status)}`;
     if(status==='approved'&&r.request_type==='staff') okMsg+=staffApprovalToastExtra(sideResult);
@@ -1263,7 +1340,310 @@ async function updateStatus(id,status){
     showToast('تعذر تنفيذ العملية: '+humanizeAdminError(e),'error')
   }
 }
-function exportCsv(){const rows=[['رقم المرجع','الاسم','النوع','الحالة','الجوال','البريد','المدينة','التاريخ','التفاصيل','الملاحظات']]; filtered().forEach(r=>rows.push([refCode(r),r.full_name||'',getTypeLabel(r.request_type),getStatusLabel(r.status||'new'),r.phone||'',r.email||'',r.city||'',`${formatDate(r.created_at)} ${formatTime(r.created_at)}`,getRequestSummary(r),notes(r)])); const csv=rows.map(row=>row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n'); const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'}); const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='academy_requests.csv';document.body.appendChild(a);a.click();a.remove();showToast('تم التصدير بنجاح')}
+function exportDetailByType(r){
+  const add=(label,value)=>`${label}: ${value==null||String(value).trim()===''?'-':String(value).trim()}`;
+  if(r.request_type==='player'){
+    return [
+      add('الفئة',r.age_category),
+      add('المركز',r.position),
+      add('العمر',r.player_age?`${r.player_age} سنة`:'')
+    ].join(' | ');
+  }
+  if(r.request_type==='guardian'){
+    const mode=guardianMode(r);
+    const linkedNames=window.GUARDIAN_GOALS?.linkedPlayerNames?window.GUARDIAN_GOALS.linkedPlayerNames(r):'';
+    const related=mode==='new_player'
+      ? (r.child_name||'-')
+      : (linkedNames||r.existing_player_names||r.child_name||'-');
+    return [
+      add('الغرض',goalLabel(r.guardian_goal)),
+      add('صلة القرابة',r.relationship||r.guardian_relation),
+      add('اللاعب/الأبناء',related)
+    ].join(' | ');
+  }
+  if(r.request_type==='staff'){
+    const m=staffMeta(r);
+    return [
+      add('المجال',AR_DOMAIN_LABEL(m.domain)),
+      add('الدور',m.roleLabel),
+      add('الخبرة',r.coach_experience?`${r.coach_experience} سنوات`:'')
+    ].join(' | ');
+  }
+  if(r.request_type==='supporter'){
+    const m=supporterMeta(r);
+    return [
+      add('نوع الداعم',m.typeLabel),
+      add('المستوى',m.levelLabel),
+      add('طريقة الدعم',m.methodLabel)
+    ].join(' | ');
+  }
+  if(r.request_type==='academy_member'){
+    const m=memberMeta(r);
+    return [
+      add('الاهتمامات',m.interestsLabel),
+      add('المدينة',r.city),
+      add('البريد',r.email)
+    ].join(' | ');
+  }
+  return getRequestSummary(r);
+}
+function csvEscapeCell(value, delimiter){
+  const raw=String(value ?? '');
+  const normalized=raw.replace(/\r\n/g,'\n').replace(/\r/g,'\n');
+  if(normalized.includes('"')||normalized.includes('\n')||normalized.includes(delimiter)){
+    return `"${normalized.replace(/"/g,'""')}"`;
+  }
+  return normalized;
+}
+function toExportText(value){
+  return String(value ?? '').replace(/\r\n/g,'\n').replace(/\r/g,'\n').trim();
+}
+function flattenMultiline(value){
+  return toExportText(value).replace(/\n+/g,' | ');
+}
+function exportDateStamp(){
+  const d=new Date();
+  const pad=(n)=>String(n).padStart(2,'0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}_${pad(d.getHours())}-${pad(d.getMinutes())}-${pad(d.getSeconds())}`;
+}
+function selectedExportScope(){
+  const v=String($('exportScopeSelect')?.value||'filtered').trim().toLowerCase();
+  return v==='all'?'all':'filtered';
+}
+function buildExportRows(scope='filtered'){
+  const source=scope==='all'?[...requests]:filtered();
+  const rows=[[
+    'رقم المرجع','الاسم','النوع','الحالة','الجوال','البريد','المدينة','التاريخ','الوقت','تفاصيل الطلب','الملاحظات'
+  ]];
+  source.forEach(r=>{
+    rows.push([
+      toExportText(refCode(r)),
+      toExportText(r.full_name||''),
+      toExportText(getTypeLabel(r.request_type)),
+      toExportText(getStatusLabel(r.status||'new')),
+      toExportText(r.phone||''),
+      toExportText(r.email||''),
+      toExportText(r.city||''),
+      toExportText(formatDate(r.created_at)),
+      toExportText(formatTime(r.created_at)),
+      flattenMultiline(exportDetailByType(r)),
+      flattenMultiline(notes(r))
+    ]);
+  });
+  return rows;
+}
+function exportExcel(){
+  const scope=selectedExportScope();
+  const rows=buildExportRows(scope);
+  if(rows.length<=1){
+    showToast('لا توجد بيانات ضمن النطاق المحدد للتصدير.','warn');
+    return;
+  }
+  if(window.AdminExport?.downloadExcel){
+    const ok=window.AdminExport.downloadExcel(`academy_requests_${exportDateStamp()}.xlsx`,rows,[{wch:14},{wch:24},{wch:14},{wch:16},{wch:16},{wch:24},{wch:14},{wch:14},{wch:10},{wch:58},{wch:70}],'الطلبات');
+    if(ok){
+      showToast(`تم تصدير Excel بنجاح (${rows.length-1} سجل).`);
+      return;
+    }
+  }
+  if(!window.XLSX){
+    showToast('مكتبة Excel غير متاحة حالياً.','error');
+    return;
+  }
+  try{
+    const wb=window.XLSX.utils.book_new();
+    const ws=window.XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols']=[{wch:14},{wch:24},{wch:14},{wch:16},{wch:16},{wch:24},{wch:14},{wch:14},{wch:10},{wch:58},{wch:70}];
+    const range=window.XLSX.utils.decode_range(ws['!ref']||'A1');
+    for(let row=1;row<=range.e.r;row+=1){
+      for(let col=0;col<=range.e.c;col+=1){
+        const addr=window.XLSX.utils.encode_cell({r:row,c:col});
+        const cell=ws[addr];
+        if(!cell) continue;
+        cell.t='s';
+        cell.v=toExportText(cell.v);
+      }
+    }
+    window.XLSX.utils.book_append_sheet(wb,ws,'الطلبات');
+    window.XLSX.writeFile(wb,`academy_requests_${exportDateStamp()}.xlsx`);
+    showToast(`تم تصدير Excel بنجاح (${rows.length-1} سجل).`);
+  }catch(err){
+    console.error(err);
+    showToast('تعذر تصدير ملف Excel.','error');
+  }
+}
+function formatPdfCell(value, maxLen){
+  const clean=flattenMultiline(value).replace(/\s+/g,' ').trim();
+  if(!maxLen || clean.length<=maxLen) return clean;
+  return `${clean.slice(0,maxLen-1)}…`;
+}
+function getAcademyBrandSnapshot(){
+  let cached=null;
+  try{
+    cached=JSON.parse(localStorage.getItem('academy_brand_cache_v1')||'null');
+  }catch(_e){}
+  const logoFromSidebar=document.getElementById('adminSidebarLogo')?.getAttribute('src')||'';
+  const fallbackLogo='academy-logo.svg';
+  return {
+    name:(cached?.brand_name_ar||'أكاديمية المسارحة').trim(),
+    subtitle:(cached?.brand_subtitle_ar||'لكرة القدم').trim(),
+    logoUrl:(cached?.logo_url||logoFromSidebar||fallbackLogo).trim()||fallbackLogo
+  };
+}
+function exportPdf(){
+  const scope=selectedExportScope();
+  const rows=buildExportRows(scope);
+  if(rows.length<=1){
+    showToast('لا توجد بيانات ضمن النطاق المحدد للتصدير.','warn');
+    return;
+  }
+  const printWin=window.open('','_blank','width=1280,height=900');
+  if(!printWin){
+    showToast('تعذر فتح نافذة الطباعة. تأكد من السماح بالنوافذ المنبثقة.','warn');
+    return;
+  }
+  try{
+    const brand=getAcademyBrandSnapshot();
+    const nowForRef=new Date();
+    const pad=(n)=>String(n).padStart(2,'0');
+    const reportNumber=`RPT-${nowForRef.getFullYear()}${pad(nowForRef.getMonth()+1)}${pad(nowForRef.getDate())}-${pad(nowForRef.getHours())}${pad(nowForRef.getMinutes())}${pad(nowForRef.getSeconds())}`;
+    const fileBase=`academy_requests_${exportDateStamp()}`;
+    const printableRows=rows.slice(1).map((r)=>{
+      const main=`<tr class="main-row">
+        <td class="cell-ref">${escapeHtml(formatPdfCell(r[0],30))}</td>
+        <td class="cell-name">${escapeHtml(formatPdfCell(r[1],42))}</td>
+        <td>${escapeHtml(formatPdfCell(r[2],20))}</td>
+        <td>${escapeHtml(formatPdfCell(r[3],20))}</td>
+        <td class="cell-phone">${escapeHtml(formatPdfCell(r[4],28))}</td>
+        <td>${escapeHtml(formatPdfCell(r[5],36))}</td>
+        <td>${escapeHtml(formatPdfCell(r[6],18))}</td>
+        <td>${escapeHtml(formatPdfCell(r[7],20))}</td>
+        <td>${escapeHtml(formatPdfCell(r[8],16))}</td>
+      </tr>`;
+      const details=`<tr class="detail-row">
+        <td colspan="9">
+          <b>تفاصيل الطلب:</b> ${escapeHtml(formatPdfCell(r[9],300))}
+          <span class="sep">|</span>
+          <b>الملاحظات:</b> ${escapeHtml(formatPdfCell(r[10],300))}
+        </td>
+      </tr>`;
+      return main+details;
+    }).join('');
+    const now=new Date();
+    const html=`
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <title>${fileBase}</title>
+  <style>
+    :root{--bg:#f5f7fa;--ink:#0f1720;--muted:#5f6b7a;--line:#d7deea;--panel:#ffffff;--accent:#0f3f2b;--gold:#d5b15a}
+    *{box-sizing:border-box}
+    body{font-family:"Cairo","Tahoma",Arial,sans-serif;margin:0;background:var(--bg);color:var(--ink)}
+    .page{padding:16mm 12mm}
+    .hero{background:linear-gradient(135deg,#0f3f2b,#102c22 55%,#0b1f18);border-radius:14px;color:#fff;padding:14px 16px;display:flex;align-items:center;justify-content:space-between;gap:14px;border:2px solid rgba(213,177,90,.22)}
+    .hero-brand{display:flex;align-items:center;gap:12px}
+    .hero-logo{width:64px;height:64px;border-radius:16px;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.18);display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .hero-logo img{width:100%;height:100%;object-fit:contain;padding:7px}
+    .hero-title{margin:0;font-size:23px;line-height:1.2}
+    .hero-sub{margin:3px 0 0;font-size:12px;color:#dbe7df}
+    .hero-meta{font-size:12px;line-height:1.9;text-align:left;color:#f7e9c3}
+    .hero-report{margin-top:4px;font-size:11px;color:#ffe7a6;font-weight:800}
+    .sheet{margin-top:10px;background:var(--panel);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+    table{width:100%;border-collapse:collapse;table-layout:fixed}
+    thead th{background:#f4f7fb;color:#1d2733;font-size:11px;padding:8px 6px;border-bottom:1px solid var(--line)}
+    th,td{padding:7px 6px;font-size:11px;vertical-align:top;word-break:break-word;border-bottom:1px solid #edf1f7}
+    .main-row td{background:#fff}
+    .main-row .cell-ref{font-weight:800;color:#0c4a34}
+    .main-row .cell-name{font-weight:800}
+    .main-row .cell-phone{font-family:"Tahoma",Arial,sans-serif}
+    .detail-row td{background:#fcfdfd;line-height:1.8;color:#2b3442}
+    .detail-row b{color:#102c22}
+    .sep{display:inline-block;margin:0 8px;color:#a5afbe}
+    .report-footer{margin-top:12px;display:flex;justify-content:flex-start}
+    .report-stamp{
+      border:2px dashed rgba(15,63,43,.55);
+      color:#0f3f2b;
+      border-radius:14px;
+      padding:10px 14px;
+      font-weight:900;
+      font-size:12px;
+      background:rgba(15,63,43,.05);
+      display:inline-flex;
+      flex-direction:column;
+      gap:3px;
+      min-width:220px;
+      text-align:center;
+    }
+    .report-stamp small{font-weight:700;color:#355647;font-size:10px}
+    @media print{
+      body{background:#fff}
+      .page{padding:8mm}
+      tr{page-break-inside:avoid}
+      .hero{print-color-adjust:exact;-webkit-print-color-adjust:exact}
+      .print-page-counter{position:fixed;left:8mm;bottom:6mm;font-size:10px;color:#6b7787}
+      .print-page-counter::after{content:"صفحة " counter(page) " / " counter(pages)}
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <section class="hero">
+      <div class="hero-brand">
+        <div class="hero-logo"><img src="${escapeHtml(brand.logoUrl)}" alt="شعار الأكاديمية"></div>
+        <div>
+          <h1 class="hero-title">${escapeHtml(brand.name)}</h1>
+          <p class="hero-sub">${escapeHtml(brand.subtitle)} - تقرير إدارة الطلبات</p>
+        </div>
+      </div>
+      <div class="hero-meta">
+        <div class="hero-report">رقم التقرير: <b>${escapeHtml(reportNumber)}</b></div>
+        <div>عدد السجلات: <b>${rows.length-1}</b></div>
+        <div>تاريخ التصدير: ${now.toLocaleDateString('ar-SA')}</div>
+        <div>الوقت: ${now.toLocaleTimeString('ar-SA')}</div>
+      </div>
+    </section>
+    <section class="sheet">
+      <table>
+        <thead>
+          <tr>
+            <th>رقم المرجع</th>
+            <th>الاسم</th>
+            <th>النوع</th>
+            <th>الحالة</th>
+            <th>الجوال</th>
+            <th>البريد</th>
+            <th>المدينة</th>
+            <th>التاريخ</th>
+            <th>الوقت</th>
+          </tr>
+        </thead>
+        <tbody>${printableRows}</tbody>
+      </table>
+    </section>
+    <div class="report-footer">
+      <div class="report-stamp">
+        <span>ختم إدارة الطلبات</span>
+        <small>${escapeHtml(brand.name)} - ${escapeHtml(brand.subtitle)}</small>
+        <small>رقم التقرير: ${escapeHtml(reportNumber)}</small>
+      </div>
+    </div>
+  </div>
+  <div class="print-page-counter"></div>
+</body>
+</html>`;
+    printWin.document.open();
+    printWin.document.write(html);
+    printWin.document.close();
+    printWin.focus();
+    setTimeout(()=>{printWin.print();},450);
+    showToast(`تم تجهيز نسخة الطباعة PDF (${rows.length-1} سجل).`);
+  }catch(err){
+    console.error(err);
+    try{printWin.close();}catch(_e){}
+    showToast('تعذر تصدير PDF حالياً.','error');
+  }
+}
 
 window.openRequest=openRequest;
 window.loadCompletionForRequest=loadCompletionForRequest;
@@ -1315,7 +1695,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     renderTable(window.REQUEST_TYPE||null);
   }));
   $('applyFiltersBtn')?.addEventListener('click',()=>{syncStatCardFromDropdown();renderTable(window.REQUEST_TYPE||null);});
-  $('exportBtn')?.addEventListener('click',exportCsv);
-  $('exportRequestsBtn')?.addEventListener('click',exportCsv);
+  $('exportBtn')?.addEventListener('click',exportPdf);
+  $('exportExcelBtn')?.addEventListener('click',exportExcel);
+  $('exportPdfBtn')?.addEventListener('click',exportPdf);
   loadRequests(window.REQUEST_TYPE||null);
 });

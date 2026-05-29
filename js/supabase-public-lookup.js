@@ -13,6 +13,9 @@
     const code = error && (error.code || error.details);
     return /PGRST202|42883/i.test(String(code || "")) || /Could not find the function/i.test(String(error?.message || ""));
   }
+  function missingRpcError(name) {
+    return new Error(`Required RPC is missing: ${name}`);
+  }
 
   async function lookupJoinRequestByRefPhone(ref, phone) {
     const pRef = String(ref || "").trim();
@@ -22,16 +25,8 @@
       return Array.isArray(rows) && rows.length ? rows[0] : null;
     } catch (error) {
       if (!isMissingRpc(error)) throw error;
+      throw missingRpcError("lookup_join_request_by_ref_phone");
     }
-    const client = createSupabaseClient();
-    const { data, error } = await client
-      .from("join_requests")
-      .select("*")
-      .eq("reference_code", pRef)
-      .eq("phone", pPhone)
-      .maybeSingle();
-    if (error) throw error;
-    return data;
   }
 
   async function lookupJoinRequestsByContact(phone, email) {
@@ -42,17 +37,8 @@
       return Array.isArray(rows) ? rows : [];
     } catch (error) {
       if (!isMissingRpc(error)) throw error;
+      throw missingRpcError("lookup_join_requests_by_contact");
     }
-    const client = createSupabaseClient();
-    const { data, error: qErr } = await client
-      .from("join_requests")
-      .select("*")
-      .eq("phone", pPhone)
-      .eq("email", pEmail)
-      .order("created_at", { ascending: false })
-      .limit(20);
-    if (qErr) throw qErr;
-    return Array.isArray(data) ? data : [];
   }
 
   async function markJoinRequestReviewing(requestId, ref, phone) {
@@ -66,14 +52,8 @@
       });
     } catch (error) {
       if (!isMissingRpc(error)) throw error;
+      throw missingRpcError("submit_join_request_review");
     }
-    const client = createSupabaseClient();
-    const { error: updErr } = await client
-      .from("join_requests")
-      .update({ status: "reviewing", updated_at: new Date().toISOString() })
-      .eq("id", requestId);
-    if (updErr) throw updErr;
-    return true;
   }
 
   async function lookupRequestCompletion(ref, phone) {
@@ -84,17 +64,8 @@
       return Array.isArray(rows) && rows.length ? rows[0] : null;
     } catch (error) {
       if (!isMissingRpc(error)) throw error;
+      throw missingRpcError("lookup_request_completion");
     }
-    const client = createSupabaseClient();
-    const req = await lookupJoinRequestByRefPhone(pRef, pPhone);
-    if (!req || !req.id) return null;
-    const { data, error: qErr } = await client
-      .from("request_completions")
-      .select("*")
-      .eq("request_id", req.id)
-      .maybeSingle();
-    if (qErr) throw qErr;
-    return data;
   }
 
   async function upsertRequestCompletion(ref, phone, payload) {
@@ -110,18 +81,8 @@
       return rows || null;
     } catch (error) {
       if (!isMissingRpc(error)) throw error;
+      throw missingRpcError("upsert_request_completion");
     }
-    const client = createSupabaseClient();
-    const req = await lookupJoinRequestByRefPhone(pRef, pPhone);
-    if (!req || !req.id) throw new Error("request not found");
-    const body = Object.assign({ request_id: req.id }, payload || {});
-    const { data, error: upErr } = await client
-      .from("request_completions")
-      .upsert([body], { onConflict: "request_id" })
-      .select("*")
-      .single();
-    if (upErr) throw upErr;
-    return data;
   }
 
   async function searchPlayersPublic(term) {
