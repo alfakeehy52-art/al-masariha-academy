@@ -18,7 +18,13 @@
     if (!url || !anonKey) {
       throw new Error("Missing SUPABASE_CONFIG.url or SUPABASE_CONFIG.anonKey.");
     }
-    _client = window.supabase.createClient(url, anonKey);
+    _client = window.supabase.createClient(url, anonKey, {
+      auth: {
+        detectSessionInUrl: true,
+        persistSession: true,
+        autoRefreshToken: true
+      }
+    });
     return _client;
   }
 

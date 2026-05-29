@@ -12,6 +12,9 @@
     /** إعادة التوجيه بعد تفعيل/رابط بريد الكادر (يُضبط تلقائياً من الصفحة إن تُرك فارغاً) */
     staffActivationRedirect: "",
     /** النطاق العام — Cloudflare Pages */
-    siteUrl: "https://al-masariha-academy.pages.dev"
+    siteUrl: "https://al-masariha-academy.pages.dev",
+    /** إعادة التوجيه بعد استعادة كلمة المرور (اختياري — يُشتق من siteUrl) */
+    adminPasswordResetRedirect: "",
+    staffPasswordResetRedirect: ""
   };
 })();

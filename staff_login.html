@@ -14,8 +14,8 @@
     .box{width:min(460px,100%);border:1px solid var(--line);border-radius:28px;padding:28px;background:linear-gradient(180deg,rgba(255,255,255,.05),rgba(255,255,255,.02));box-shadow:0 24px 60px rgba(0,0,0,.35)}
     h1{margin:0 0 6px;color:var(--gold2);font-size:30px;font-weight:900}
     .lead{margin:0 0 20px;color:var(--muted);line-height:1.85;font-size:14px}
-    .tabs{display:flex;gap:8px;margin-bottom:18px}
-    .tab{flex:1;padding:12px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--muted);font-weight:900;cursor:pointer}
+    .tabs{display:flex;gap:6px;margin-bottom:18px;flex-wrap:wrap}
+    .tab{flex:1;min-width:calc(50% - 6px);padding:10px 8px;border-radius:14px;border:1px solid var(--line);background:rgba(255,255,255,.04);color:var(--muted);font-weight:900;cursor:pointer;font-size:12px}
     .tab.active{background:rgba(213,177,90,.14);border-color:rgba(213,177,90,.35);color:var(--gold2)}
     .panel{display:none}
     .panel.active{display:block}
@@ -37,6 +37,7 @@
   <script src="supabase-config.js"></script>
   <script src="js/supabase-client.js"></script>
   <script src="js/staff-auth.js"></script>
+  <script src="js/auth-password-reset.js"></script>
   <script>redirectIfStaffLoggedIn("staff_dashboard.html");</script>
 </head>
 <body>
@@ -47,6 +48,7 @@
     <div class="tabs">
       <button type="button" class="tab active" data-tab="login">دخول</button>
       <button type="button" class="tab" data-tab="activate">تفعيل حساب</button>
+      <button type="button" class="tab" data-tab="reset">استعادة كلمة المرور</button>
       <button type="button" class="tab" data-tab="magic">رابط بريد</button>
     </div>
 
@@ -69,6 +71,13 @@
       <label for="actPassword">كلمة مرور جديدة</label>
       <input type="password" id="actPassword" autocomplete="new-password" placeholder="8 أحرف على الأقل" />
       <button type="button" id="activateBtn">إنشاء حساب وربط السجل</button>
+    </div>
+
+    <div class="panel" id="panel-reset">
+      <label for="resetEmail">البريد (كما في الطلب المعتمد)</label>
+      <input type="email" id="resetEmail" autocomplete="username" />
+      <button type="button" id="resetBtn">إرسال رابط استعادة كلمة المرور</button>
+      <p class="hint" style="margin-top:10px">يصلك رابط لتعيين كلمة مرور جديدة. يعمل فقط إذا فعّلت حسابك مسبقاً.</p>
     </div>
 
     <div class="panel" id="panel-magic">
@@ -113,7 +122,7 @@
     };
     if (params.get("err") && ERR_TEXT[params.get("err")]) showErr(ERR_TEXT[params.get("err")]);
     if (params.get("email")) {
-      ["loginEmail", "actEmail", "magicEmail"].forEach((id) => {
+      ["loginEmail", "actEmail", "magicEmail", "resetEmail"].forEach((id) => {
         const el = document.getElementById(id);
         if (el) el.value = params.get("email");
       });
@@ -167,6 +176,14 @@
           return;
         }
         location.href = "staff_dashboard.html";
+      })
+    );
+
+    document.getElementById("resetBtn").addEventListener("click", () =>
+      withBtn(document.getElementById("resetBtn"), async () => {
+        document.getElementById("resetBtn").textContent = "جاري الإرسال...";
+        await staffRequestPasswordReset(document.getElementById("resetEmail").value);
+        showOk("تم إرسال رابط استعادة كلمة المرور. افتح بريدك واتبع التعليمات.");
       })
     );
 

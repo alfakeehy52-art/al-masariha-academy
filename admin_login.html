@@ -16,42 +16,88 @@ label{display:block;margin:0 0 8px;font-weight:800}
 input{width:100%;box-sizing:border-box;padding:14px 16px;margin:0 0 14px;background:rgba(7,12,22,.72);color:#ecf2ff;border:1px solid rgba(255,255,255,.10);border-radius:14px;font-family:inherit;font-size:14px}
 button{width:100%;padding:14px 16px;border:none;border-radius:14px;cursor:pointer;background:linear-gradient(135deg,#d4af37,#f5d46b);color:#1a1a1a;font-family:inherit;font-weight:900;font-size:16px}
 button:disabled{opacity:.65;cursor:not-allowed}
-.err{display:none;margin-top:12px;padding:10px 12px;border-radius:12px;background:rgba(255,107,107,.12);border:1px solid rgba(255,107,107,.25);color:#ffd9d9;font-weight:800}
-.err.show{display:block}
+button.ghost{margin-top:8px;background:rgba(255,255,255,.05);color:#ecf2ff;border:1px solid rgba(255,255,255,.10)}
+.link-btn{background:none;border:none;padding:0;color:#f5d46b;font-weight:900;cursor:pointer;text-decoration:underline;font-family:inherit;font-size:13px}
+.panel{display:none}
+.panel.active{display:block}
+.err,.ok{display:none;margin-top:12px;padding:10px 12px;border-radius:12px;font-weight:800;line-height:1.7;font-size:13px}
+.err.show{display:block;background:rgba(255,107,107,.12);border:1px solid rgba(255,107,107,.25);color:#ffd9d9}
+.ok.show{display:block;background:rgba(21,145,95,.12);border:1px solid rgba(21,145,95,.28);color:#caffdd}
 .hint{margin-top:12px;color:#9fb0d1;font-size:13px;line-height:1.8;text-align:center}
+.forgot-row{text-align:left;margin:-6px 0 12px}
 </style>
 <script src="js/site-seo.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
-  <script src="js/supabase-client.js"></script>
-  <script src="js/academy-roles.js"></script>
-  <script src="js/panel-access.js"></script>
-  <script src="js/admin-auth.js"></script>
+<script src="js/supabase-client.js"></script>
+<script src="js/academy-roles.js"></script>
+<script src="js/panel-access.js"></script>
+<script src="js/auth-password-reset.js"></script>
+<script src="js/admin-auth.js"></script>
 <script>redirectIfAlreadyLoggedIn("admin_dashboard.html");</script>
 </head>
 <body>
 <div class="box">
-  <h2>دخول الإدارة</h2>
-  <p>سجّل الدخول بحساب المسؤول المعتمد.</p>
-  <label for="email">البريد الإلكتروني</label>
-  <input type="email" id="email" placeholder="بريد المسؤول المعتمد" autocomplete="username">
-  <label for="password">كلمة المرور</label>
-  <input type="password" id="password" placeholder="كلمة المرور" autocomplete="current-password">
-  <button type="button" id="loginBtn" onclick="login()">دخول</button>
-  <div id="err" class="err">تعذر تسجيل الدخول. تحقق من البريد وكلمة المرور.</div>
-  <div class="hint">للمساعدة في تفعيل حساب الإدارة، تواصل مع مسؤول النظام.</div>
+  <div id="panelLogin" class="panel active">
+    <h2>دخول الإدارة</h2>
+    <p>سجّل الدخول بحساب المسؤول أو الموظف المعتمد.</p>
+    <label for="email">البريد الإلكتروني</label>
+    <input type="email" id="email" placeholder="بريد الدخول المعتمد" autocomplete="username">
+    <label for="password">كلمة المرور</label>
+    <input type="password" id="password" placeholder="كلمة المرور" autocomplete="current-password">
+    <div class="forgot-row">
+      <button type="button" class="link-btn" id="showForgotBtn">نسيت كلمة المرور؟</button>
+    </div>
+    <button type="button" id="loginBtn">دخول</button>
+  </div>
+
+  <div id="panelForgot" class="panel">
+    <h2>استعادة كلمة المرور</h2>
+    <p>أدخل بريدك المسجّل في لوحة الإدارة. سنرسل رابطاً لتعيين كلمة مرور جديدة.</p>
+    <label for="forgotEmail">البريد الإلكتروني</label>
+    <input type="email" id="forgotEmail" placeholder="example@email.com" autocomplete="username">
+    <button type="button" id="forgotBtn">إرسال رابط الاستعادة</button>
+    <button type="button" class="ghost" id="backLoginBtn">← العودة للدخول</button>
+  </div>
+
+  <div id="err" class="err"></div>
+  <div id="ok" class="ok"></div>
+  <div class="hint" id="hintFooter">للمساعدة في تفعيل حساب جديد، تواصل مع المدير العام.</div>
 </div>
 <script>
 const errEl = document.getElementById("err");
+const okEl = document.getElementById("ok");
 const loginBtn = document.getElementById("loginBtn");
 
+function clearMsgs() {
+  errEl.classList.remove("show");
+  okEl.classList.remove("show");
+}
 function showError(msg) {
-  errEl.textContent = msg || "تعذر تسجيل الدخول. تحقق من البريد وكلمة المرور.";
+  clearMsgs();
+  errEl.textContent = msg || "تعذر إكمال العملية.";
   errEl.classList.add("show");
 }
+function showOk(msg) {
+  clearMsgs();
+  okEl.textContent = msg;
+  okEl.classList.add("show");
+}
+function showPanel(name) {
+  clearMsgs();
+  document.getElementById("panelLogin").classList.toggle("active", name === "login");
+  document.getElementById("panelForgot").classList.toggle("active", name === "forgot");
+}
+
+document.getElementById("showForgotBtn").addEventListener("click", () => {
+  const email = document.getElementById("email").value.trim();
+  if (email) document.getElementById("forgotEmail").value = email;
+  showPanel("forgot");
+});
+document.getElementById("backLoginBtn").addEventListener("click", () => showPanel("login"));
 
 async function login() {
-  errEl.classList.remove("show");
+  clearMsgs();
   loginBtn.disabled = true;
   loginBtn.textContent = "جاري الدخول...";
   try {
@@ -68,7 +114,25 @@ async function login() {
   }
 }
 
-document.getElementById("password").addEventListener("keydown", function (e) {
+loginBtn.addEventListener("click", login);
+
+document.getElementById("forgotBtn").addEventListener("click", async () => {
+  const btn = document.getElementById("forgotBtn");
+  clearMsgs();
+  btn.disabled = true;
+  btn.textContent = "جاري الإرسال...";
+  try {
+    await adminRequestPasswordReset(document.getElementById("forgotEmail").value);
+    showOk("إذا كان البريد مسجّلاً، ستصلك رسالة خلال دقائق. افتح الرابط واختر كلمة مرور جديدة.");
+  } catch (e) {
+    showError(e?.message || null);
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "إرسال رابط الاستعادة";
+  }
+});
+
+document.getElementById("password").addEventListener("keydown", (e) => {
   if (e.key === "Enter") login();
 });
 </script>

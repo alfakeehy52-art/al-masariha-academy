@@ -40,7 +40,13 @@ adminRequireRole: false
 3. افتح أي لوحة بدون دخول — إعادة توجيه لصفحة الدخول.
 4. اضغط «تسجيل خروج» من الشريط الجانبي — يجب الخروج فعلياً من Supabase.
 
-## ملاحظة أمان
+## Site URL واستعادة كلمة المرور
+
+راجع **`docs/SUPABASE_AUTH_EMAIL_AR.md`** — يجب أن يكون:
+
+- **Site URL** = `https://al-masariha-academy.pages.dev` (وليس صفحة انضم إلينا)
+- **Redirect URL** = `.../reset_password.html`
+
 
 - فعّل **Email confirmation** في الإنتاج إن أمكن.
 - لا تضع كلمات مرور في الكود؛ أنشئ المستخدمين من لوحة Supabase فقط.

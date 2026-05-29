@@ -237,7 +237,9 @@ const ACT_SVG = {
   play:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><polygon points="10 8 16 12 10 16 10 8"/></svg>',
   off:
-    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.36 6.64A9 9 0 1 1 5.64 18.36"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.36 6.64A9 9 0 1 1 5.64 18.36"/><line x1="1" y1="1" x2="23" y2="23"/></svg>',
+  key:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>'
 };
 
 function actIconBtn(kind, label, onclick) {
@@ -468,7 +470,11 @@ function rowActionsHtml(row) {
     ? actIconBtn("copy", "نسخ رابط بوابة الكادر", `copyStaffPortalLink('${id}')`)
     : "";
 
-  return `${base}${portalBtn}${copyBtn}${statusBtn}</div>`;
+  const resetBtn = row.email
+    ? actIconBtn("key", "إرسال استعادة كلمة المرور", `sendStaffPasswordReset('${id}')`)
+    : "";
+
+  return `${base}${portalBtn}${copyBtn}${resetBtn}${statusBtn}</div>`;
 }
 
 function findRow(id) {
@@ -515,6 +521,7 @@ function viewEntity(id) {
   const staffActions =
     isAcademyStaffPage() && row.email
       ? `<button class="btn" type="button" onclick="copyStaffPortalLink('${esc(id)}')">نسخ رابط التفعيل</button>
+         <button class="btn" type="button" onclick="sendStaffPasswordReset('${esc(id)}')">إرسال استعادة كلمة المرور</button>
          <a class="btn" href="${esc(staffPortalUrl(row))}" target="_blank" rel="noopener">فتح بوابة الكادر</a>`
       : "";
   $("modalActions").innerHTML = `
@@ -645,6 +652,48 @@ async function copyStaffPortalLink(id) {
     showToast("تم نسخ رابط بوابة الكادر.", "success");
   } catch (e) {
     prompt("انسخ الرابط:", url);
+  }
+}
+
+async function sendStaffPasswordReset(id) {
+  const row = findRow(id);
+  if (!row?.email) {
+    showToast("لا يوجد بريد لهذا الكادر.", "warn");
+    return;
+  }
+
+  if (!row.auth_user_id) {
+    const useActivation = await confirmBox(
+      "الحساب غير مفعّل",
+      "لم يفعّل هذا الكادر حسابه بعد. استعادة كلمة المرور تعمل بعد التفعيل فقط. هل تنسخ رابط التفعيل؟",
+      "نسخ رابط التفعيل"
+    );
+    if (useActivation) await copyStaffPortalLink(id);
+    return;
+  }
+
+  const kind =
+    typeof panelResetKindForRow === "function" ? panelResetKindForRow(row) : "staff";
+  const portalLabel = kind === "admin" ? "لوحة الإدارة" : "بوابة الكادر";
+  const ok = await confirmBox(
+    "إرسال استعادة كلمة المرور",
+    `سيُرسل رابط إلى «${row.email}» لتعيين كلمة مرور جديدة (${portalLabel}). متابعة؟`,
+    "إرسال"
+  );
+  if (!ok) return;
+
+  try {
+    if (typeof sendStaffPasswordResetByRow === "function") {
+      await sendStaffPasswordResetByRow(row);
+    } else if (typeof requestPasswordResetEmail === "function") {
+      await requestPasswordResetEmail(row.email, kind);
+    } else {
+      throw new Error("وحدة استعادة كلمة المرور غير محمّلة.");
+    }
+    showToast(`تم إرسال رابط الاستعادة إلى ${row.email}`, "success");
+  } catch (e) {
+    console.error(e);
+    showToast(e?.message || "تعذر إرسال رابط الاستعادة.", "error");
   }
 }
 

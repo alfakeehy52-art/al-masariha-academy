@@ -211,6 +211,7 @@ thead th{white-space:nowrap}
 .act-icon-copy{color:#e8d6ff;border-color:rgba(180,140,255,.28)}
 .act-icon-stop,.act-icon-off{color:#ffd7d7;border-color:rgba(197,82,82,.32)}
 .act-icon-play{color:#caffdd;border-color:rgba(21,145,95,.32)}
+.act-icon-key{color:#ffe79c;border-color:rgba(255,200,100,.35)}
 .actions-col,.actions-cell{white-space:nowrap;vertical-align:middle!important}
 .icon-btn,.mini-btn{border-radius:12px;padding:9px 12px;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;color:var(--admin-text);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
 .icon-btn:hover,.mini-btn:hover{background:rgba(255,255,255,.1)}
