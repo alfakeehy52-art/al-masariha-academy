@@ -47,15 +47,20 @@
   <script src="js/admin-auth.js"></script>
   <script src="js/admin-permissions.js?v=20260529-rbac1"></script>
   <script>
-    requireAdmin().then(function (ok) {
+    requireAdmin().then(async function (ok) {
       if (!ok) return;
-      getAdminSession().then(function (s) {
-        if (!s || !s.user || !isAdminUser(s.user)) {
-          window.location.replace("admin_dashboard.html");
-          return;
-        }
-        if (typeof adminPermissionsBoot === "function") adminPermissionsBoot();
-      });
+      const session = await getAdminSession();
+      const user = session && session.user;
+      const allowed =
+        typeof canPanel === "function"
+          ? await canPanel("system", "update")
+          : user && typeof isAdminUser === "function" && isAdminUser(user);
+      if (!allowed) {
+        alert("هذا القسم للمدير العام فقط (مستوى L1).");
+        window.location.replace("admin_dashboard.html");
+        return;
+      }
+      if (typeof adminPermissionsBoot === "function") adminPermissionsBoot();
     });
   </script>
 </head>

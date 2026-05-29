@@ -113,10 +113,11 @@ document.addEventListener("DOMContentLoaded", () => {
         {
           href: "admin_permissions_dashboard.html",
           label: "الموظفون والصلاحيات",
-          desc: "أدوار ونطاقات العمل",
+          desc: "أدوار ونطاقات العمل — المدير العام فقط",
           icon: "settings",
           match: ["admin_permissions_dashboard.html"],
-          navRole: "admin"
+          navRole: "admin",
+          requireSystemUpdate: true
         },
         { href: "academy_settings_dashboard.html", label: "الإعدادات", desc: "إعدادات الأكاديمية", icon: "settings", panelDomain: "system", match: ["academy_settings_dashboard.html"] }
       ]
@@ -174,11 +175,12 @@ document.addEventListener("DOMContentLoaded", () => {
     const desc = item.desc ? `<span class="nav-desc">${item.desc}</span>` : "";
     const navRoleAttr = item.navRole ? ` data-nav-role="${item.navRole}"` : "";
     const panelDomainAttr = item.panelDomain ? ` data-panel-domain="${item.panelDomain}"` : "";
+    const systemPermAttr = item.requireSystemUpdate ? ` data-require-system-update="true"` : "";
     const badge = item.badgeKey
       ? `<span class="nav-item-badge" data-badge="${item.badgeKey}" hidden aria-label="تنبيهات">0</span>`
       : "";
     return `
-      <a href="${item.href}" class="nav-link${isChild ? " nav-sublink" : ""}${active ? " active" : ""}"${navRoleAttr}${panelDomainAttr}>
+      <a href="${item.href}" class="nav-link${isChild ? " nav-sublink" : ""}${active ? " active" : ""}"${navRoleAttr}${panelDomainAttr}${systemPermAttr}>
         ${iconHtml(item.icon)}
         <span class="nav-copy">
           <span class="nav-label">${item.label}</span>
@@ -258,7 +260,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <div class="admin-user-card" id="adminUserCard" hidden>
           <span class="admin-user-label">المسؤول الحالي</span>
           <strong id="adminUserName">—</strong>
-          <span class="admin-user-signatory" id="adminUserSignatory"></span>
+          <span class="admin-user-role" id="adminUserRole"></span>
         </div>
       </div>
     `;
@@ -303,17 +305,15 @@ document.addEventListener("DOMContentLoaded", () => {
         ? `${subtitle} — نظام إداري موحّد`
         : "نظام إداري موحّد للاعبين والطلبات والتشغيل.";
     }
-    applyAdminUserSignatory(s);
+    applyAdminUserRole("");
   }
 
-  function applyAdminUserSignatory(settings) {
-    const el = document.getElementById("adminUserSignatory");
+  function applyAdminUserRole(title) {
+    const el = document.getElementById("adminUserRole");
     if (!el) return;
-    const name = String(
-      (settings || window.ACADEMY_SETTINGS || {}).official_signatory_name_ar || ""
-    ).trim();
-    el.textContent = name || "لم يُحدَّد — من إعدادات الأكاديمية";
-    el.classList.toggle("is-missing", !name);
+    const text = String(title || "").trim();
+    el.textContent = text || "";
+    el.hidden = !text;
   }
 
   async function bootstrapSidebarBrand() {
@@ -369,8 +369,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .admin-user-card{margin-top:12px;padding:12px 14px;border-radius:16px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08)}
       .admin-user-label{display:block;color:#9fb0a4;font-size:11px;font-weight:800;margin-bottom:4px}
       .admin-user-card strong{display:block;color:#f0d58f;font-size:15px;font-weight:900;line-height:1.4}
-      .admin-user-signatory{display:block;margin-top:6px;color:#e8efe9;font-size:13px;font-weight:800;line-height:1.5}
-      .admin-user-signatory.is-missing{color:#9fb0a4;font-size:11px;font-weight:700}
+      .admin-user-role{display:block;margin-top:6px;color:#e8efe9;font-size:13px;font-weight:800;line-height:1.5}
       #admin-sidebar{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
       .admin-pro-menu{display:flex;flex-direction:column;gap:12px;margin:0;overflow-y:auto;overflow-x:hidden;min-height:0;padding:2px 2px 16px;scrollbar-width:thin;scrollbar-color:rgba(213,177,90,.7) rgba(255,255,255,.06)}
       .menu-group{padding-bottom:10px;border-bottom:1px solid rgba(255,255,255,.06)}
@@ -504,10 +503,21 @@ document.addEventListener("DOMContentLoaded", () => {
       } else if (typeof getAdminDisplayIdentity === "function") {
         identity = getAdminDisplayIdentity(user);
       }
-      nameEl.textContent = identity.title || "مسؤول";
       const settings =
-        window.ACADEMY_SETTINGS || (await loadAcademySettings().catch(() => null));
-      applyAdminUserSignatory(settings);
+        window.ACADEMY_SETTINGS || (await loadAcademySettings().catch(() => null)) || {};
+      let profile = null;
+      if (typeof fetchStaffProfileByEmail === "function") {
+        profile = await fetchStaffProfileByEmail(user.email);
+      }
+      let personalName = "";
+      if (typeof resolveStaffPersonalName === "function") {
+        personalName = resolveStaffPersonalName(user, profile, settings);
+      } else {
+        personalName =
+          String(profile?.full_name || user.user_metadata?.full_name || settings.official_signatory_name_ar || "").trim();
+      }
+      nameEl.textContent = personalName || identity.title || "مسؤول";
+      applyAdminUserRole(personalName ? identity.title || "مسؤول" : "");
       card.hidden = false;
       if (typeof applyPanelNavPolicy === "function") await applyPanelNavPolicy(user);
       else applyAdminNavPolicy(user);

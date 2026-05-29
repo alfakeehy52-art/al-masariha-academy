@@ -54,5 +54,43 @@ create policy admin_manage_academy_staff on public.academy_staff
     or coalesce(auth.jwt() -> 'app_metadata' ->> 'role', '') = 'admin'
   );
 
+-- ─── الكادر: إنشاء سجله الأولي (لوحة الإدارة) ───
+drop policy if exists staff_insert_bootstrap_own on public.academy_staff;
+create policy staff_insert_bootstrap_own on public.academy_staff
+  for insert to authenticated
+  with check (
+    auth_user_id = auth.uid()
+    and email is not null
+    and lower(trim(email)) = lower(trim(coalesce(auth.jwt() ->> 'email', '')))
+  );
+
+-- ─── الكادر: تحديث اسمه وجواله ───
+drop policy if exists staff_update_own_profile on public.academy_staff;
+create policy staff_update_own_profile on public.academy_staff
+  for update to authenticated
+  using (auth.uid() = auth_user_id)
+  with check (auth.uid() = auth_user_id);
+
+-- ─── المدير العام L1: إدارة كل الكوادر ───
+drop policy if exists gm_manage_academy_staff on public.academy_staff;
+create policy gm_manage_academy_staff on public.academy_staff
+  for all to authenticated
+  using (
+    exists (
+      select 1 from public.academy_staff s
+      where s.auth_user_id = auth.uid()
+        and s.panel_level = 'L1'
+        and s.status = 'active'
+    )
+  )
+  with check (
+    exists (
+      select 1 from public.academy_staff s
+      where s.auth_user_id = auth.uid()
+        and s.panel_level = 'L1'
+        and s.status = 'active'
+    )
+  );
+
 -- ملاحظة: إدراج طلبات الانضمام (join_requests) يبقى بسياساته الخاصة.
 -- anon insert للطلبات العامة لا يزال منفصلاً عن هذا الملف.

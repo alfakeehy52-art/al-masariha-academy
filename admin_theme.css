@@ -201,6 +201,17 @@ thead th{white-space:nowrap}
 .badge-info{background:rgba(88,166,255,.1);color:#aad1ff;border-color:rgba(88,166,255,.24)}
 .badge-danger{background:rgba(255,107,107,.1);color:#ffc0c0;border-color:rgba(255,107,107,.24)}
 .row-actions,.table-actions{display:flex;gap:8px;flex-wrap:wrap}
+.row-actions-icons{flex-wrap:nowrap!important;flex-direction:row!important;align-items:center;width:auto!important}
+.act-icon{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;padding:0;border-radius:11px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.05);color:var(--admin-text);cursor:pointer;text-decoration:none;flex-shrink:0;transition:background .15s ease,transform .15s ease}
+.act-icon svg{width:17px;height:17px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round;display:block}
+.act-icon:hover{background:rgba(255,255,255,.12);transform:translateY(-1px)}
+.act-icon-view{color:#caddff;border-color:rgba(108,168,255,.32)}
+.act-icon-edit{color:#ffe79c;border-color:rgba(213,177,90,.32)}
+.act-icon-portal{color:#caffdd;border-color:rgba(21,145,95,.32)}
+.act-icon-copy{color:#e8d6ff;border-color:rgba(180,140,255,.28)}
+.act-icon-stop,.act-icon-off{color:#ffd7d7;border-color:rgba(197,82,82,.32)}
+.act-icon-play{color:#caffdd;border-color:rgba(21,145,95,.32)}
+.actions-col,.actions-cell{white-space:nowrap;vertical-align:middle!important}
 .icon-btn,.mini-btn{border-radius:12px;padding:9px 12px;font-family:inherit;font-size:12px;font-weight:800;cursor:pointer;color:var(--admin-text);background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.08)}
 .icon-btn:hover,.mini-btn:hover{background:rgba(255,255,255,.1)}
 .footer-bar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:16px}
@@ -304,7 +315,10 @@ tr:hover td{background:rgba(255,255,255,.02)}
   .table-wrap td.empty-cell{display:block;text-align:center!important}
   .table-wrap td.empty-cell::before{display:none}
   .row-actions,.table-actions{justify-content:flex-start;width:100%;flex-direction:column;align-items:stretch}
+  .row-actions-icons{flex-direction:row!important;align-items:center!important;width:auto!important;flex-wrap:nowrap!important}
   .row-actions .mini-btn,.table-actions .mini-btn{width:100%;justify-content:center}
+  .row-actions-icons .act-icon,.row-actions-icons .mini-btn{width:36px;min-width:36px;justify-content:center}
+  .table-wrap td.actions-cell::before{align-self:center}
   .mini-btn,.icon-btn{min-height:44px;min-width:44px;padding:10px 14px}
   .btn,.button{min-height:44px}
   .input,.select,.textarea,.field input,.field select{min-height:48px}

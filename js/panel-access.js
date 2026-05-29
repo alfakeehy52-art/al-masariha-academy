@@ -40,11 +40,11 @@
   function staffJobTitle(profile) {
     if (!profile || typeof profile !== "object") return "";
     if (profile.job_title_ar) return String(profile.job_title_ar).trim();
+    if (profile.job_title) return String(profile.job_title).trim();
     const AR = window.ACADEMY_ROLES;
     const fromRole =
       AR && typeof AR.getRoleLabel === "function" ? AR.getRoleLabel(profile.staff_type) : "";
     if (fromRole && fromRole !== profile.staff_type) return fromRole;
-    if (profile.job_title) return String(profile.job_title).trim();
     if (profile.staff_type) return String(profile.staff_type).trim();
     return "";
   }
@@ -83,7 +83,13 @@
     const fields = RBAC()?.staffSelectFields?.() || "id,full_name,email,staff_type,staff_category,job_title,role,status";
     try {
       const sb = createSupabaseClient();
-      const { data, error } = await sb.from("academy_staff").select(fields).ilike("email", normalized).maybeSingle();
+      const minimal = "id,full_name,email,phone,role,status,auth_user_id";
+      let { data, error } = await sb.from("academy_staff").select(fields).ilike("email", normalized).maybeSingle();
+      if (error && /column|panel_|job_title/i.test(String(error.message || ""))) {
+        const retry = await sb.from("academy_staff").select(minimal).ilike("email", normalized).maybeSingle();
+        data = retry.data;
+        error = retry.error;
+      }
       if (error) {
         console.warn("[panel-access] staff profile:", error.message);
         return null;
@@ -195,6 +201,13 @@
       });
     }
     applyDomainNavVisibility(ctx);
+
+    const canManageStaff =
+      typeof canPanel === "function" ? await canPanel("system", "update") : !!isFullAdmin;
+    menu.querySelectorAll("[data-require-system-update]").forEach((el) => {
+      if (!canManageStaff) el.setAttribute("hidden", "");
+      else el.removeAttribute("hidden");
+    });
   }
 
   async function resolvePanelIdentity(user) {
@@ -217,6 +230,39 @@
     return rbac ? rbac.canAccess(ctx, domain, action) : false;
   }
 
+  async function linkStaffProfileByEmail(user) {
+    if (!user?.id || typeof createSupabaseClient !== "function") return null;
+    const sb = createSupabaseClient();
+    const { data: byAuth, error: authErr } = await sb
+      .from("academy_staff")
+      .select("id")
+      .eq("auth_user_id", user.id)
+      .maybeSingle();
+    if (authErr) throw authErr;
+    if (byAuth) return byAuth;
+
+    const email = normalizeEmail(user.email);
+    if (!email) return null;
+    const { data: candidate, error: selErr } = await sb
+      .from("academy_staff")
+      .select("id,status,auth_user_id")
+      .ilike("email", email)
+      .maybeSingle();
+    if (selErr) throw selErr;
+    if (!candidate || candidate.auth_user_id) return candidate;
+    if (String(candidate.status || "").toLowerCase() !== "active") return null;
+
+    const { data, error } = await sb
+      .from("academy_staff")
+      .update({ auth_user_id: user.id, updated_at: new Date().toISOString() })
+      .eq("id", candidate.id)
+      .is("auth_user_id", null)
+      .select("id")
+      .maybeSingle();
+    if (error) throw error;
+    return data;
+  }
+
   async function requirePanelPermission(domain, action, redirectTo) {
     const ok = await canPanel(domain, action);
     if (ok) return true;
@@ -233,6 +279,7 @@
   window.getNavHiddenGroups = getNavHiddenGroups;
   window.applyPanelNavPolicy = applyPanelNavPolicy;
   window.fetchStaffProfileByEmail = fetchStaffProfileByEmail;
+  window.linkStaffProfileByEmail = linkStaffProfileByEmail;
   window.resolvePanelIdentity = resolvePanelIdentity;
   window.resolveEffectivePanelRole = resolveEffectivePanelRole;
   window.resolvePanelAccessContext = resolvePanelAccessContext;

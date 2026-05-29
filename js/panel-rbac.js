@@ -128,7 +128,7 @@
   }
 
   function staffSelectFields() {
-    return "id,full_name,email,phone,staff_type,staff_category,job_title,job_title_ar,role,status,auth_user_id,panel_level,panel_domains,panel_template";
+    return "id,full_name,email,phone,staff_type,staff_category,job_title_ar,role,status,auth_user_id,panel_level,panel_domains,panel_template";
   }
 
   window.PanelRBAC = {

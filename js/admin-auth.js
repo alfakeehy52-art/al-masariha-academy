@@ -165,6 +165,13 @@
         throw new Error("تم إيقاف حسابك. تواصل مع المدير العام.");
       }
     }
+    if (typeof linkStaffProfileByEmail === "function") {
+      try {
+        await linkStaffProfileByEmail(data.user);
+      } catch (linkErr) {
+        console.warn("[admin-auth] staff link:", linkErr);
+      }
+    }
     return data;
   }
 

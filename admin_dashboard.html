@@ -11,37 +11,92 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="js/supabase-client.js"></script>
+  <script src="js/panel-rbac.js?v=20260529-exec1"></script>
+  <script src="js/panel-access.js?v=20260529-exec1"></script>
   <script src="js/admin-auth.js"></script>
   <script>requireAdmin();</script>
   <style>
     .stat-link{cursor:pointer;transition:transform .15s ease}
     .stat-link:hover{transform:translateY(-2px)}
     .stat-link:focus-visible{outline:2px solid rgba(213,177,90,.65);outline-offset:2px}
+    .exec-section{margin-bottom:24px;padding:22px;border:1px solid rgba(213,177,90,.22);border-radius:24px;background:linear-gradient(135deg,rgba(213,177,90,.08),rgba(255,255,255,.02))}
+    .exec-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px}
+    .exec-head h3{margin:0;font-size:26px;color:var(--admin-gold-soft)}
+    .exec-head p{margin:6px 0 0;color:var(--admin-muted);font-size:14px;line-height:1.8}
+    .exec-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
+    .exec-stat{padding:16px;border-radius:18px;border:1px solid var(--admin-line);background:rgba(255,255,255,.03);cursor:pointer}
+    .exec-stat span{display:block;color:var(--admin-muted);font-size:12px;font-weight:800;margin-bottom:8px}
+    .exec-stat strong{font-size:28px;color:var(--admin-gold-soft)}
+    .exec-alerts{display:grid;gap:10px}
+    .exec-alert{display:block;padding:14px 16px;border-radius:16px;border:1px solid var(--admin-line);text-decoration:none;color:inherit;background:rgba(255,255,255,.03)}
+    .exec-alert strong{display:block;margin-bottom:4px;color:#fff}
+    .exec-alert span{color:var(--admin-muted);font-size:13px}
+    .exec-alert-warn{border-color:rgba(213,177,90,.35);background:rgba(213,177,90,.08)}
+    .exec-alert-info{border-color:rgba(108,168,255,.28);background:rgba(108,168,255,.08)}
+    .exec-alert-muted{border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.04)}
+    .exec-empty{color:var(--admin-muted);margin:0;font-weight:800}
+    .exec-meta{color:var(--admin-muted);font-size:12px;font-weight:800}
+    @media(max-width:1100px){.exec-stats{grid-template-columns:repeat(2,1fr)}}
+    @media(max-width:640px){.exec-stats{grid-template-columns:1fr}}
   </style>
-  
-
-
 </head>
 <body>
 <div class="layout">
   <aside class="sidebar">
-      <div class="brand">
+    <div class="brand">
       <h1>أكاديمية كرة القدم</h1>
-      <p>لوحة الإدارة الرئيسية لمتابعة مؤشرات الأكاديمية والتنقل بين الصفحات الداخلية.</p>
+      <p>لوحة الإدارة الرئيسية — ملخص تشغيلي للمدير العام ومؤشرات عامة.</p>
     </div>
-      <div id="admin-sidebar"></div>
-    </aside>
+    <div id="admin-sidebar"></div>
+  </aside>
   <main class="main">
     <div class="topbar">
       <div class="title-box">
         <h2>لوحة الإدارة</h2>
-        <p>مركز القيادة الرئيسي لإدارة اللاعبين والفئات والمدربين والإحصائيات والإعدادات.</p>
+        <p>مركز القيادة — راجع المؤشرات ثم انتقل للأقسام دون إدخال يومي.</p>
       </div>
       <div class="actions">
-        <a class="btn btn-secondary" href="players_list_dashboard.html">قائمة اللاعبين</a>
-        <a class="btn btn-primary" href="players_add_dashboard.html">+ إضافة لاعب جديد</a>
+        <a class="btn btn-primary" href="admin_requests.html?status=new">مراجعة الطلبات الجديدة</a>
+        <a class="btn btn-secondary" href="admin_permissions_dashboard.html">الموظفون والصلاحيات</a>
       </div>
     </div>
+
+    <section id="executiveDashboard" class="exec-section" hidden>
+      <div class="exec-head">
+        <div>
+          <h3>ملخص المدير العام</h3>
+          <p>نظرة تنفيذية سريعة — ما يحتاج متابعة اليوم.</p>
+        </div>
+        <span class="exec-meta">آخر تحديث: <span id="execLastSync">—</span></span>
+      </div>
+      <div class="exec-stats">
+        <div class="exec-stat stat-link" data-exec-link="admin_requests.html?status=new" tabindex="0" role="button">
+          <span>طلبات جديدة</span><strong id="execNewRequests">0</strong>
+        </div>
+        <div class="exec-stat stat-link" data-exec-link="admin_completion_dashboard.html" tabindex="0" role="button">
+          <span>بانتظار استكمال/مراجعة</span><strong id="execPendingRequests">0</strong>
+        </div>
+        <div class="exec-stat stat-link" data-exec-link="communications_dashboard.html" tabindex="0" role="button">
+          <span>محادثات مفتوحة</span><strong id="execOpenChats">0</strong>
+        </div>
+        <div class="exec-stat stat-link" data-exec-link="contact_messages_dashboard.html" tabindex="0" role="button">
+          <span>رسائل تواصل جديدة</span><strong id="execContactNew">0</strong>
+        </div>
+        <div class="exec-stat stat-link" data-exec-link="store_orders_dashboard.html" tabindex="0" role="button">
+          <span>طلبات المتجر</span><strong id="execStoreOrders">0</strong>
+        </div>
+        <div class="exec-stat stat-link" data-exec-link="players_list_dashboard.html" tabindex="0" role="button">
+          <span>إجمالي اللاعبين</span><strong id="execPlayers">0</strong>
+        </div>
+        <div class="exec-stat stat-link" data-exec-link="admin_permissions_dashboard.html" tabindex="0" role="button">
+          <span>موظفون نشطون</span><strong id="execActiveStaff">0</strong>
+        </div>
+        <div class="exec-stat stat-link" data-exec-link="admin_requests.html" tabindex="0" role="button">
+          <span>أولوية اليوم</span><strong id="execTodayPriority" style="font-size:15px;line-height:1.6">—</strong>
+        </div>
+      </div>
+      <div id="execAlerts" class="exec-alerts"></div>
+    </section>
 
     <section class="stats">
       <div class="stat stat-link" data-stat-action="players" role="button" tabindex="0" title="فتح قائمة اللاعبين">
@@ -69,20 +124,18 @@
           <div class="row"><span class="label">آخر نشاط</span><span class="value" id="lastActivity">جاري التحميل...</span></div>
           <div class="row"><span class="label">جاهزية النظام</span><span class="value" id="systemStatus">متصل</span></div>
           <div class="row"><span class="label">أولوية اليوم</span><span class="value" id="todayPriority">مراجعة طلبات الانضمام</span></div>
-          <div class="row"><span class="label">الصفحة السريعة</span><span class="value">إضافة لاعب جديد</span></div>
         </div>
       </div>
-
       <div class="card">
         <div class="card-head"><h3>اختصارات سريعة</h3></div>
         <div class="card-body">
           <div class="quick-links">
-            <a class="quick-link" href="players_add_dashboard.html"><strong>إضافة لاعب</strong>إدخال سجل لاعب جديد</a>
-            <a class="quick-link" href="players_list_dashboard.html"><strong>قائمة اللاعبين</strong>عرض السجلات والبحث</a>
-            <a class="quick-link" href="admin_requests.html"><strong>إدارة الطلبات</strong>مراجعة طلبات الانضمام</a>
-            <a class="quick-link" href="teams_categories_dashboard.html"><strong>الفرق والفئات</strong>إدارة الفرق والفئات</a>
-            <a class="quick-link" href="coaches_dashboard.html"><strong>المدربين</strong>إدارة سجلات المدربين</a>
-            <a class="quick-link" href="stats_dashboard.html"><strong>الإحصائيات</strong>متابعة الأرقام والمؤشرات</a>
+            <a class="quick-link" href="admin_requests.html"><strong>إدارة الطلبات</strong>مراجعة واعتماد</a>
+            <a class="quick-link" href="communications_dashboard.html"><strong>محادثات الطلبات</strong>الدعم الفني</a>
+            <a class="quick-link" href="media_dashboard.html"><strong>الإعلام</strong>صور وفيديو</a>
+            <a class="quick-link" href="store_orders_dashboard.html"><strong>طلبات المتجر</strong>معالجة الطلبات</a>
+            <a class="quick-link" href="players_list_dashboard.html"><strong>قائمة اللاعبين</strong>عرض السجلات</a>
+            <a class="quick-link" href="admin_permissions_dashboard.html"><strong>الموظفون</strong>الصلاحيات والأدوار</a>
             <a class="quick-link" href="academy_settings_dashboard.html"><strong>الإعدادات</strong>إعدادات الأكاديمية</a>
           </div>
         </div>
@@ -91,119 +144,113 @@
   </main>
 </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="supabase-config.js"></script>
-  <script src="js/supabase-client.js"></script>
-  <script src="admin_sidebar.js"></script>
-  <script>
-    const supabaseClient = createSupabaseClient();
-    let dashboardTopCategory = "";
+<script src="admin_sidebar.js"></script>
+<script src="js/admin-executive-dashboard.js?v=20260529-exec1"></script>
+<script>
+  const supabaseClient = createSupabaseClient();
+  let dashboardTopCategory = "";
 
-    function setText(id, value){
-      const el = document.getElementById(id);
-      if (el) el.textContent = value;
-    }
+  function setText(id, value) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = value;
+  }
 
-    function normalizeCategory(value){
-      return String(value || '').replace('فئة ', '').trim() || '-';
-    }
+  function normalizeCategory(value) {
+    return String(value || "").replace("فئة ", "").trim() || "-";
+  }
 
-    function formatDate(value){
-      if (!value) return '-';
-      const d = new Date(value);
-      if (Number.isNaN(d.getTime())) return '-';
-      return d.toLocaleDateString('ar-SA') + ' - ' + d.toLocaleTimeString('ar-SA', {hour:'2-digit', minute:'2-digit'});
-    }
+  function formatDate(value) {
+    if (!value) return "-";
+    const d = new Date(value);
+    if (Number.isNaN(d.getTime())) return "-";
+    return d.toLocaleDateString("ar-SA") + " - " + d.toLocaleTimeString("ar-SA", { hour: "2-digit", minute: "2-digit" });
+  }
 
-    function openStatTarget(action){
-      if (action === "players"){
+  function openStatTarget(action) {
+    if (action === "players") { window.location.href = "players_list_dashboard.html"; return; }
+    if (action === "requests") { window.location.href = "admin_requests.html"; return; }
+    if (action === "top-category") {
+      if (!dashboardTopCategory || dashboardTopCategory === "-") {
         window.location.href = "players_list_dashboard.html";
         return;
       }
-      if (action === "requests"){
-        window.location.href = "admin_requests.html";
-        return;
-      }
-      if (action === "top-category"){
-        if (!dashboardTopCategory || dashboardTopCategory === "-"){
-          window.location.href = "players_list_dashboard.html";
-          return;
-        }
-        window.location.href = `players_list_dashboard.html?category=${encodeURIComponent(dashboardTopCategory)}`;
-        return;
-      }
-      if (action === "need-review"){
-        window.location.href = "players_list_dashboard.html?filter=need-review";
-      }
+      window.location.href = `players_list_dashboard.html?category=${encodeURIComponent(dashboardTopCategory)}`;
+      return;
     }
+    if (action === "need-review") window.location.href = "players_list_dashboard.html?filter=need-review";
+  }
 
-    function bindStatCards(){
-      document.querySelectorAll(".stat-link[data-stat-action]").forEach((card) => {
-        const action = card.getAttribute("data-stat-action");
-        card.addEventListener("click", () => openStatTarget(action));
-        card.addEventListener("keydown", (e) => {
-          if (e.key === "Enter" || e.key === " ") {
-            e.preventDefault();
-            openStatTarget(action);
-          }
-        });
+  function bindStatCards() {
+    document.querySelectorAll(".stat-link[data-stat-action]").forEach((card) => {
+      const action = card.getAttribute("data-stat-action");
+      card.addEventListener("click", () => openStatTarget(action));
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openStatTarget(action); }
       });
-    }
-
-    async function loadDashboard(){
-      try{
-        const [{ data: players, error: playersError }, { data: requests, error: requestsError }] = await Promise.all([
-          supabaseClient.from('players').select('*').order('created_at', { ascending:false }),
-          supabaseClient.from('join_requests').select('*').order('created_at', { ascending:false })
-        ]);
-
-        if (playersError || requestsError) throw (playersError || requestsError);
-
-        const playersList = Array.isArray(players) ? players : [];
-        const requestsList = Array.isArray(requests) ? requests : [];
-
-        setText('statPlayers', playersList.length);
-        setText('statRequests', requestsList.length);
-
-        const categoryCounts = {};
-        playersList.forEach(player => {
-          const cat = normalizeCategory(player.category);
-          if (cat !== '-') categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
-        });
-        const topCategory = Object.entries(categoryCounts).sort((a,b) => b[1] - a[1])[0]?.[0] || '-';
-        dashboardTopCategory = topCategory;
-        setText('statTopCategory', topCategory);
-
-        const needReview = playersList.filter(p => !(p.full_name && p.phone && p.category && p.position)).length
-          + requestsList.filter(r => ['new','pending','review'].includes(String(r.status || 'new'))).length;
-        setText('statNeedReview', needReview);
-
-        const latestRequest = requestsList[0];
-        const latestPlayer = playersList[0];
-        if (latestRequest && latestPlayer){
-          const requestTime = new Date(latestRequest.created_at || 0).getTime();
-          const playerTime = new Date(latestPlayer.created_at || 0).getTime();
-          setText('lastActivity', requestTime >= playerTime ? `طلب جديد: ${latestRequest.full_name || 'بدون اسم'} — ${formatDate(latestRequest.created_at)}` : `لاعب جديد: ${latestPlayer.full_name || 'بدون اسم'} — ${formatDate(latestPlayer.created_at)}`);
-        } else if (latestRequest){
-          setText('lastActivity', `طلب جديد: ${latestRequest.full_name || 'بدون اسم'} — ${formatDate(latestRequest.created_at)}`);
-        } else if (latestPlayer){
-          setText('lastActivity', `لاعب جديد: ${latestPlayer.full_name || 'بدون اسم'} — ${formatDate(latestPlayer.created_at)}`);
-        } else {
-          setText('lastActivity', 'لا توجد بيانات بعد');
-        }
-
-        setText('todayPriority', requestsList.filter(r => String(r.status || 'new') === 'new').length ? 'مراجعة الطلبات الجديدة' : 'استكمال بيانات اللاعبين');
-      } catch (error){
-        console.error('Dashboard Supabase error:', error);
-        setText('systemStatus', 'تعذر الاتصال');
-        setText('lastActivity', 'تحقق من الاتصال وحاول لاحقاً');
-      }
-    }
-
-    document.addEventListener('DOMContentLoaded', () => {
-      bindStatCards();
-      loadDashboard();
     });
-  </script>
+  }
+
+  async function loadDashboard() {
+    try {
+      const [{ data: players, error: playersError }, { data: requests, error: requestsError }] = await Promise.all([
+        supabaseClient.from("players").select("*").order("created_at", { ascending: false }),
+        supabaseClient.from("join_requests").select("*").order("created_at", { ascending: false })
+      ]);
+      if (playersError || requestsError) throw playersError || requestsError;
+
+      const playersList = Array.isArray(players) ? players : [];
+      const requestsList = Array.isArray(requests) ? requests : [];
+
+      setText("statPlayers", playersList.length);
+      setText("statRequests", requestsList.length);
+
+      const categoryCounts = {};
+      playersList.forEach((player) => {
+        const cat = normalizeCategory(player.category);
+        if (cat !== "-") categoryCounts[cat] = (categoryCounts[cat] || 0) + 1;
+      });
+      const topCategory = Object.entries(categoryCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || "-";
+      dashboardTopCategory = topCategory;
+      setText("statTopCategory", topCategory);
+
+      const needReview =
+        playersList.filter((p) => !(p.full_name && p.phone && p.category && p.position)).length +
+        requestsList.filter((r) => ["new", "pending", "review"].includes(String(r.status || "new"))).length;
+      setText("statNeedReview", needReview);
+
+      const latestRequest = requestsList[0];
+      const latestPlayer = playersList[0];
+      if (latestRequest && latestPlayer) {
+        const requestTime = new Date(latestRequest.created_at || 0).getTime();
+        const playerTime = new Date(latestPlayer.created_at || 0).getTime();
+        setText(
+          "lastActivity",
+          requestTime >= playerTime
+            ? `طلب: ${latestRequest.full_name || "بدون اسم"} — ${formatDate(latestRequest.created_at)}`
+            : `لاعب: ${latestPlayer.full_name || "بدون اسم"} — ${formatDate(latestPlayer.created_at)}`
+        );
+      } else if (latestRequest) {
+        setText("lastActivity", `طلب: ${latestRequest.full_name || "بدون اسم"} — ${formatDate(latestRequest.created_at)}`);
+      } else if (latestPlayer) {
+        setText("lastActivity", `لاعب: ${latestPlayer.full_name || "بدون اسم"} — ${formatDate(latestPlayer.created_at)}`);
+      } else {
+        setText("lastActivity", "لا توجد بيانات بعد");
+      }
+
+      const newCount = requestsList.filter((r) => String(r.status || "new") === "new").length;
+      setText("todayPriority", newCount ? "مراجعة الطلبات الجديدة" : "تدقيق عام");
+    } catch (error) {
+      console.error("Dashboard Supabase error:", error);
+      setText("systemStatus", "تعذر الاتصال");
+      setText("lastActivity", "تحقق من الاتصال وحاول لاحقاً");
+    }
+  }
+
+  document.addEventListener("DOMContentLoaded", () => {
+    bindStatCards();
+    loadDashboard();
+    if (typeof bootExecutiveDashboard === "function") bootExecutiveDashboard();
+  });
+</script>
 </body>
 </html>

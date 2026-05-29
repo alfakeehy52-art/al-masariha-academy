@@ -223,6 +223,35 @@ function isAcademyStaffPage() {
   return window.ENTITY_TYPE === "academy_staff";
 }
 
+const ACT_SVG = {
+  view:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>',
+  edit:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg>',
+  portal:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>',
+  copy:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>',
+  stop:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><line x1="9" y1="9" x2="15" y2="15"/><line x1="15" y1="9" x2="9" y2="15"/></svg>',
+  play:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><polygon points="10 8 16 12 10 16 10 8"/></svg>',
+  off:
+    '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M18.36 6.64A9 9 0 1 1 5.64 18.36"/><line x1="1" y1="1" x2="23" y2="23"/></svg>'
+};
+
+function actIconBtn(kind, label, onclick) {
+  return (
+    `<button type="button" class="act-icon act-icon-${kind}" title="${esc(label)}" aria-label="${esc(label)}" onclick="${onclick}">${ACT_SVG[kind] || ACT_SVG.view}</button>`
+  );
+}
+
+function actIconLink(kind, label, href) {
+  return (
+    `<a class="act-icon act-icon-${kind}" href="${href}" target="_blank" rel="noopener" title="${esc(label)}" aria-label="${esc(label)}">${ACT_SVG[kind] || ACT_SVG.portal}</a>`
+  );
+}
+
 function isValidEntityRow(row) {
   if (!row || row.id == null || String(row.id).trim() === "") return false;
   const name = String(row.full_name || "").trim();
@@ -380,7 +409,7 @@ function render() {
     <tr>
       ${cfg.columns.map(([, label]) => `<th>${esc(label)}</th>`).join("")}
       <th>تاريخ الإنشاء</th>
-      <th>الإجراءات</th>
+      <th class="actions-col">الإجراءات</th>
     </tr>
   `;
 
@@ -408,7 +437,7 @@ function render() {
       <tr>
         ${cells}
         <td>${esc(fmtDate(row.created_at))}</td>
-        <td>${rowActionsHtml(row)}</td>
+        <td class="actions-cell" data-label="الإجراءات">${rowActionsHtml(row)}</td>
       </tr>
     `;
   }).join("");
@@ -417,26 +446,26 @@ function render() {
 function rowActionsHtml(row) {
   const id = esc(row.id);
   const base = `
-    <div class="row-actions">
-      <button class="mini-btn review" type="button" onclick="viewEntity('${id}')">عرض</button>
-      <button class="mini-btn more" type="button" onclick="editEntity('${id}')">تعديل</button>
+    <div class="row-actions row-actions-icons">
+      ${actIconBtn("view", "عرض التفاصيل", `viewEntity('${id}')`)}
+      ${actIconBtn("edit", "تعديل البيانات", `editEntity('${id}')`)}
   `;
   if (!isAcademyStaffPage()) {
-    return `${base}<button class="mini-btn reject" type="button" onclick="deactivateEntity('${id}')">تعطيل</button></div>`;
+    return `${base}${actIconBtn("off", "تعطيل", `deactivateEntity('${id}')`)}</div>`;
   }
 
   const st = normalizeStatus(row.status);
   const statusBtn =
     st === "active"
-      ? `<button class="mini-btn reject" type="button" onclick="deactivateEntity('${id}')">إيقاف</button>`
-      : `<button class="mini-btn review" type="button" onclick="setEntityStatus('${id}','active')">تفعيل</button>`;
+      ? actIconBtn("stop", "إيقاف الكادر", `deactivateEntity('${id}')`)
+      : actIconBtn("play", "تفعيل الكادر", `setEntityStatus('${id}','active')`);
 
   const portalBtn = row.email
-    ? `<a class="mini-btn review" href="${esc(staffPortalUrl(row))}" target="_blank" rel="noopener">بوابة</a>`
+    ? actIconLink("portal", "فتح بوابة الكادر", esc(staffPortalUrl(row)))
     : "";
 
   const copyBtn = row.email
-    ? `<button class="mini-btn more" type="button" onclick="copyStaffPortalLink('${id}')">نسخ الرابط</button>`
+    ? actIconBtn("copy", "نسخ رابط بوابة الكادر", `copyStaffPortalLink('${id}')`)
     : "";
 
   return `${base}${portalBtn}${copyBtn}${statusBtn}</div>`;

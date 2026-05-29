@@ -182,11 +182,20 @@
   async function loadStaff() {
     const sb = createSupabaseClient();
     const fields = rbac().staffSelectFields?.() || "id,full_name,email,phone,role,status,auth_user_id";
-    const { data, error } = await sb
+    let { data, error } = await sb
       .from("academy_staff")
       .select(fields)
       .not("email", "is", null)
       .order("full_name", { ascending: true });
+    if (error && /column|panel_|job_title/i.test(String(error.message || ""))) {
+      const retry = await sb
+        .from("academy_staff")
+        .select("id,full_name,email,phone,role,status,auth_user_id")
+        .not("email", "is", null)
+        .order("full_name", { ascending: true });
+      data = retry.data;
+      error = retry.error;
+    }
     if (error) throw error;
     staffRows = data || [];
     const stat = $("permCount");
