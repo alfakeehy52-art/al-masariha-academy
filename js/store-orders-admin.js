@@ -12,6 +12,20 @@
   };
 
   let rows = [];
+  let storeOrdersUpdate = false;
+  let storeOrdersDelete = false;
+
+  function storeNotify(msg) {
+    if (typeof flashPanelDenied === "function") flashPanelDenied(msg);
+    else alert(msg);
+  }
+
+  function applyStoreOrdersUi() {
+    storeOrdersUpdate =
+      typeof window.canUpdateStoreOrdersNow === "function" && window.canUpdateStoreOrdersNow();
+    storeOrdersDelete =
+      typeof window.canDeleteStoreOrdersNow === "function" && window.canDeleteStoreOrdersNow();
+  }
 
   function esc(v) {
     return String(v ?? "")
@@ -45,6 +59,27 @@
     if (els.newCount) els.newCount.textContent = rows.filter((r) => r.status === "new").length;
   }
 
+  function statusSelectHtml(o) {
+    const opts = [
+      ["new", "جديد"],
+      ["confirmed", "مؤكد"],
+      ["preparing", "قيد التجهيز"],
+      ["shipped", "تم الشحن"],
+      ["done", "مكتمل"],
+      ["cancelled", "ملغى"]
+    ];
+    if (!storeOrdersUpdate) {
+      return "";
+    }
+    const options = opts
+      .map(
+        ([value, label]) =>
+          `<option value="${value}" ${o.status === value ? "selected" : ""}>${label}</option>`
+      )
+      .join("");
+    return `<select class="mini-select" data-status="${esc(o.id)}">${options}</select>`;
+  }
+
   function renderTable() {
     if (!els.tbody) return;
     const filter = els.filter?.value || "all";
@@ -64,15 +99,9 @@
       <td><span class="status-pill status-${esc(o.status)}">${esc(statusLabel(o.status))}</span></td>
       <td>${esc(fmtDate(o.created_at))}</td>
       <td><div class="table-actions">
-        <select class="mini-select" data-status="${esc(o.id)}">
-          <option value="new" ${o.status === "new" ? "selected" : ""}>جديد</option>
-          <option value="confirmed" ${o.status === "confirmed" ? "selected" : ""}>مؤكد</option>
-          <option value="preparing" ${o.status === "preparing" ? "selected" : ""}>قيد التجهيز</option>
-          <option value="shipped" ${o.status === "shipped" ? "selected" : ""}>تم الشحن</option>
-          <option value="done" ${o.status === "done" ? "selected" : ""}>مكتمل</option>
-          <option value="cancelled" ${o.status === "cancelled" ? "selected" : ""}>ملغى</option>
-        </select>
-        <button type="button" class="mini-btn" data-del="${esc(o.id)}">حذف</button>
+        ${statusSelectHtml(o)}
+        ${storeOrdersDelete ? `<button type="button" class="mini-btn" data-del="${esc(o.id)}">حذف</button>` : ""}
+        ${!storeOrdersUpdate && !storeOrdersDelete ? `<span class="subtext">عرض فقط</span>` : ""}
       </div></td>
     </tr>`
       )
@@ -103,6 +132,10 @@
   }
 
   async function updateStatus(id, status) {
+    if (typeof guardStoreOrdersUpdate === "function" && !guardStoreOrdersUpdate(storeNotify)) {
+      await loadRows();
+      return;
+    }
     const { error } = await supabaseClient.from("store_orders").update({ status }).eq("id", id);
     if (error) {
       alert("تعذر تحديث الحالة.");
@@ -112,18 +145,34 @@
   }
 
   async function deleteRow(id) {
+    if (typeof guardStoreOrdersDelete === "function" && !guardStoreOrdersDelete(storeNotify)) return;
     if (!id || !confirm("حذف هذا الطلب؟")) return;
     const { error } = await supabaseClient.from("store_orders").delete().eq("id", id);
     if (error) {
       alert("تعذر الحذف.");
       return;
     }
+    if (typeof logPanelAudit === "function") {
+      void logPanelAudit({
+        domain: "store",
+        action: window.PANEL_AUDIT?.STORE_ORDER_DELETE || "store.order_delete",
+        entityType: "store_order",
+        entityId: id,
+        summary: "حذف طلب متجر"
+      });
+    }
     await loadRows();
   }
 
-  document.addEventListener("DOMContentLoaded", () => {
+  document.addEventListener("DOMContentLoaded", async () => {
+    try {
+      if (typeof ensureStoreRbacReady === "function") await ensureStoreRbacReady();
+    } catch (e) {
+      console.warn("[store-orders-rbac]", e);
+    }
+    applyStoreOrdersUi();
     els.filter?.addEventListener("change", renderTable);
     els.refreshBtn?.addEventListener("click", loadRows);
-    loadRows();
+    await loadRows();
   });
 })();

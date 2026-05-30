@@ -141,7 +141,7 @@
 |--------|--------|-------------|
 | محادثات الطلبات | `communications_dashboard.html` | دردشة مرتبطة بطلب انضمام |
 | رسائل تواصل معنا | `contact_messages_dashboard.html` | استفسارات نموذج الموقع |
-| (مرحلة لاحقة) تذاكر دعم | جدول `support_tickets` | مشاكل تقنية / حساب / موقع |
+| تذاكر الدعم الفني | `support_tickets_dashboard.html` | مشاكل تقنية / حساب / موقع |
 
 > موظف الدعم **لا يرى** إعدادات النظام و**لا يعتمد** طلبات انضمام — يحل مشاكل التواصل فقط.  
 > موظف الطلبات **يرى** محادثات الطلبات ضمن سياق الطلب، لكن **مدير الدعم** يرى كل قنوات الدعم.
@@ -211,7 +211,7 @@
 | إخفاء القائمة | `NAV_HIDDEN_GROUPS` | + إخفاء أزرار حسب Action |
 | RLS | جزئي | توسيع حسب Domain |
 | صفحة موظفين | `admin_permissions_dashboard` (دور فقط) | HR كامل: إضافة/إيقاف/نطاق |
-| حسابي (تعديل جوال/اسم) | غير موجود | P0 مع RBAC |
+| حسابي (تعديل جوال/اسم) | `admin_account.html` | P0 مع RBAC — كل موظف نشط |
 
 ---
 
@@ -225,16 +225,16 @@
 - [ ] إيقاف موظف = منع Auth + `status=suspended`
 
 ### المرحلة RBAC-2 — تشغيل يومي (P1)
-- [ ] `media`: مسودة → مراجعة → نشر
-- [ ] `store`: فصل أزرار حسب L2/L3/L4
-- [ ] `requests`: موظف بدون اعتماد نهائي
-- [ ] صفحة **«حسابي»** للمدير والموظف
+- [x] `media`: مسودة → مراجعة → نشر
+- [x] `store`: فصل أزرار حسب L2/L3/L4
+- [x] `requests`: موظف بدون اعتماد نهائي (L3+ للقبول/الرفض — RBAC-2)
+- [x] صفحة **«حسابي»** للمدير والموظف
 
 ### المرحلة RBAC-3 — حوكمة (P2)
-- [ ] `audit_log`
-- [ ] تذاكر `support_tickets`
-- [ ] لوحة ملخص المدير العام (Executive)
-- [ ] RLS كامل حسب Domain
+- [x] `audit_log`
+- [x] تذاكر `support_tickets`
+- [x] لوحة ملخص المدير العام (Executive)
+- [x] RLS كامل حسب Domain
 
 ### المرحلة RBAC-4 — إعداد أول مدير (P0 bootstrap)
 - [ ] صفحة «إعداد أول مرة» (تُقفل بعد إنشاء L1)
@@ -282,3 +282,8 @@
 | `js/panel-access.js` | القائمة الجانبية حسب النطاق |
 | `admin_permissions_dashboard.html` | إدارة الموظفين والقوالب |
 | `admin_account.html` | حسابي (اسم، جوال، كلمة مرور) |
+| `docs/AUDIT_LOG_SCHEMA.sql` | جدول `audit_log` + RLS |
+| `docs/SUPPORT_TICKETS_SCHEMA.sql` | جدول `support_tickets` + RLS |
+| `docs/PANEL_RLS_BY_DOMAIN.sql` | RLS موحّد حسب Domain |
+| `js/panel-audit.js` | `logPanelAudit()` — تسجيل الأحداث |
+| `support_tickets_dashboard.html` | تذاكر الدعم الفني |

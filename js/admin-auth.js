@@ -36,7 +36,9 @@
     "news_dashboard.html": { domain: "media", action: "read" },
     "media_dashboard.html": { domain: "media", action: "read" },
     "communications_dashboard.html": { domain: "support", action: "read" },
-    "contact_messages_dashboard.html": { domain: "support", action: "read" }
+    "contact_messages_dashboard.html": { domain: "support", action: "read" },
+    "support_tickets_dashboard.html": { domain: "support", action: "read" },
+    "admin_account.html": { account: true }
   };
 
   const PANEL_DENIED_MSG_KEY = "panel_denied_message";
@@ -254,6 +256,11 @@
     });
   }
 
+  async function ensurePanelAuditLoaded() {
+    if (typeof window.logPanelAudit === "function") return;
+    await loadScriptOnce("js/panel-audit.js?v=20260529-rbac3");
+  }
+
   async function ensurePanelAccessLoaded() {
     if (!window.PanelRBAC) await loadScriptOnce("js/panel-rbac.js?v=20260529-rbac2");
     if (typeof window.canPanel !== "function") await loadScriptOnce("js/panel-access.js?v=20260529-rbac2");
@@ -265,6 +272,10 @@
         ? getPanelPageGuard()
         : window.PANEL_PAGE_GUARDS && window.PANEL_PAGE_GUARDS[(location.pathname.split("/").pop() || "").toLowerCase()];
     if (!guard) return true;
+    if (guard.account) {
+      if (typeof unlockPanelContent === "function") unlockPanelContent();
+      return true;
+    }
     if (typeof lockPanelContent === "function") lockPanelContent();
     await ensurePanelAccessLoaded();
     const session = await getSession();
@@ -296,6 +307,7 @@
           }
         }
         const domainOk = await checkPageDomainAccess();
+        if (domainOk) ensurePanelAuditLoaded().catch(() => {});
         return domainOk;
       }
     } catch (e) {
@@ -349,11 +361,34 @@
         console.warn("[admin-auth] staff link:", linkErr);
       }
     }
+    try {
+      await ensurePanelAuditLoaded();
+      if (typeof logPanelAudit === "function") {
+        await logPanelAudit({
+          domain: "auth",
+          action: window.PANEL_AUDIT?.AUTH_LOGIN || "auth.login",
+          entityType: "session",
+          entityId: data.user.id,
+          summary: "تسجيل دخول إلى لوحة الإدارة",
+          meta: { email: data.user.email || null }
+        });
+      }
+    } catch (_audit) {}
     return data;
   }
 
   async function adminLogout() {
     clearLegacySession();
+    try {
+      await ensurePanelAuditLoaded();
+      if (typeof logPanelAudit === "function") {
+        await logPanelAudit({
+          domain: "auth",
+          action: window.PANEL_AUDIT?.AUTH_LOGOUT || "auth.logout",
+          summary: "تسجيل خروج من لوحة الإدارة"
+        });
+      }
+    } catch (_audit) {}
     try {
       const client = getAuthClient();
       await client.auth.signOut();
@@ -390,6 +425,8 @@
   window.isPanelLoggedIn = isPanelLoggedIn;
   window.isAdminLoggedIn = isAdminLoggedIn;
   window.requireAdmin = requireAdmin;
+  window.ensurePanelAccessLoaded = ensurePanelAccessLoaded;
+  window.ensurePanelAuditLoaded = ensurePanelAuditLoaded;
   window.adminLogin = adminLogin;
   window.adminLogout = adminLogout;
   window.redirectIfAlreadyLoggedIn = redirectIfAlreadyLoggedIn;

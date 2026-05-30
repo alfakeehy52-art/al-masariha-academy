@@ -209,11 +209,38 @@
 
   async function saveStaffRow(staffId, patch) {
     const sb = createSupabaseClient();
+    const row = staffRows.find((r) => String(r.id) === String(staffId));
     const payload = { ...patch, updated_at: new Date().toISOString() };
     const { error } = await sb.from("academy_staff").update(payload).eq("id", staffId);
     if (error) throw error;
-    const row = staffRows.find((r) => String(r.id) === String(staffId));
     if (row) Object.assign(row, patch);
+
+    if (typeof logPanelAudit === "function") {
+      const A = window.PANEL_AUDIT || {};
+      let action = A.STAFF_PERMISSIONS || "staff.permissions_update";
+      let summary = `تحديث صلاحيات الموظف ${row?.email || staffId}`;
+      if (patch.status === "suspended") {
+        action = A.STAFF_SUSPEND || "staff.suspend";
+        summary = `إيقاف حساب الموظف ${row?.email || staffId}`;
+      } else if (patch.status === "active") {
+        action = A.STAFF_ACTIVATE || "staff.activate";
+        summary = `تفعيل حساب الموظف ${row?.email || staffId}`;
+      } else if (patch.panel_level) {
+        summary = `تغيير مستوى ${row?.email || staffId} إلى ${patch.panel_level}`;
+      } else if (patch.panel_domains) {
+        summary = `تغيير نطاقات ${row?.email || staffId}`;
+      } else if (patch.panel_template) {
+        summary = `تطبيق قالب ${patch.panel_template} على ${row?.email || staffId}`;
+      }
+      void logPanelAudit({
+        domain: "system",
+        action,
+        entityType: "academy_staff",
+        entityId: staffId,
+        summary,
+        meta: { patch, email: row?.email || null, full_name: row?.full_name || null }
+      });
+    }
   }
 
   function domainsFromRowCheckboxes(staffId) {

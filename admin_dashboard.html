@@ -23,7 +23,7 @@
     .exec-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px;flex-wrap:wrap;margin-bottom:18px}
     .exec-head h3{margin:0;font-size:26px;color:var(--admin-gold-soft)}
     .exec-head p{margin:6px 0 0;color:var(--admin-muted);font-size:14px;line-height:1.8}
-    .exec-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;margin-bottom:18px}
+    .exec-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:18px}
     .exec-stat{padding:16px;border-radius:18px;border:1px solid var(--admin-line);background:rgba(255,255,255,.03);cursor:pointer}
     .exec-stat span{display:block;color:var(--admin-muted);font-size:12px;font-weight:800;margin-bottom:8px}
     .exec-stat strong{font-size:28px;color:var(--admin-gold-soft)}
@@ -36,6 +36,11 @@
     .exec-alert-muted{border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.04)}
     .exec-empty{color:var(--admin-muted);margin:0;font-weight:800}
     .exec-meta{color:var(--admin-muted);font-size:12px;font-weight:800}
+    .exec-audit{margin-top:16px;padding-top:16px;border-top:1px solid rgba(255,255,255,.08)}
+    .exec-audit h4{margin:0 0 10px;font-size:15px;color:var(--admin-gold-soft)}
+    .exec-audit-list{display:grid;gap:8px;margin:0;padding:0;list-style:none}
+    .exec-audit-list li{padding:10px 12px;border-radius:12px;border:1px solid var(--admin-line);background:rgba(255,255,255,.03);font-size:13px;line-height:1.7}
+    .exec-audit-list li time{display:block;color:var(--admin-muted);font-size:11px;font-weight:800;margin-top:4px}
     @media(max-width:1100px){.exec-stats{grid-template-columns:repeat(2,1fr)}}
     @media(max-width:640px){.exec-stats{grid-template-columns:1fr}}
     .panel-denied-banner{
@@ -89,8 +94,14 @@
         <div class="exec-stat stat-link" data-exec-link="contact_messages_dashboard.html" tabindex="0" role="button">
           <span>رسائل تواصل جديدة</span><strong id="execContactNew">0</strong>
         </div>
+        <div class="exec-stat stat-link" data-exec-link="support_tickets_dashboard.html" tabindex="0" role="button">
+          <span>تذاكر دعم مفتوحة</span><strong id="execOpenTickets">0</strong>
+        </div>
         <div class="exec-stat stat-link" data-exec-link="store_orders_dashboard.html" tabindex="0" role="button">
           <span>طلبات المتجر</span><strong id="execStoreOrders">0</strong>
+        </div>
+        <div class="exec-stat stat-link" data-exec-link="media_dashboard.html" tabindex="0" role="button">
+          <span>مسودات إعلام</span><strong id="execMediaDrafts">0</strong>
         </div>
         <div class="exec-stat stat-link" data-exec-link="players_list_dashboard.html" tabindex="0" role="button">
           <span>إجمالي اللاعبين</span><strong id="execPlayers">0</strong>
@@ -103,6 +114,10 @@
         </div>
       </div>
       <div id="execAlerts" class="exec-alerts"></div>
+      <div id="execAuditWrap" class="exec-audit" hidden>
+        <h4>آخر نشاطات مسجّلة (تدقيق)</h4>
+        <ul id="execAuditList" class="exec-audit-list"></ul>
+      </div>
     </section>
 
     <section class="stats">
@@ -140,6 +155,8 @@
             <a class="quick-link" href="admin_requests.html"><strong>إدارة الطلبات</strong>مراجعة واعتماد</a>
             <a class="quick-link" href="communications_dashboard.html"><strong>محادثات الطلبات</strong>الدعم الفني</a>
             <a class="quick-link" href="media_dashboard.html"><strong>الإعلام</strong>صور وفيديو</a>
+            <a class="quick-link" href="support_tickets_dashboard.html"><strong>تذاكر الدعم</strong>مشاكل تقنية وحسابات</a>
+            <a class="quick-link" href="contact_messages_dashboard.html"><strong>رسائل التواصل</strong>تواصل معنا</a>
             <a class="quick-link" href="store_orders_dashboard.html"><strong>طلبات المتجر</strong>معالجة الطلبات</a>
             <a class="quick-link" href="players_list_dashboard.html"><strong>قائمة اللاعبين</strong>عرض السجلات</a>
             <a class="quick-link" href="admin_permissions_dashboard.html" data-require-system-update><strong>الموظفون</strong>الصلاحيات والأدوار</a>
@@ -152,7 +169,7 @@
 </div>
 
 <script src="admin_sidebar.js"></script>
-<script src="js/admin-executive-dashboard.js?v=20260529-exec1"></script>
+<script src="js/admin-executive-dashboard.js?v=20260529-rbac3"></script>
 <script>
   const supabaseClient = createSupabaseClient();
   let dashboardTopCategory = "";

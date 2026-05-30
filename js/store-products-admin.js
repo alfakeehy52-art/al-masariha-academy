@@ -105,6 +105,59 @@
 
   let playersCache = [];
   let productsCache = [];
+  let storeProductsWrite = false;
+  let storeProductsDelete = false;
+
+  function storeNotify(msg) {
+    if (typeof flashPanelDenied === "function") flashPanelDenied(msg);
+    else alert(msg);
+  }
+
+  function applyStoreProductsUi() {
+    storeProductsWrite =
+      typeof window.canManageStoreProductsNow === "function" && window.canManageStoreProductsNow();
+    storeProductsDelete =
+      typeof window.canDeleteStoreProductsNow === "function" && window.canDeleteStoreProductsNow();
+
+    if (els.seedBtn) els.seedBtn.hidden = !storeProductsWrite;
+    if (els.clearBtn) els.clearBtn.hidden = !storeProductsDelete;
+    if (els.submitBtn) els.submitBtn.disabled = !storeProductsWrite;
+    if (els.resetBtn) els.resetBtn.disabled = !storeProductsWrite;
+
+    const inputs = [
+      els.name,
+      els.price,
+      els.type,
+      els.category,
+      els.status,
+      els.image,
+      els.emoji,
+      els.player,
+      els.description,
+      els.featured,
+      els.customizable
+    ];
+    inputs.forEach((input) => {
+      if (!input) return;
+      input.disabled = !storeProductsWrite;
+    });
+
+    let note = document.getElementById("storeProductsRbacNote");
+    if (!storeProductsWrite) {
+      if (!note && els.form) {
+        note = document.createElement("p");
+        note.id = "storeProductsRbacNote";
+        note.className = "lead";
+        note.style.cssText = "color:#ffe79c;font-weight:800;margin:0 0 14px";
+        note.textContent =
+          window.STORE_MSG?.productsWrite ||
+          "عرض فقط — إضافة وتعديل المنتجات للمستوى L3 فما فوق.";
+        els.form.parentElement?.insertBefore(note, els.form);
+      }
+    } else if (note) {
+      note.remove();
+    }
+  }
 
   function escapeHtml(value) {
     return String(value ?? "")
@@ -295,9 +348,10 @@
             <td>${product.customizable ? "نعم" : "لا"}</td>
             <td>
               <div class="table-actions">
-                <button class="mini-btn" type="button" data-edit="${escapeHtml(product.id)}">تعديل</button>
-                <button class="mini-btn" type="button" data-dup="${escapeHtml(product.id)}">نسخ</button>
-                <button class="mini-btn" type="button" data-del="${escapeHtml(product.id)}">حذف</button>
+                ${storeProductsWrite ? `<button class="mini-btn" type="button" data-edit="${escapeHtml(product.id)}">تعديل</button>` : ""}
+                ${storeProductsWrite ? `<button class="mini-btn" type="button" data-dup="${escapeHtml(product.id)}">نسخ</button>` : ""}
+                ${storeProductsDelete ? `<button class="mini-btn" type="button" data-del="${escapeHtml(product.id)}">حذف</button>` : ""}
+                ${!storeProductsWrite && !storeProductsDelete ? `<span class="subtext">عرض فقط</span>` : ""}
               </div>
             </td>
           </tr>
@@ -338,6 +392,7 @@
   }
 
   async function duplicateProduct(id) {
+    if (typeof guardStoreProductsWrite === "function" && !guardStoreProductsWrite(storeNotify)) return;
     const product = productsCache.find((item) => String(item.id) === String(id));
     if (!product) return;
     const copy = uiToDb({
@@ -354,6 +409,7 @@
   }
 
   async function deleteProduct(id) {
+    if (typeof guardStoreProductsDelete === "function" && !guardStoreProductsDelete(storeNotify)) return;
     if (!confirm("هل تريد حذف هذا المنتج نهائياً؟")) return;
     const { error } = await supabaseClient.from("store_products").delete().eq("id", id);
     if (error) {
@@ -362,6 +418,15 @@
     }
     if (String(els.productId.value) === String(id)) resetForm();
     await reloadProducts();
+    if (typeof logPanelAudit === "function") {
+      void logPanelAudit({
+        domain: "store",
+        action: window.PANEL_AUDIT?.STORE_PRODUCT_DELETE || "store.product_delete",
+        entityType: "store_product",
+        entityId: id,
+        summary: "حذف منتج من المتجر"
+      });
+    }
   }
 
   async function reloadProducts() {
@@ -378,6 +443,7 @@
   }
 
   async function seedDefaults() {
+    if (typeof guardStoreProductsWrite === "function" && !guardStoreProductsWrite(storeNotify)) return;
     if (productsCache.length) {
       alert("يوجد منتجات بالفعل. احذفها أولاً إن أردت إعادة تحميل الأمثلة.");
       return;
@@ -392,6 +458,7 @@
   }
 
   async function clearAllProducts() {
+    if (typeof guardStoreProductsDelete === "function" && !guardStoreProductsDelete(storeNotify)) return;
     if (!confirm("سيتم حذف جميع منتجات المتجر. هل أنت متأكد؟")) return;
     const { error } = await supabaseClient
       .from("store_products")
@@ -404,13 +471,28 @@
     productsCache = [];
     renderTable();
     resetForm();
+    if (typeof logPanelAudit === "function") {
+      void logPanelAudit({
+        domain: "store",
+        action: window.PANEL_AUDIT?.STORE_PRODUCTS_CLEAR || "store.products_clear_all",
+        summary: "حذف جميع منتجات المتجر"
+      });
+    }
   }
 
   async function init() {
     if (!els.form) return;
 
+    try {
+      if (typeof ensureStoreRbacReady === "function") await ensureStoreRbacReady();
+    } catch (e) {
+      console.warn("[store-products-rbac]", e);
+    }
+    applyStoreProductsUi();
+
     els.form.addEventListener("submit", async (e) => {
       e.preventDefault();
+      if (typeof guardStoreProductsWrite === "function" && !guardStoreProductsWrite(storeNotify)) return;
       const data = getFormData();
       if (!data.name) {
         alert("يرجى إدخال اسم المنتج أولاً.");

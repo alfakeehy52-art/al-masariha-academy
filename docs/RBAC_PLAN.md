@@ -38,8 +38,8 @@
 - [ ] مزامنة تلقائية لـ `user_metadata.role` من Supabase Admin API
 
 ### المرحلة R3 — تدقيق
-- [ ] RLS لكل جدول حسب الدور (قراءة / كتابة / حذف)
-- [ ] سجل تدقيق `audit_log` للعمليات الحساسة
+- [x] RLS لكل جدول حسب الدور (قراءة / كتابة / حذف) — `PANEL_RLS_BY_DOMAIN.sql`
+- [x] سجل تدقيق `audit_log` للعمليات الحساسة — `docs/AUDIT_LOG_SCHEMA.sql` + `js/panel-audit.js`
 
 ---
 

@@ -113,15 +113,31 @@ function displayNotes(r){
   if(m.interestsLabel&&m.interestsLabel!=='-') lines.unshift(`الاهتمامات: ${m.interestsLabel}`);
   return lines.join('\n')||'-';
 }
+function userCanFinalApproveRequests(){
+  return typeof window.canApproveRequestsNow==="function"&&window.canApproveRequestsNow();
+}
+function guardFinalRequestAction(){
+  if(userCanFinalApproveRequests()) return true;
+  const msg=window.REQUESTS_FINAL_APPROVE_MSG||"الاعتماد النهائي ورفض الطلب — للمشرف (L3) فما فوق فقط.";
+  showToast(msg,"warn");
+  return false;
+}
+function applyRequestsApproveUi(){
+  const ok=userCanFinalApproveRequests();
+  ["modalAcceptBtn","modalRejectBtn"].forEach(id=>{const el=$(id);if(el)el.style.display=ok?"":"none";});
+}
 function buildRowActions(r){
   const id=escapeInlineJsString(r.id);
   let html=`<button class="mini-btn review" onclick="openRequest('${id}')">عرض</button><button class="mini-btn chat" type="button" onclick="openChatForRequest('${id}')">تواصل</button>`;
-  if(getStatusLabel(r.status)!=='مقبول') html+=`<button class="mini-btn accept" onclick="updateStatus('${id}','approved')">قبول</button>`;
-  if(getStatusLabel(r.status)!=='مرفوض') html+=`<button class="mini-btn reject" onclick="updateStatus('${id}','rejected')">رفض</button>`;
+  if(userCanFinalApproveRequests()){
+    if(getStatusLabel(r.status)!=='مقبول') html+=`<button class="mini-btn accept" onclick="updateStatus('${id}','approved')">قبول</button>`;
+    if(getStatusLabel(r.status)!=='مرفوض') html+=`<button class="mini-btn reject" onclick="updateStatus('${id}','rejected')">رفض</button>`;
+  }
   if(showCompletionAction(r)) html+=`<button class="mini-btn more" onclick="updateStatus('${id}','pending')">استكمال</button>`;
   return html;
 }
 function syncModalActions(r){
+  applyRequestsApproveUi();
   const btn=$('modalCompleteBtn');
   if(btn) btn.style.display=showCompletionAction(r)?'':'none';
 }
@@ -757,11 +773,24 @@ async function saveFileNote(key){
   currentCompletion=data; renderAttachmentsReview(); showToast('تم حفظ الملاحظة.');
 }
 async function setFinalReview(status,note=''){
+  if((status==='approved'||status==='rejected')&&!guardFinalRequestAction()) return null;
   if(!currentCompletion)return null;
   const payload={final_review_status:status, final_review_note:note||currentCompletion.final_review_note||null, reviewed_at:new Date().toISOString(), updated_at:new Date().toISOString()};
   const {data,error}=await supabaseClient.from('request_completions').update(payload).eq('id',currentCompletion.id).select('*').single();
   if(error)throw error;
-  currentCompletion=data; renderAttachmentsReview(); return data;
+  currentCompletion=data; renderAttachmentsReview();
+  if(typeof logPanelAudit==='function'&&(status==='approved'||status==='rejected')){
+    const A=window.PANEL_AUDIT||{};
+    void logPanelAudit({
+      domain:'requests',
+      action:A.REQUEST_FINAL_REVIEW||'request.final_review',
+      entityType:'request_completion',
+      entityId:currentCompletion.id,
+      summary:`مراجعة نهائية للمرفقات — ${status==='approved'?'اعتماد':'رفض'}`,
+      meta:{request_id:currentCompletion.request_id,final_review_status:status}
+    });
+  }
+  return data;
 }
 function previewFile(key){
   const f=getReviewFile(key); if(!f||!currentCompletion)return;
@@ -1289,6 +1318,7 @@ function humanizeAdminError(err){
 }
 async function updateStatus(id,status){
   const r=findReq(id); if(!r)return;
+  if((status==='approved'||status==='rejected')&&!guardFinalRequestAction()) return;
   const actionIcon = status==='approved' ? '✅' : (status==='rejected' ? '⛔' : '📝');
   const ok = await requestConfirmation({
     title:'تأكيد تحديث حالة الطلب',
@@ -1337,6 +1367,17 @@ async function updateStatus(id,status){
     if(error)throw error;
     Object.assign(r,upd);
     if(status==='approved'||status==='rejected') await closeChatRoomsForRequest(id, status);
+    if(typeof logPanelAudit==='function'){
+      const A=window.PANEL_AUDIT||{};
+      void logPanelAudit({
+        domain:'requests',
+        action:status==='approved'?A.REQUEST_APPROVE||'request.approve':status==='rejected'?A.REQUEST_REJECT||'request.reject':A.REQUEST_STATUS||'request.status_change',
+        entityType:'join_request',
+        entityId:id,
+        summary:`${getTypeLabel(r.request_type)} — ${r.full_name||refCode(r)} → ${getStatusLabel(status)}`,
+        meta:{request_type:r.request_type,status,reference:refCode(r),email:r.email||null}
+      });
+    }
     renderTable(window.REQUEST_TYPE||null);
     updateRequestStatsUI();
     if(typeof window.refreshAdminSidebarBadges==='function') window.refreshAdminSidebarBadges();
@@ -1683,11 +1724,15 @@ function applyFiltersFromUrl(){
 function focusNewRequests(){
   applyStatusFilterFromStat('new',{toast:true});
 }
-document.addEventListener('DOMContentLoaded',()=>{
+document.addEventListener('DOMContentLoaded',async ()=>{
   ensureFileReviewUi();
   ensureChatUi();
   bindStatsCards();
   ensureResetFiltersButton();
+  try{
+    if(typeof ensureRequestsRbacReady==='function') await ensureRequestsRbacReady();
+  }catch(e){console.warn('[requests-rbac]',e);}
+  applyRequestsApproveUi();
   $('resetRequestsFiltersBtn')?.addEventListener('click',resetRequestsFilters);
   const reviewBtn=$('reviewNewRequestsBtn');
   if(reviewBtn) reviewBtn.addEventListener('click',focusNewRequests);

@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>استكمال الطلبات | الإدارة</title><link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
 <style>:root{--gold:#d5b15a;--gold2:#f0d58f;--text:#f3f4ef;--muted:#b6c1b8;--line:rgba(255,255,255,.08);--shadow:0 22px 55px rgba(0,0,0,.24);--ok:#2ecc71;--warn:#ffe79c}*{box-sizing:border-box}body{margin:0;font-family:'Cairo',system-ui,sans-serif;background:#041009;color:var(--text)}.layout{display:grid;grid-template-columns:318px 1fr;min-height:100vh}.sidebar{background:linear-gradient(180deg,rgba(213,177,90,.10),rgba(255,255,255,.02));border-left:1px solid var(--line);padding:20px 16px;position:sticky;top:0;height:100vh;overflow:hidden}.brand{background:rgba(255,255,255,.03);border:1px solid var(--line);border-radius:22px;padding:18px;box-shadow:var(--shadow);margin-bottom:18px}.brand h1{margin:0;color:var(--gold2);font-weight:900;font-size:26px}.brand p{margin:8px 0 0;color:var(--muted);line-height:1.9}.main{padding:30px}.card{border:1px solid var(--line);border-radius:28px;background:linear-gradient(180deg,rgba(255,255,255,.045),rgba(255,255,255,.02));box-shadow:var(--shadow);padding:24px;margin-bottom:20px}.hero h1{font-size:42px;margin:0}.hero p{color:var(--muted);line-height:1.8}.note{margin-top:12px;padding:12px 14px;border-radius:14px;background:rgba(213,177,90,.08);border:1px solid rgba(213,177,90,.22);color:var(--warn);font-weight:800;font-size:14px}table{width:100%;border-collapse:collapse;min-width:1100px}th,td{padding:14px;border-bottom:1px solid rgba(255,255,255,.07);text-align:right;vertical-align:middle}th{color:var(--gold2)}.wrap{overflow:auto}.btn{min-height:42px;border:1px solid var(--line);border-radius:13px;padding:0 14px;background:rgba(255,255,255,.05);color:#fff;font:inherit;font-weight:900;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px}.gold{background:linear-gradient(180deg,#e4c36f,#d5b15a);color:#08110b}.gold:disabled{opacity:.45;cursor:not-allowed}.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:flex-start}.actions .btn{white-space:nowrap}.progress-ok{color:var(--ok);font-weight:900}.progress-warn{color:var(--warn);font-weight:900}.status-done{color:var(--ok);font-weight:900}.toast{position:fixed;left:20px;bottom:20px;max-width:560px;padding:14px 16px;border-radius:16px;background:#102217;color:#ffe79c;font-weight:900;display:none;z-index:10;line-height:1.7}.toast.show{display:block}.toast.error{color:#ffd7d7;border:1px solid rgba(197,82,82,.35)}@media(max-width:1100px){.layout{grid-template-columns:1fr}.sidebar{height:auto;position:relative}}</style><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="js/supabase-client.js"></script><script src="js/admin-auth.js"></script><script>requireAdmin();</script></head>
 <body><div class="layout"><aside class="sidebar"><div class="brand"><h1>أكاديمية كرة القدم</h1><p>مراجعة استكمال البيانات والمرفقات.</p></div><div id="admin-sidebar"></div></aside><main class="main"><section class="card hero"><h1>استكمال الطلبات</h1><p>نظرة سريعة على المرفقات. الاعتماد النهائي يتطلب قبول كل الملفات الإجبارية — نفس شرط <a href="admin_requests.html" style="color:var(--gold2)">إدارة الطلبات</a>.</p><div class="note">ولي أمر · داعم · كادر · لاعب: راجع كل ملف من «مراجعة تفصيلية». عضوية الأكاديمية بدون مرفقات. العمود «ملف إضافي» يختلف حسب النوع (عقد، كشف، نموذج ربط…).</div></section><section class="card"><div class="wrap"><table><thead><tr><th>الاسم</th><th>النوع</th><th>الجوال</th><th>الحالة</th><th>تقدم المراجعة</th><th>الهوية</th><th>الصورة</th><th>ملف إضافي</th><th>الإجراء</th></tr></thead><tbody id="tbody"><tr><td colspan="9">جاري التحميل...</td></tr></tbody></table></div></section></main></div><div class="toast" id="toast"></div>
-<script src="admin_sidebar.js"></script><script src="js/guardian-goals.js"></script><script src="js/academy-roles.js"></script><script src="js/supporter-profile.js"></script><script src="js/academy-member-profile.js"></script><script src="js/join-attachments-catalog.js"></script><script src="js/request-completion-review.js"></script><script src="js/chat-room-sync.js"></script><script>
+<script src="admin_sidebar.js"></script><script src="js/guardian-goals.js"></script><script src="js/academy-roles.js"></script><script src="js/supporter-profile.js"></script><script src="js/academy-member-profile.js"></script><script src="js/join-attachments-catalog.js"></script><script src="js/request-completion-review.js"></script><script src="js/panel-rbac.js?v=20260529-rbac2"></script><script src="js/panel-access.js?v=20260529-rbac2"></script><script src="js/chat-room-sync.js"></script><script>
 const sb = createSupabaseClient();
 const $ = id => document.getElementById(id);
 let completions = [];
@@ -105,15 +105,18 @@ function renderRow(r) {
   const rid = r.request_id || "";
   const detail = `<a class="btn" href="${escAttr(reviewDetailHref(rid, r.request_type))}">مراجعة تفصيلية</a>`;
   const profile = entityProfileLink(rid, r.request_type);
+  const canFinalApprove = typeof window.canApproveRequestsNow === "function" && window.canApproveRequestsNow();
 
   let actionHtml;
   if (finalized) {
     actionHtml = `${detail}${profile}`;
   } else {
     const approveDisabled = ready ? "" : " disabled title=\"يجب قبول كل المرفقات الإجبارية أولاً\"";
-    const approveBtn = needsAtt
-      ? `<button class="btn gold" onclick="approve('${escAttr(r.id)}','${escAttr(rid)}')"${approveDisabled}>اعتماد نهائي</button>`
-      : `<button class="btn gold" onclick="approveMemberOnly('${escAttr(r.id)}','${escAttr(rid)}')">اعتماد (بدون مرفقات)</button>`;
+    const approveBtn = canFinalApprove
+      ? (needsAtt
+          ? `<button class="btn gold" onclick="approve('${escAttr(r.id)}','${escAttr(rid)}')"${approveDisabled}>اعتماد نهائي</button>`
+          : `<button class="btn gold" onclick="approveMemberOnly('${escAttr(r.id)}','${escAttr(rid)}')">اعتماد (بدون مرفقات)</button>`)
+      : "";
     const reviewBtn =
       String(r.status || "").toLowerCase() === "reviewing"
         ? ""
@@ -171,6 +174,7 @@ async function loadEntityProfilesForRequests(requestIds) {
 }
 
 async function approveMemberOnly(id, requestId) {
+  if (typeof window.guardRequestsFinalAction === "function" && !window.guardRequestsFinalAction((m) => toast(m, "error"))) return;
   const row = completions.find((c) => String(c.id) === String(id));
   if (!row) {
     toast("لم يُعثر على السجل.", "error");
@@ -184,6 +188,16 @@ async function approveMemberOnly(id, requestId) {
   if (joinErr) {
     toast("تعذر تحديث الطلب.", "error");
     return;
+  }
+  if (typeof logPanelAudit === "function") {
+    void logPanelAudit({
+      domain: "requests",
+      action: window.PANEL_AUDIT?.REQUEST_APPROVE || "request.approve",
+      entityType: "join_request",
+      entityId: requestId,
+      summary: "اعتماد طلب (عضوية بدون مرفقات)",
+      meta: { completion_id: id, mode: "member_only" }
+    });
   }
   toast("تم اعتماد الطلب (عضوية بدون مرفقات).");
   if (typeof window.refreshAdminSidebarBadges === "function") window.refreshAdminSidebarBadges();
@@ -242,6 +256,7 @@ async function setReview(id) {
 }
 
 async function approve(id, requestId) {
+  if (typeof window.guardRequestsFinalAction === "function" && !window.guardRequestsFinalAction((m) => toast(m, "error"))) return;
   const row = completions.find(c => String(c.id) === String(id));
   if (!row) { toast("لم يُعثر على السجل.", "error"); return; }
 
@@ -287,5 +302,12 @@ async function approve(id, requestId) {
   load();
 }
 
-document.addEventListener("DOMContentLoaded", load);
+document.addEventListener("DOMContentLoaded", async () => {
+  try {
+    if (typeof ensureRequestsRbacReady === "function") await ensureRequestsRbacReady();
+  } catch (e) {
+    console.warn("[completion-rbac]", e);
+  }
+  load();
+});
 </script></body></html>

@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>تذاكر الدعم الفني | أكاديمية المسارحة</title>
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="admin_theme.css">
+  <style>
+    .status-open{color:#ffe79c;background:rgba(213,177,90,.12)}
+    .status-in_progress,.status-waiting{color:#caddff;background:rgba(88,166,255,.12)}
+    .status-resolved,.status-closed{color:#caffdd;background:rgba(21,145,95,.14)}
+    .priority-urgent{color:#ffd8d8;background:rgba(183,66,66,.18)}
+    .priority-high{color:#ffe79c;background:rgba(213,177,90,.12)}
+    .mini-select{min-height:36px;border-radius:10px;border:1px solid rgba(255,255,255,.12);background:#0d1a12;color:#fff;font-family:inherit;padding:4px 8px}
+    .form-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+    .form-grid .full{grid-column:1/-1}
+    @media(max-width:900px){.form-grid{grid-template-columns:1fr}}
+  </style>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="supabase-config.js"></script>
+  <script src="js/supabase-client.js"></script>
+  <script src="js/panel-rbac.js?v=20260529-rbac3"></script>
+  <script src="js/panel-access.js?v=20260529-rbac3"></script>
+  <script src="js/admin-auth.js"></script>
+  <script>requireAdmin();</script>
+</head>
+<body class="store-admin">
+  <div class="layout">
+    <aside class="sidebar">
+      <div class="brand">
+        <h1>تذاكر الدعم الفني</h1>
+        <p>مشاكل تقنية، حسابات، صلاحيات، وعطل الموقع.</p>
+      </div>
+      <div id="admin-sidebar"></div>
+    </aside>
+    <main class="main">
+      <div class="topbar">
+        <div class="page-intro">
+          <h1>تذاكر الدعم</h1>
+          <p>تسجيل ومتابعة بلاغات الدعم — منفصلة عن رسائل «تواصل معنا» ومحادثات الطلبات.</p>
+        </div>
+        <div class="header-actions">
+          <button class="btn btn-soft" type="button" id="refreshTicketsBtn">تحديث</button>
+        </div>
+      </div>
+
+      <section class="cards">
+        <article class="card stat-card"><div class="stat-label">إجمالي التذاكر</div><div class="stat-value" id="totalTickets">0</div></article>
+        <article class="card stat-card"><div class="stat-label">مفتوحة</div><div class="stat-value" id="openTicketsCount">0</div></article>
+        <article class="card stat-card"><div class="stat-label">قيد المعالجة</div><div class="stat-value" id="progressTicketsCount">0</div></article>
+        <article class="card stat-card"><div class="stat-label">تصفية</div>
+          <select id="ticketStatusFilter" style="margin-top:8px;width:100%;min-height:40px;border-radius:12px;border:1px solid rgba(255,255,255,.12);background:#0d1a12;color:#fff;font-family:inherit">
+            <option value="all">الكل</option>
+            <option value="open">مفتوحة</option>
+            <option value="in_progress">قيد المعالجة</option>
+            <option value="waiting">بانتظار رد</option>
+            <option value="resolved">محلولة</option>
+            <option value="closed">مغلقة</option>
+          </select>
+        </article>
+      </section>
+
+      <section class="content-grid">
+        <section class="panel">
+          <h2>فتح تذكرة جديدة</h2>
+          <form id="ticketForm">
+            <input type="hidden" id="ticketId" />
+            <div class="form-grid">
+              <div class="field full"><label for="ticketTitle">العنوان</label><input id="ticketTitle" type="text" required /></div>
+              <div class="field full"><label for="ticketDescription">الوصف</label><textarea id="ticketDescription" rows="4" required></textarea></div>
+              <div class="field"><label for="ticketCategory">التصنيف</label>
+                <select id="ticketCategory">
+                  <option value="technical">تقني</option>
+                  <option value="account">حساب / دخول</option>
+                  <option value="website">الموقع</option>
+                  <option value="access">صلاحيات</option>
+                  <option value="general">عام</option>
+                </select>
+              </div>
+              <div class="field"><label for="ticketPriority">الأولوية</label>
+                <select id="ticketPriority">
+                  <option value="low">منخفضة</option>
+                  <option value="normal" selected>عادية</option>
+                  <option value="high">عالية</option>
+                  <option value="urgent">عاجلة</option>
+                </select>
+              </div>
+              <div class="field"><label for="ticketReporterName">اسم المبلّغ (اختياري)</label><input id="ticketReporterName" type="text" /></div>
+              <div class="field"><label for="ticketReporterPhone">جوال المبلّغ</label><input id="ticketReporterPhone" type="text" /></div>
+              <div class="field full"><label for="ticketReporterEmail">بريد المبلّغ</label><input id="ticketReporterEmail" type="email" /></div>
+              <div class="field full"><label for="ticketAdminNote">ملاحظة داخلية</label><textarea id="ticketAdminNote" rows="2"></textarea></div>
+            </div>
+            <div class="form-actions" style="margin-top:14px">
+              <button class="btn btn-primary" type="submit" id="ticketSubmitBtn">حفظ التذكرة</button>
+              <button class="btn btn-soft" type="button" id="resetTicketFormBtn">تفريغ</button>
+            </div>
+          </form>
+        </section>
+      </section>
+
+      <section class="panel" style="margin-top:22px;">
+        <h2>قائمة التذاكر</h2>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr><th>المرجع</th><th>العنوان</th><th>التصنيف</th><th>الأولوية</th><th>الحالة</th><th>التاريخ</th><th>إجراءات</th></tr>
+            </thead>
+            <tbody id="ticketsTableBody"></tbody>
+          </table>
+        </div>
+        <div class="empty-state" id="emptyTicketsState" style="display:none;">لا توجد تذاكر بعد.</div>
+      </section>
+    </main>
+  </div>
+  <script src="js/support-tickets-admin.js?v=20260529-rbac3"></script>
+  <script src="admin_sidebar.js"></script>
+</body>
+</html>

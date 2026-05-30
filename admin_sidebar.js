@@ -159,6 +159,14 @@ document.addEventListener("DOMContentLoaded", () => {
           icon: "bell",
           badgeKey: "newContactMessages",
           match: ["contact_messages_dashboard.html"]
+        },
+        {
+          href: "support_tickets_dashboard.html",
+          label: "تذاكر الدعم الفني",
+          desc: "مشاكل تقنية وحسابات",
+          icon: "inbox",
+          badgeKey: "openSupportTickets",
+          match: ["support_tickets_dashboard.html"]
         }
       ]
     }
@@ -243,7 +251,7 @@ document.addEventListener("DOMContentLoaded", () => {
           )
           .join("")}
         <div class="menu-bottom-actions">
-          <a href="admin_account.html" class="nav-link site-link">
+          <a href="admin_account.html" class="nav-link site-link" data-panel-account="true">
             ${iconHtml("settings")}
             <span class="nav-copy"><span class="nav-label">حسابي</span><span class="nav-desc">الاسم والجوال</span></span>
             <span class="nav-arrow">${ICONS.chevron}</span>
@@ -340,8 +348,8 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       if (!window.SUPABASE_CONFIG) await loadScriptOnce("supabase-config.js");
       if (!window.createSupabaseClient) await loadScriptOnce("js/supabase-client.js");
-      if (!window.PanelRBAC) await loadScriptOnce("js/panel-rbac.js?v=20260529-rbac1");
-      if (!window.PANEL_ROLES) await loadScriptOnce("js/panel-access.js?v=20260529-rbac1");
+      if (!window.PanelRBAC) await loadScriptOnce("js/panel-rbac.js?v=20260529-rbac2");
+      if (!window.PANEL_ROLES) await loadScriptOnce("js/panel-access.js?v=20260529-rbac2");
       if (!window.loadAcademySettings) await loadScriptOnce("js/academy-settings.js");
       const s = await loadAcademySettings();
       applySidebarBrand(s);
@@ -507,8 +515,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const nameEl = document.getElementById("adminUserName");
     if (!card || !nameEl || typeof getAdminSession !== "function") return;
     try {
-      if (!window.PanelRBAC) await loadScriptOnce("js/panel-rbac.js?v=20260529-rbac1");
-      if (!window.PANEL_ROLES) await loadScriptOnce("js/panel-access.js?v=20260529-rbac1");
+      if (!window.PanelRBAC) await loadScriptOnce("js/panel-rbac.js?v=20260529-rbac2");
+      if (!window.PANEL_ROLES) await loadScriptOnce("js/panel-access.js?v=20260529-rbac2");
       if (!window.ACADEMY_ROLES) await loadScriptOnce("js/academy-roles.js");
       if (!window.loadAcademySettings) await loadScriptOnce("js/academy-settings.js");
       const session = await getAdminSession();
@@ -571,7 +579,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (typeof createSupabaseClient !== "function") return;
     try {
       const sb = createSupabaseClient();
-      const [pendingRes, newRowsRes, contactRes, chatRes] = await Promise.all([
+      const [pendingRes, newRowsRes, contactRes, chatRes, ticketsRes] = await Promise.all([
         sb
           .from("join_requests")
           .select("id", { count: "exact", head: true })
@@ -588,7 +596,11 @@ document.addEventListener("DOMContentLoaded", () => {
           .from("chat_rooms")
           .select("id", { count: "exact", head: true })
           .eq("status", "open")
-          .eq("room_type", "join_request")
+          .eq("room_type", "join_request"),
+        sb
+          .from("support_tickets")
+          .select("id", { count: "exact", head: true })
+          .in("status", ["open", "in_progress", "waiting"])
       ]);
 
       const pending = pendingRes.error ? 0 : pendingRes.count || 0;
@@ -601,6 +613,7 @@ document.addEventListener("DOMContentLoaded", () => {
       }, {});
       const contactNew = contactRes.error ? 0 : contactRes.count || 0;
       const openChats = chatRes.error ? 0 : chatRes.count || 0;
+      const openTickets = ticketsRes.error ? 0 : ticketsRes.count || 0;
 
       setBadgeCount("pendingRequests", pending);
       document.querySelectorAll('[data-badge="pendingRequests"]').forEach((el) => {
@@ -615,7 +628,8 @@ document.addEventListener("DOMContentLoaded", () => {
       });
       setBadgeCount("newContactMessages", contactNew);
       setBadgeCount("openChats", openChats);
-      setBadgeCount("supportTotal", contactNew + openChats);
+      setBadgeCount("openSupportTickets", openTickets);
+      setBadgeCount("supportTotal", contactNew + openChats + openTickets);
       setBadgeCount("newRequestsPlayer", byType.player || 0);
       setBadgeCount("newRequestsCoach", byType.coach || 0);
       setBadgeCount("newRequestsGuardian", byType.guardian || 0);

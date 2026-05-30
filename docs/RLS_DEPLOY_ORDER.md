@@ -24,6 +24,9 @@
 16. [`CONTACT_MESSAGES_RLS.sql`](CONTACT_MESSAGES_RLS.sql) + `contact_messages_dashboard.html` + `al_masariha_contact_page.html`
 17. [`STORE_ORDERS_RLS.sql`](STORE_ORDERS_RLS.sql) + `store_orders_dashboard.html` + `al_masariha_store_page.html`
 18. [`ACADEMY_SETTINGS_RLS.sql`](ACADEMY_SETTINGS_RLS.sql) + `academy_settings_dashboard.html` + الهيدر/الفوتر/الرئيسية
+19. [`AUDIT_LOG_SCHEMA.sql`](AUDIT_LOG_SCHEMA.sql) — جدول `audit_log` + RLS (RBAC-3)
+20. [`SUPPORT_TICKETS_SCHEMA.sql`](SUPPORT_TICKETS_SCHEMA.sql) — جدول `support_tickets` + RLS + `support_tickets_dashboard.html`
+21. [`PANEL_RLS_BY_DOMAIN.sql`](PANEL_RLS_BY_DOMAIN.sql) — **RLS كامل** حسب Domain (RBAC-3) — راجع [`PANEL_RLS_BY_DOMAIN.md`](PANEL_RLS_BY_DOMAIN.md)
 
 ( [`STAFF_AUTH_RLS.sql`](STAFF_AUTH_RLS.sql) — مُطبَّق مسبقاً على `academy_staff` )
 

@@ -222,6 +222,7 @@
     });
 
     syncGroupVisibility(menu);
+    menu.querySelectorAll("[data-panel-account]").forEach((el) => el.removeAttribute("hidden"));
     menu.classList.remove("nav-policy-pending");
   }
 
@@ -303,6 +304,294 @@
     if (redirectTo) window.location.replace(redirectTo);
     return false;
   }
+
+  const REQUESTS_FINAL_APPROVE_MSG =
+    "الاعتماد النهائي ورفض الطلب — للمشرف (مستوى L3) فما فوق فقط.";
+
+  function canApproveRequestsNow() {
+    const ctx = window.__panelAccessContext;
+    const rbac = RBAC();
+    if (!ctx || !rbac) return false;
+    return rbac.canAccess(ctx, "requests", "approve");
+  }
+
+  async function refreshRequestsApproveState() {
+    const session = typeof getAdminSession === "function" ? await getAdminSession() : null;
+    const user = session?.user;
+    if (user && typeof resolvePanelAccessContext === "function") {
+      window.__panelAccessContext = await resolvePanelAccessContext(user);
+    }
+    return canApproveRequestsNow();
+  }
+
+  async function ensureRequestsRbacReady() {
+    if (typeof getAdminSession !== "function") return false;
+    if (!window.PanelRBAC || typeof window.canPanel !== "function") {
+      if (typeof window.ensurePanelAccessLoaded === "function") {
+        await window.ensurePanelAccessLoaded();
+      } else {
+        await new Promise((resolve, reject) => {
+          const load = (src) =>
+            new Promise((res, rej) => {
+              const base = String(src).split("?")[0];
+              if (document.querySelector(`script[src^="${base}"]`)) return res();
+              const el = document.createElement("script");
+              el.src = src;
+              el.onload = res;
+              el.onerror = () => rej(new Error("Failed: " + src));
+              document.head.appendChild(el);
+            });
+          Promise.all([
+            window.PanelRBAC ? Promise.resolve() : load("js/panel-rbac.js?v=20260529-rbac2"),
+            typeof window.canPanel === "function" ? Promise.resolve() : load("js/panel-access.js?v=20260529-rbac2")
+          ])
+            .then(resolve)
+            .catch(reject);
+        });
+      }
+    }
+    return refreshRequestsApproveState();
+  }
+
+  function guardRequestsFinalAction(showMessage) {
+    if (canApproveRequestsNow()) return true;
+    const msg = REQUESTS_FINAL_APPROVE_MSG;
+    if (typeof showMessage === "function") showMessage(msg);
+    return false;
+  }
+
+  const STORE_DOMAIN = "store";
+  const STORE_MSG = {
+    productsWrite: "إضافة وتعديل المنتجات — لنائب مدير المتجر (L3) أو مدير المتجر (L2).",
+    productsDelete: "حذف المنتجات — لمدير المتجر (L2) فقط.",
+    ordersUpdate: "تحديث حالة الطلب — غير مسموح لمستوى صلاحيتك.",
+    ordersDelete: "حذف الطلبات — لمدير المتجر (L2) فقط."
+  };
+
+  function storePanelLevel(ctx) {
+    if (!ctx) return "L4";
+    if (ctx.isFullAdmin) return "L1";
+    return String(ctx.level || "L4").toUpperCase();
+  }
+
+  function canManageStoreProductsNow() {
+    const ctx = window.__panelAccessContext;
+    const rbac = RBAC();
+    if (!ctx || !rbac || !rbac.canAccess(ctx, STORE_DOMAIN, "read")) return false;
+    const l = storePanelLevel(ctx);
+    return l === "L1" || l === "L2" || l === "L3";
+  }
+
+  function canDeleteStoreProductsNow() {
+    const ctx = window.__panelAccessContext;
+    const rbac = RBAC();
+    if (!ctx || !rbac) return false;
+    return rbac.canAccess(ctx, STORE_DOMAIN, "delete");
+  }
+
+  function canUpdateStoreOrdersNow() {
+    const ctx = window.__panelAccessContext;
+    const rbac = RBAC();
+    if (!ctx || !rbac) return false;
+    return rbac.canAccess(ctx, STORE_DOMAIN, "update");
+  }
+
+  function canDeleteStoreOrdersNow() {
+    return canDeleteStoreProductsNow();
+  }
+
+  async function ensureStoreRbacReady() {
+    return ensureRequestsRbacReady();
+  }
+
+  function guardStoreProductsWrite(showMessage) {
+    if (canManageStoreProductsNow()) return true;
+    if (typeof showMessage === "function") showMessage(STORE_MSG.productsWrite);
+    return false;
+  }
+
+  function guardStoreProductsDelete(showMessage) {
+    if (canDeleteStoreProductsNow()) return true;
+    if (typeof showMessage === "function") showMessage(STORE_MSG.productsDelete);
+    return false;
+  }
+
+  function guardStoreOrdersUpdate(showMessage) {
+    if (canUpdateStoreOrdersNow()) return true;
+    if (typeof showMessage === "function") showMessage(STORE_MSG.ordersUpdate);
+    return false;
+  }
+
+  function guardStoreOrdersDelete(showMessage) {
+    if (canDeleteStoreOrdersNow()) return true;
+    if (typeof showMessage === "function") showMessage(STORE_MSG.ordersDelete);
+    return false;
+  }
+
+  const MEDIA_DOMAIN = "media";
+  const MEDIA_MSG = {
+    create: "رفع وسائط جديدة — غير مسموح لمستوى صلاحيتك.",
+    edit: "تعديل الوسائط — لمشرف المحتوى (L3) أو مدير الإعلام (L2).",
+    publish: "نشر المحتوى — لمشرف المحتوى (L3) أو مدير الإعلام (L2).",
+    delete: "حذف الوسائط — لمدير الإعلام (L2) فقط."
+  };
+
+  function mediaPanelLevel(ctx) {
+    if (!ctx) return "L4";
+    if (ctx.isFullAdmin) return "L1";
+    return String(ctx.level || "L4").toUpperCase();
+  }
+
+  function canCreateMediaNow() {
+    const ctx = window.__panelAccessContext;
+    const rbac = RBAC();
+    if (!ctx || !rbac) return false;
+    return rbac.canAccess(ctx, MEDIA_DOMAIN, "create");
+  }
+
+  function canEditMediaNow() {
+    const ctx = window.__panelAccessContext;
+    const rbac = RBAC();
+    if (!ctx || !rbac || !rbac.canAccess(ctx, MEDIA_DOMAIN, "read")) return false;
+    const l = mediaPanelLevel(ctx);
+    return l === "L1" || l === "L2" || l === "L3";
+  }
+
+  function canPublishMediaNow() {
+    const ctx = window.__panelAccessContext;
+    const rbac = RBAC();
+    if (!ctx || !rbac) return false;
+    return rbac.canAccess(ctx, MEDIA_DOMAIN, "approve");
+  }
+
+  function canDeleteMediaNow() {
+    const ctx = window.__panelAccessContext;
+    const rbac = RBAC();
+    if (!ctx || !rbac) return false;
+    return rbac.canAccess(ctx, MEDIA_DOMAIN, "delete");
+  }
+
+  async function ensureMediaRbacReady() {
+    return ensureRequestsRbacReady();
+  }
+
+  function guardMediaCreate(showMessage) {
+    if (canCreateMediaNow()) return true;
+    if (typeof showMessage === "function") showMessage(MEDIA_MSG.create);
+    return false;
+  }
+
+  function guardMediaEdit(showMessage) {
+    if (canEditMediaNow()) return true;
+    if (typeof showMessage === "function") showMessage(MEDIA_MSG.edit);
+    return false;
+  }
+
+  function guardMediaPublish(showMessage) {
+    if (canPublishMediaNow()) return true;
+    if (typeof showMessage === "function") showMessage(MEDIA_MSG.publish);
+    return false;
+  }
+
+  function guardMediaDelete(showMessage) {
+    if (canDeleteMediaNow()) return true;
+    if (typeof showMessage === "function") showMessage(MEDIA_MSG.delete);
+    return false;
+  }
+
+  const SUPPORT_DOMAIN = "support";
+  const SUPPORT_MSG = {
+    create: "فتح تذكرة دعم — لنائب مدير الدعم (L3) أو مدير الدعم (L2).",
+    update: "تحديث التذكرة — غير مسموح لمستوى صلاحيتك.",
+    delete: "حذف التذاكر — لمدير الدعم الفني (L2) فقط."
+  };
+
+  function supportPanelLevel(ctx) {
+    if (!ctx) return "L4";
+    if (ctx.isFullAdmin) return "L1";
+    return String(ctx.level || "L4").toUpperCase();
+  }
+
+  function canCreateSupportTicketsNow() {
+    const ctx = window.__panelAccessContext;
+    const rbac = RBAC();
+    if (!ctx || !rbac || !rbac.canAccess(ctx, SUPPORT_DOMAIN, "read")) return false;
+    const l = supportPanelLevel(ctx);
+    return l === "L1" || l === "L2" || l === "L3";
+  }
+
+  function canUpdateSupportTicketsNow() {
+    const ctx = window.__panelAccessContext;
+    const rbac = RBAC();
+    if (!ctx || !rbac) return false;
+    return rbac.canAccess(ctx, SUPPORT_DOMAIN, "update");
+  }
+
+  function canDeleteSupportTicketsNow() {
+    const ctx = window.__panelAccessContext;
+    const rbac = RBAC();
+    if (!ctx || !rbac) return false;
+    return rbac.canAccess(ctx, SUPPORT_DOMAIN, "delete");
+  }
+
+  async function ensureSupportRbacReady() {
+    return ensureRequestsRbacReady();
+  }
+
+  function guardSupportTicketsCreate(showMessage) {
+    if (canCreateSupportTicketsNow()) return true;
+    if (typeof showMessage === "function") showMessage(SUPPORT_MSG.create);
+    return false;
+  }
+
+  function guardSupportTicketsUpdate(showMessage) {
+    if (canUpdateSupportTicketsNow()) return true;
+    if (typeof showMessage === "function") showMessage(SUPPORT_MSG.update);
+    return false;
+  }
+
+  function guardSupportTicketsDelete(showMessage) {
+    if (canDeleteSupportTicketsNow()) return true;
+    if (typeof showMessage === "function") showMessage(SUPPORT_MSG.delete);
+    return false;
+  }
+
+  window.STORE_MSG = STORE_MSG;
+  window.canManageStoreProductsNow = canManageStoreProductsNow;
+  window.canDeleteStoreProductsNow = canDeleteStoreProductsNow;
+  window.canUpdateStoreOrdersNow = canUpdateStoreOrdersNow;
+  window.canDeleteStoreOrdersNow = canDeleteStoreOrdersNow;
+  window.ensureStoreRbacReady = ensureStoreRbacReady;
+  window.guardStoreProductsWrite = guardStoreProductsWrite;
+  window.guardStoreProductsDelete = guardStoreProductsDelete;
+  window.guardStoreOrdersUpdate = guardStoreOrdersUpdate;
+  window.guardStoreOrdersDelete = guardStoreOrdersDelete;
+
+  window.MEDIA_MSG = MEDIA_MSG;
+  window.canCreateMediaNow = canCreateMediaNow;
+  window.canEditMediaNow = canEditMediaNow;
+  window.canPublishMediaNow = canPublishMediaNow;
+  window.canDeleteMediaNow = canDeleteMediaNow;
+  window.ensureMediaRbacReady = ensureMediaRbacReady;
+  window.guardMediaCreate = guardMediaCreate;
+  window.guardMediaEdit = guardMediaEdit;
+  window.guardMediaPublish = guardMediaPublish;
+  window.guardMediaDelete = guardMediaDelete;
+
+  window.SUPPORT_MSG = SUPPORT_MSG;
+  window.canCreateSupportTicketsNow = canCreateSupportTicketsNow;
+  window.canUpdateSupportTicketsNow = canUpdateSupportTicketsNow;
+  window.canDeleteSupportTicketsNow = canDeleteSupportTicketsNow;
+  window.ensureSupportRbacReady = ensureSupportRbacReady;
+  window.guardSupportTicketsCreate = guardSupportTicketsCreate;
+  window.guardSupportTicketsUpdate = guardSupportTicketsUpdate;
+  window.guardSupportTicketsDelete = guardSupportTicketsDelete;
+
+  window.REQUESTS_FINAL_APPROVE_MSG = REQUESTS_FINAL_APPROVE_MSG;
+  window.canApproveRequestsNow = canApproveRequestsNow;
+  window.refreshRequestsApproveState = refreshRequestsApproveState;
+  window.ensureRequestsRbacReady = ensureRequestsRbacReady;
+  window.guardRequestsFinalAction = guardRequestsFinalAction;
 
   window.PANEL_ROLE_LABELS = PANEL_ROLE_LABELS;
   window.PANEL_ROLE_OPTIONS = PANEL_ROLE_OPTIONS;

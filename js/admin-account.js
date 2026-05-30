@@ -169,6 +169,9 @@
 
     let profile = await fetchStaffByAuthUserId(sb, user.id).catch(() => null);
     if (profile) {
+      if (String(profile.status || "").toLowerCase() !== "active") {
+        throw new Error("سجل الكادر غير نشط. تواصل مع المدير العام.");
+      }
       staffId = profile.id;
       return profile;
     }
@@ -181,16 +184,28 @@
 
     if (typeof fetchStaffProfileByEmail === "function") {
       profile = await fetchStaffProfileByEmail(user.email);
+      if (profile && String(profile.status || "").toLowerCase() !== "active") {
+        throw new Error("سجل الكادر غير نشط. تواصل مع المدير العام.");
+      }
       if (profile) {
         profile = (await linkPendingStaff(sb, user)) || profile;
-        staffId = profile.id;
-        return profile;
+        if (profile?.id) {
+          staffId = profile.id;
+          return profile;
+        }
       }
     }
 
-    profile = await bootstrapStaffRow(sb, user, settings);
-    staffId = profile.id;
-    return profile;
+    const isGm = typeof isAdminUser === "function" && isAdminUser(user);
+    if (isGm) {
+      profile = await bootstrapStaffRow(sb, user, settings);
+      staffId = profile.id;
+      return profile;
+    }
+
+    throw new Error(
+      "لا يوجد سجل كادر نشط لهذا البريد. اطلب من المدير العام إضافتك من «الموظفون والصلاحيات»."
+    );
   }
 
   function fillForm(user, profile, identity, settings) {
@@ -198,12 +213,29 @@
     $("accRole").value = identity?.title || profile?.job_title_ar || "—";
     $("accName").value = resolvePersonalName(user, profile, settings);
     $("accPhone").value = resolvePhone(profile, user, settings);
+    applyAccountFormState(!!profile?.id);
+  }
+
+  function applyAccountFormState(linked) {
+    const canSaveProfile = !!linked;
+    if ($("accName")) $("accName").disabled = !canSaveProfile;
+    if ($("accPhone")) $("accPhone").disabled = !canSaveProfile;
+    if ($("saveProfileBtn")) $("saveProfileBtn").disabled = !canSaveProfile;
   }
 
   async function loadForm() {
     const session = await getAdminSession();
     const user = session?.user;
     if (!user) return;
+
+    try {
+      if (typeof ensurePanelAccessLoaded === "function") await ensurePanelAccessLoaded();
+      if (typeof resolvePanelAccessContext === "function") {
+        window.__panelAccessContext = await resolvePanelAccessContext(user);
+      }
+    } catch (e) {
+      console.warn("[admin-account] rbac:", e);
+    }
 
     const settings = await loadAcademySettingsSafe();
     const identity =
@@ -212,12 +244,13 @@
     try {
       const profile = await ensureStaffRow(user, settings);
       fillForm(user, profile, identity, settings);
+      showStatus("", "ok");
     } catch (e) {
       console.error("[admin-account]", e);
       fillForm(user, null, identity, settings);
       showStatus(
         e?.message ||
-          "تعذر ربط حسابك بجدول الكوادر. انسخ سكربت RBAC من المحادثة ونفّذه في Supabase ثم سجّل خروجاً ودخولاً.",
+          "تعذر ربط حسابك بجدول الكوادر. يمكنك تحديث كلمة المرور؛ لحفظ الاسم والجوال تواصل مع المدير العام.",
         "error"
       );
     }
@@ -237,8 +270,17 @@
         updated_at: new Date().toISOString()
       };
       const { error } = await sb.from("academy_staff").update(payload).eq("id", staffId);
-      if (error) throw error;
-      showStatus("تم حفظ بياناتك.", "ok");
+    if (error) throw error;
+    showStatus("تم حفظ بياناتك.", "ok");
+    if (typeof logPanelAudit === "function") {
+      void logPanelAudit({
+        domain: "account",
+        action: window.PANEL_AUDIT?.ACCOUNT_PROFILE || "account.profile_update",
+        entityType: "academy_staff",
+        entityId: staffId,
+        summary: "تحديث الاسم والجوال من صفحة حسابي"
+      });
+    }
     } catch (e) {
       console.error(e);
       showStatus("تعذر الحفظ: " + (e.message || ""), "error");
@@ -264,6 +306,13 @@
       $("accPass").value = "";
       $("accPass2").value = "";
       showStatus("تم تحديث كلمة المرور.", "ok");
+      if (typeof logPanelAudit === "function") {
+        void logPanelAudit({
+          domain: "auth",
+          action: window.PANEL_AUDIT?.AUTH_PASSWORD || "auth.password_change",
+          summary: "تحديث كلمة المرور من صفحة حسابي"
+        });
+      }
     } catch (e) {
       console.error(e);
       showStatus("تعذر تحديث كلمة المرور: " + (e.message || ""), "error");

@@ -9,10 +9,13 @@
   <style>
     .status-published{color:#caffdd;background:rgba(21,145,95,.14)}
     .status-draft,.status-archived{color:#dce5f4;background:rgba(255,255,255,.06)}
+    .mini-btn-accent{color:#caffdd;border-color:rgba(21,145,95,.35);background:rgba(21,145,95,.12)}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="js/supabase-client.js"></script>
+  <script src="js/panel-rbac.js?v=20260529-rbac2"></script>
+  <script src="js/panel-access.js?v=20260529-rbac2"></script>
   <script src="js/admin-auth.js"></script>
   <script>requireAdmin();</script>
 </head>
@@ -96,7 +99,7 @@
       </section>
     </main>
   </div>
-  <script src="js/media-admin.js"></script>
+  <script src="js/media-admin.js?v=20260529-rbac2"></script>
   <script src="admin_sidebar.js"></script>
 </body>
 </html>
