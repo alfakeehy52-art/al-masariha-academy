@@ -34,9 +34,11 @@
       return "هذا البريد مسجّل مسبقاً. استخدم تبويب «دخول» أو استعادة كلمة المرور.";
     }
     if (/signup is disabled/i.test(msg)) {
-      return "التسجيل الذاتي معطّل في Supabase. فعّله من Authentication → Providers.";
+      return "التسجيل الذاتي غير متاح حالياً. تواصل مع إدارة الأكاديمية.";
     }
-    return msg || "تعذر إكمال العملية.";
+    return typeof sanitizeAuthMessage === "function"
+      ? sanitizeAuthMessage(msg, "تعذر إكمال العملية.")
+      : msg || "تعذر إكمال العملية.";
   }
 
   function isStaffSessionUser(user) {

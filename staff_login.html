@@ -36,6 +36,7 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="js/supabase-client.js"></script>
+  <script src="js/visitor-message.js"></script>
   <script src="js/staff-auth.js"></script>
   <script src="js/auth-password-reset.js"></script>
   <script>redirectIfStaffLoggedIn("staff_dashboard.html");</script>
@@ -57,7 +58,7 @@
 
     <div class="panel active" id="panel-login">
       <label for="loginEmail">البريد الإلكتروني</label>
-      <input type="email" id="loginEmail" autocomplete="username" placeholder="example@email.com" />
+      <input type="email" id="loginEmail" autocomplete="username" placeholder="أدخل بريدك الإلكتروني" />
       <label for="loginPassword">كلمة المرور</label>
       <input type="password" id="loginPassword" autocomplete="current-password" placeholder="كلمة المرور" />
       <button type="button" id="loginBtn">دخول</button>
@@ -88,7 +89,7 @@
     </div>
 
     <p class="hint">
-      بعد اعتماد طلبك من الإدارة، يُنشأ سجل في <strong>academy_staff</strong>.
+      بعد اعتماد طلبك من الإدارة، يُنشأ سجل كادر مرتبط بحسابك.
       فعّل الحساب مرة واحدة ثم استخدم «دخول».
       <br /><a href="request_status.html">متابعة حالة الطلب</a>
       · <a href="index.html">الرئيسية</a>
@@ -145,7 +146,7 @@
       try {
         await fn();
       } catch (e) {
-        showErr(e && e.message ? e.message : null);
+        showErr(typeof sanitizeAuthMessage === "function" ? sanitizeAuthMessage(e && e.message, null) : (e && e.message ? e.message : null));
       } finally {
         btn.disabled = false;
         btn.textContent = old;

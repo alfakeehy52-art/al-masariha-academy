@@ -49,7 +49,7 @@
     const emails = getAdminEmailList();
     if (!emails.length) {
       list.innerHTML =
-        '<li class="warn">لا توجد عناوين مسموحة — أضف البريد في supabase-config.js ثم ارفع الموقع.</li>';
+        '<li class="warn">لا توجد عناوين مسموحة — أضف البريد في إعدادات الموقع (ملف الاتصال) ثم ارفع الموقع.</li>';
       return;
     }
     list.innerHTML = emails.map((e) => `<li><strong>${esc(e)}</strong> — مسموح بدخول لوحة الإدارة</li>`).join("");
@@ -241,6 +241,7 @@
         meta: { patch, email: row?.email || null, full_name: row?.full_name || null }
       });
     }
+    if (typeof clearPanelAccessCache === "function") clearPanelAccessCache();
   }
 
   function domainsFromRowCheckboxes(staffId) {
@@ -305,9 +306,14 @@
         console.error(err);
         const msg = String(err.message || "");
         if (/panel_level|panel_domains|column/i.test(msg)) {
-          showStatus("نفّذ سكربت RBAC_PANEL_GRANTS.sql في Supabase ثم أعد المحاولة.", "error");
+          showStatus("تعذر الحفظ. تواصل مع مسؤول النظام لتفعيل صلاحيات لوحة التحكم.", "error");
         } else {
-          showStatus("تعذر الحفظ: " + (msg || "تحقق من RLS"), "error");
+          showStatus(
+            typeof sanitizeAdminMessage === "function"
+              ? sanitizeAdminMessage(msg, "تعذر الحفظ. تحقق من صلاحياتك أو تواصل مع مسؤول النظام.")
+              : "تعذر الحفظ. تحقق من صلاحياتك أو تواصل مع مسؤول النظام.",
+            "error"
+          );
         }
       } finally {
         el.disabled = false;

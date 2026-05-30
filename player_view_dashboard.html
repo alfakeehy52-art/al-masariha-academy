@@ -24,7 +24,12 @@
     .page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;margin-bottom:22px;flex-wrap:wrap}
     .page-title h2{margin:0;font-size:36px;font-weight:900}
     .page-title p{margin:8px 0 0;color:var(--muted);font-size:14px;line-height:1.9}
-    .head-actions{display:flex;gap:12px;flex-wrap:wrap}
+    .head-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+    .head-actions .act-icon{display:inline-flex;align-items:center;justify-content:center;width:42px;height:42px;padding:0;border-radius:11px;border:1px solid rgba(255,255,255,.08);background:rgba(255,255,255,.05);color:var(--text);cursor:pointer;text-decoration:none;flex-shrink:0}
+    .head-actions .act-icon svg{width:18px;height:18px;display:block}
+    .head-actions .act-icon-edit{color:#ffe79c;border-color:rgba(213,177,90,.32)}
+    .head-actions .act-icon-delete{color:#ffd7d7;border-color:rgba(197,82,82,.32)}
+    .head-actions .act-icon-back{color:#dce5f4}
     .btn{border:none;border-radius:16px;padding:14px 18px;font-family:inherit;font-weight:900;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:.22s ease}
     .btn:hover{transform:translateY(-2px)}
     .btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold-2));color:#17140c;box-shadow:0 14px 30px rgba(215,179,95,.18)}
@@ -113,10 +118,10 @@
           <h2>ملف اللاعب</h2>
           <p>هذه الصفحة مخصصة للإدارة فقط، وتعرض بيانات اللاعب الكاملة مع الإحصائيات الأساسية ومعلومات السجل.</p>
         </div>
-        <div class="head-actions">
-          <a class="btn btn-dark" href="players_list_dashboard.html">العودة لقائمة اللاعبين</a>
-          <button class="btn btn-gold" type="button" id="editPlayerBtn">تعديل اللاعب</button>
-          <button class="btn btn-danger" type="button" id="deletePlayerBtn">حذف اللاعب</button>
+        <div class="head-actions row-actions-icons">
+          <a class="act-icon act-icon-back" href="players_list_dashboard.html" title="العودة لقائمة اللاعبين" aria-label="العودة لقائمة اللاعبين"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg></a>
+          <button class="act-icon act-icon-edit" type="button" id="editPlayerBtn" title="تعديل اللاعب" aria-label="تعديل اللاعب"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4 12.5-12.5z"/></svg></button>
+          <button class="act-icon act-icon-delete" type="button" id="deletePlayerBtn" title="حذف اللاعب" aria-label="حذف اللاعب"><svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/></svg></button>
         </div>
       </div>
 
@@ -140,6 +145,8 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="js/supabase-client.js"></script>
+  <script src="js/ui-labels.js?v=20260529-launch"></script>
+  <script src="js/player-image.js?v=20260529-launch"></script>
   <script src="admin_sidebar.js"></script>
   <script>
     const supabaseClient = createSupabaseClient();
@@ -324,7 +331,10 @@
       }
 
       currentPlayer = data;
-      renderPlayer(data);
+      if (typeof resolvePlayerPhoto === "function") {
+        await resolvePlayerPhoto(supabaseClient, currentPlayer);
+      }
+      renderPlayer(currentPlayer);
     }
 
     function renderPlayer(player){
@@ -332,11 +342,17 @@
       const overall = player.overall || overallFromRatings(ratings);
       const age = calcAge(player);
       const category = safeValue(normalizeCategory(player.category));
-      const position = safeValue(player.position, "لاعب");
+      const position = safeValue(typeof positionLabelAr === "function" ? positionLabelAr(player.position) : player.position, "لاعب");
       const foot = safeValue(player.preferred_foot || player.preferredFoot);
       const height = safeValue(player.height);
-      const shirtNumber = safeValue(player.shirt_number || player.shirtNumber || player.code);
-      const code = safeValue(player.code || player.shirt_number || player.shirtNumber);
+      const shirtNumber =
+        typeof formatPlayerDisplayNumber === "function"
+          ? formatPlayerDisplayNumber(player)
+          : safeValue(player.shirt_number || player.shirtNumber || player.code);
+      const code =
+        typeof formatPlayerDisplayNumber === "function"
+          ? formatPlayerDisplayNumber(player)
+          : safeValue(player.code || player.shirt_number || player.shirtNumber);
       const city = safeValue(player.city);
       const phone = safeValue(player.phone);
       const email = safeValue(player.email);
@@ -346,12 +362,15 @@
       const joinedAt = formatDate(player.created_at || player.joined_at || player.joinedAt);
       const status = safeValue(player.player_status || player.status, "نشط");
       const notes = player.notes || "لا توجد ملاحظات إضافية لهذا اللاعب حاليًا.";
-      const sourceRequestId = safeValue(player.reference_code || player.source_request_id);
+      const sourceRequestId =
+        typeof formatRequestRef === "function"
+          ? formatRequestRef(player.reference_code || player.source_request_code)
+          : safeValue(player.reference_code);
       const matches = player.matches || 0;
       const goals = player.goals || 0;
       const assists = player.assists || 0;
       const avg = player.avg_rate || player.avgRate || (overall / 10).toFixed(1);
-      const image = player.image || "";
+      const image = (typeof resolvePlayerImageUrl === "function" ? resolvePlayerImageUrl(player) : player.image) || "";
       const playerName = safeValue(player.full_name || player.fullName, "لاعب بدون اسم");
 
       document.getElementById("playerViewRoot").innerHTML = `
@@ -361,7 +380,7 @@
               <div class="card-top">
                 <div class="shirt-number">${escapeHtml(shirtNumber)}</div>
                 <div class="position-box">${escapeHtml(position)}</div>
-                <div class="ovr-box">${escapeHtml(overall)}<small>OVR</small></div>
+                <div class="ovr-box">${escapeHtml(overall)}<small>تقييم</small></div>
               </div>
 
               <div class="avatar-wrap">
@@ -407,7 +426,7 @@
                   <h4>بيانات اللاعب</h4>
                   <div class="detail-list">
                     ${detail("الاسم الكامل", playerName)}
-                    ${detail("رقم اللاعب", code)}
+                    ${detail("رقم القميص", shirtNumber)}
                     ${detail("الفئة", category)}
                     ${detail("الفريق", player.team)}
                     ${detail("المركز", position)}
@@ -426,7 +445,7 @@
                     ${detail("كود المدرب", coachCode)}
                     ${detail("المسار / المستوى", level)}
                     ${detail("تاريخ الإنشاء", joinedAt)}
-                    ${detail("رقم الطلب المرتبط", sourceRequestId)}
+                    ${detail("مرجع الطلب", sourceRequestId)}
                     ${detail("القدم المفضلة", foot)}
                   </div>
                 </section>
@@ -456,7 +475,7 @@
       const deleteBtn = document.getElementById("deletePlayerBtn");
       if (deleteBtn){
         deleteBtn.disabled = true;
-        deleteBtn.textContent = "جاري الحذف...";
+        deleteBtn.setAttribute("aria-busy", "true");
       }
 
       const { error } = await supabaseClient
@@ -469,7 +488,7 @@
         showToast("تعذر حذف اللاعب. تحقق من صلاحيات الحذف أو الاتصال.", "error");
         if (deleteBtn){
           deleteBtn.disabled = false;
-          deleteBtn.textContent = "حذف اللاعب";
+          deleteBtn.removeAttribute("aria-busy");
         }
         return;
       }

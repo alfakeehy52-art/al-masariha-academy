@@ -14,15 +14,17 @@
   function uploadErrorMessage(err) {
     const msg = String((err && (err.message || err.error_description)) || err || "").trim();
     if (/row-level security|policy|403|401/i.test(msg)) {
-      return "رفض التخزين: صلاحيات الرفع غير مفعّلة. نفّذ REQUEST_COMPLETIONS_STORAGE_FIX.sql في Supabase.";
+      return "تعذر رفع الملف. تواصل مع إدارة الأكاديمية.";
     }
     if (/payload too large|413|size/i.test(msg)) {
-      return "حجم الملف كبير جداً. جرّب صورة أصغر أو PDF مضغوط.";
+      return "حجم الملف كبير جداً. جرّب صورة أصغر أو ملفاً مضغوطاً.";
     }
     if (/network|fetch|timeout|failed/i.test(msg)) {
       return "تعذر الاتصال أثناء الرفع. تحقق من الإنترنت وحاول مرة أخرى.";
     }
-    return msg || "تعذر رفع الملف.";
+    return typeof sanitizeVisitorMessage === "function"
+      ? sanitizeVisitorMessage(msg, "تعذر رفع الملف.")
+      : "تعذر رفع الملف.";
   }
 
   function readAsImage(file) {

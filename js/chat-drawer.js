@@ -60,8 +60,10 @@
     }
     if (msg.includes("admin only")) return "يلزم تسجيل دخول إداري.";
     if (msg.includes("access denied")) return "لا صلاحية للوصول لهذه المحادثة.";
-    if (msg.includes("room is not open")) return "الغرفة مغلقة.";
-    return msg || "تعذر تنفيذ العملية.";
+    if (msg.includes("room is not open")) return "المحادثة مغلقة.";
+    return typeof sanitizeVisitorMessage === "function"
+      ? sanitizeVisitorMessage(msg, "تعذر تنفيذ العملية.")
+      : "تعذر تنفيذ العملية.";
   }
 
   function ensureDom() {
@@ -296,7 +298,7 @@
     titleEl.textContent = opts.title || "تواصل";
     subtitleEl.textContent = opts.subtitle || "";
     setStatus("جاري فتح المحادثة...");
-    messagesEl.innerHTML = '<div class="chat-drawer-empty">...</div>';
+    messagesEl.innerHTML = '<div class="chat-drawer-empty">جاري تحميل الرسائل…</div>';
     inputEl.value = "";
     inputEl.disabled = true;
     sendBtn.disabled = true;

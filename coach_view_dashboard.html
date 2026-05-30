@@ -216,7 +216,9 @@ const app = document.getElementById('app');
 let allPlayers = [];
 
 function coachCode(coach){
-  return `COA-${String(coach.id || '').replace(/-/g, '').slice(0, 8).toUpperCase()}`;
+  if (typeof formatEntityRef === "function") return formatEntityRef(coach);
+  const ref = String(coach?.reference_code || coach?.code || "").trim();
+  return ref && !/^[0-9A-F]{6,16}$/i.test(ref) ? ref : "—";
 }
 
 function escapeHtml(v){
@@ -292,7 +294,7 @@ function renderPlayerCard(player){
     <article class="player-fifa-card">
       <div class="player-card-inner">
         <div class="player-card-top">
-          <div class="ovr-box">${overall}<small>OVR</small></div>
+          <div class="ovr-box">${overall}<small>تقييم</small></div>
           <div class="position-pill">${position}</div>
           <div class="shirt-box">${shirt}</div>
         </div>
@@ -393,7 +395,7 @@ function renderCoachView(coach){
 async function loadCoachView(){
   const id = String(new URLSearchParams(window.location.search).get('id') || '').trim();
   if (!id) {
-    renderEmpty('لم يتم تمرير معرّف المدرب في الرابط.');
+    renderEmpty('لم يتم تمرير رقم المدرب في الرابط.');
     return;
   }
 

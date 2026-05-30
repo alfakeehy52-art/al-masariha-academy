@@ -183,6 +183,10 @@
       alert("أدخل عنوان الخبر.");
       return;
     }
+    if (/^اختبار$/i.test(payload.title)) {
+      alert("عنوان «اختبار» محجوز للتجربة — استخدم عنواناً واضحاً للخبر.");
+      return;
+    }
     let error;
     if (id) {
       ({ error } = await supabaseClient.from("academy_news").update(payload).eq("id", id));

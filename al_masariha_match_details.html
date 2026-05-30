@@ -76,7 +76,7 @@ async function loadMatch(){
   const id=qp('id');
   const board=document.getElementById('matchScoreboard');
   if(!id){
-    board.innerHTML='<div class="empty-note">لم يُحدَّد معرّف المباراة. <a href="al_masariha_matches_page.html">العودة للقائمة</a></div>';
+    board.innerHTML='<div class="empty-note">لم يُحدَّد رابط المباراة. <a href="al_masariha_matches_page.html">العودة للقائمة</a></div>';
     return;
   }
   try{

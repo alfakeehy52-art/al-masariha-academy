@@ -696,6 +696,8 @@ html, body{
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="js/supabase-client.js"></script>
+  <script src="js/ui-labels.js?v=20260529-launch"></script>
+  <script src="js/player-image.js?v=20260529-launch"></script>
   <script>
     const supabaseClient = createSupabaseClient();
 
@@ -714,7 +716,12 @@ html, body{
         return [];
       }
 
-      return (data || []).map(normalizePlayerRecord);
+      const rows = data || [];
+      if (typeof enrichPlayersWithPhotos === "function" && rows.length) {
+        await enrichPlayersWithPhotos(supabaseClient, rows);
+      }
+
+      return rows.map(normalizePlayerRecord);
     }
 
     function normalizePlayerRecord(row){
@@ -733,9 +740,12 @@ html, body{
         playerStatus: row.player_status || "",
         notes: row.notes || "",
         code: row.code || "",
-        shirtNumber: row.shirt_number || row.code || "",
+        shirt_number: row.shirt_number || "",
+        shirtNumber: row.shirt_number || "",
+        reference_code: row.reference_code || "",
         preferredFoot: row.preferred_foot || "القدم اليمنى",
         guardian: row.guardian_name || "",
+        sourceRequestId: row.source_request_id || "",
         image: row.image || "",
         height: row.height || "",
         overall: row.overall || null,
@@ -808,12 +818,19 @@ html, body{
       return `يعرض ${shownPhrase} من ${arabicPlayerCountPhrase(total)}.`;
     }
 
-    function publicPosition(player){
+    function positionFilterKey(player){
       const p = String(player.position || "").trim();
       const map = {
         "مهاجم":"ST","جناح":"RW","وسط":"CM","وسط هجومي":"CAM","محور":"CDM","مدافع":"CB","حارس مرمى":"GK","ظهير أيمن":"RB","ظهير أيسر":"LB"
       };
-      return map[p] || p || "CM";
+      if (map[p]) return map[p];
+      const upper = p.toUpperCase();
+      if (/^[A-Z]{2,4}$/.test(upper)) return upper;
+      return "CM";
+    }
+
+    function publicPosition(player){
+      return positionFilterKey(player);
     }
 
     function buildRatings(player){
@@ -879,7 +896,8 @@ html, body{
 
     function renderStats(players){
       document.getElementById("statTotalPlayers").textContent = players.length;
-      document.getElementById("statPositions").textContent = new Set(players.map(p => publicPosition(p))).size;
+      const posLabels = players.map(p => positionBadgeLabel(p));
+      document.getElementById("statPositions").textContent = new Set(posLabels).size;
       document.getElementById("statTopRated").textContent = players.filter(p => overall(p) >= 80).length;
     }
 
@@ -887,7 +905,10 @@ html, body{
       const pos = publicPosition(player);
       const positionLabel = positionBadgeLabel(player);
       const rating = overall(player);
-      const number = player.shirtNumber || player.code || "-";
+      const number =
+        typeof formatPlayerDisplayNumber === "function"
+          ? formatPlayerDisplayNumber(player)
+          : (player.shirtNumber && /^\d{1,3}$/.test(String(player.shirtNumber).trim()) ? String(player.shirtNumber).trim() : "—");
       const role = roleArabic(player.position || pos);
       const category = normalizeCategory(player.category);
       const foot = player.preferredFoot || "القدم اليمنى";
@@ -905,7 +926,7 @@ html, body{
             <div class="player-position">${escapeHtml(positionLabel)}</div>
             <div class="player-number">${escapeHtml(number)}</div>
           </div>
-          <div class="player-avatar-wrap"><div class="player-avatar">${player.image ? `<img src="${escapeHtml(player.image)}" alt="${escapeHtml(player.fullName || "")}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : escapeHtml(getInitials(player.fullName || ""))}</div></div>
+          <div class="player-avatar-wrap"><div class="player-avatar">${(typeof resolvePlayerImageUrl === "function" ? resolvePlayerImageUrl(player) : player.image) ? `<img src="${escapeHtml(typeof resolvePlayerImageUrl === "function" ? resolvePlayerImageUrl(player) : player.image)}" alt="${escapeHtml(player.fullName || "")}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">` : escapeHtml(getInitials(player.fullName || ""))}</div></div>
           <div class="player-info">
             <h3 class="player-name">${escapeHtml(player.fullName || "-")}</h3>
             <p class="player-role">${escapeHtml(role)}</p>

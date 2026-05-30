@@ -62,8 +62,14 @@ const REQUESTS_LAST_FILTERS_KEY = 'admin_requests_last_filters_v1';
 function $(id){return document.getElementById(id)}
 function escapeHtml(value){return String(value ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#039;')}
 function shortText(v,n=70){const s=String(v||'');return s.length>n?s.slice(0,n)+'…':s}
-function getTypeLabel(type){return TYPE_LABELS[type]||type||'-'}
-function getStatusLabel(status){return STATUS_LABELS[status]||status||'جديد'}
+function getTypeLabel(type){
+  if(typeof labelTypeAr==='function') return labelTypeAr(type,'-');
+  return TYPE_LABELS[type]||'-';
+}
+function getStatusLabel(status){
+  if(typeof labelStatusAr==='function') return labelStatusAr(status,'جديد');
+  return STATUS_LABELS[status]||'جديد';
+}
 function goalLabel(v){return window.GUARDIAN_GOALS?.goalLabel?window.GUARDIAN_GOALS.goalLabel(v):v||'-'}
 function parseInterestsLine(notes){
   const m=String(notes||'').match(/الاهتمامات:\s*([^\n]+)/);
@@ -128,12 +134,15 @@ function applyRequestsApproveUi(){
 }
 function buildRowActions(r){
   const id=escapeInlineJsString(r.id);
-  let html=`<button class="mini-btn review" onclick="openRequest('${id}')">عرض</button><button class="mini-btn chat" type="button" onclick="openChatForRequest('${id}')">تواصل</button>`;
+  const btn=typeof actIconBtn==='function'?actIconBtn:(k,l,o)=>`<button class="mini-btn review" onclick="${o}">${l}</button>`;
+  let html='';
+  html+=btn('view','عرض التفاصيل',`openRequest('${id}')`);
+  html+=btn('chat','تواصل',`openChatForRequest('${id}')`);
   if(userCanFinalApproveRequests()){
-    if(getStatusLabel(r.status)!=='مقبول') html+=`<button class="mini-btn accept" onclick="updateStatus('${id}','approved')">قبول</button>`;
-    if(getStatusLabel(r.status)!=='مرفوض') html+=`<button class="mini-btn reject" onclick="updateStatus('${id}','rejected')">رفض</button>`;
+    if(getStatusLabel(r.status)!=='مقبول') html+=btn('accept','قبول الطلب',`updateStatus('${id}','approved')`);
+    if(getStatusLabel(r.status)!=='مرفوض') html+=btn('reject','رفض الطلب',`updateStatus('${id}','rejected')`);
   }
-  if(showCompletionAction(r)) html+=`<button class="mini-btn more" onclick="updateStatus('${id}','pending')">استكمال</button>`;
+  if(showCompletionAction(r)) html+=btn('more','طلب استكمال',`updateStatus('${id}','pending')`);
   return html;
 }
 function syncModalActions(r){
@@ -210,7 +219,7 @@ function updateRequestsBackLinks(){
   const href=buildRequestsReturnUrl();
   document.querySelectorAll('.hero a.btn[href="admin_requests_dashboard.html"]').forEach((link)=>{
     link.setAttribute('href', href);
-    link.setAttribute('title', 'العودة إلى إدارة الطلبات مع آخر فلتر');
+    link.setAttribute('title', 'العودة إلى إدارة الطلبات مع آخر تصفية');
   });
 }
 function clearLastRequestsFilters(){
@@ -247,7 +256,7 @@ function resetRequestsFilters(){
     }
   }catch(_e){}
   updateRequestsBackLinks();
-  showToast('تمت إعادة تعيين الفلاتر.','success');
+  showToast('تمت إعادة تعيين التصفية.','success');
 }
 function ensureResetFiltersButton(){
   if($('resetRequestsFiltersBtn')) return;
@@ -257,8 +266,8 @@ function ensureResetFiltersButton(){
   btn.type='button';
   btn.className=host.classList.contains('filters')?'btn btn-secondary':'btn';
   btn.id='resetRequestsFiltersBtn';
-  btn.textContent='إعادة تعيين الفلاتر';
-  btn.title='مسح الفلاتر المحفوظة والعودة للعرض الافتراضي';
+  btn.textContent='إعادة تعيين التصفية';
+  btn.title='مسح خيارات التصفية والعودة للعرض الافتراضي';
   host.appendChild(btn);
 }
 
@@ -419,7 +428,7 @@ function applyStatusFilterFromStat(filter, options){
   updateRequestStatsUI();
   if(options && options.toast){
     const labels={all:'تم عرض كل الطلبات',new:'تم عرض الطلبات الجديدة',review:'تم عرض الجاهز للمراجعة',approved:'تم عرض المعتمدة',pending:'تم عرض بانتظار الاستكمال',active:'تم عرض الطلبات النشطة'};
-    showToast(labels[filter]||'تم تطبيق الفلتر.','success');
+    showToast(labels[filter]||'تم تطبيق التصفية.','success');
   }
   const table=$('requestsTableBody');
   if(table) table.scrollIntoView({behavior:'smooth',block:'nearest'});
@@ -531,10 +540,10 @@ function renderTable(type){
   const rows=filtered().map(r=>{
     const actionHtml=buildRowActions(r);
     if(!cfg){
-      return `<tr><td data-label="رقم المرجع"><span class="tag tag-ref">${escapeHtml(refCode(r))}</span></td><td data-label="الطلب"><b class="request-title">${escapeHtml(r.full_name||'طلب بدون اسم')}</b><span class="subtext">${escapeHtml(r.phone||'-')} • ${escapeHtml(r.city||'-')}</span></td><td data-label="النوع">${escapeHtml(getTypeLabel(r.request_type))}</td><td data-label="الحالة"><span class="tag ${statusClass(r.status||'new')}">${escapeHtml(getStatusLabel(r.status||'new'))}</span></td><td data-label="بيانات التواصل">${escapeHtml(getTableDetailCell(r))}</td><td data-label="تاريخ الإرسال"><div>${escapeHtml(formatDate(r.created_at))}</div><span class="subtext">${escapeHtml(formatTime(r.created_at))}</span></td><td data-label="الإجراءات"><div class="row-actions">${actionHtml}</div></td></tr>`;
+      return `<tr><td data-label="رقم المرجع"><span class="tag tag-ref">${escapeHtml(refCode(r))}</span></td><td data-label="الطلب"><b class="request-title">${escapeHtml(r.full_name||'طلب بدون اسم')}</b><span class="subtext">${escapeHtml(r.phone||'-')} • ${escapeHtml(r.city||'-')}</span></td><td data-label="النوع">${escapeHtml(getTypeLabel(r.request_type))}</td><td data-label="الحالة"><span class="tag ${statusClass(r.status||'new')}">${escapeHtml(getStatusLabel(r.status||'new'))}</span></td><td data-label="بيانات التواصل">${escapeHtml(getTableDetailCell(r))}</td><td data-label="تاريخ الإرسال"><div>${escapeHtml(formatDate(r.created_at))}</div><span class="subtext">${escapeHtml(formatTime(r.created_at))}</span></td><td data-label="الإجراءات"><div class="row-actions row-actions-icons">${actionHtml}</div></td></tr>`;
     }
     const vals=cfg.fields(r);
-    const cells=[`<td data-label="رقم المرجع"><span class="tag tag-ref">${escapeHtml(refCode(r))}</span></td>`,`<td data-label="صاحب الطلب"><b class="request-title">${escapeHtml(r.full_name||'طلب بدون اسم')}</b><span class="subtext">${escapeHtml(r.phone||'-')} • ${escapeHtml(r.city||'-')}</span></td>`,...vals.map((v,i)=>`<td data-label="${escapeHtml(colLabels[i+2]||'تفصيل')}">${escapeHtml(v)}</td>`),`<td data-label="الحالة"><span class="tag ${statusClass(r.status||'new')}">${escapeHtml(getStatusLabel(r.status||'new'))}</span></td>`,`<td data-label="تاريخ الإرسال"><div>${escapeHtml(formatDate(r.created_at))}</div><span class="subtext">${escapeHtml(formatTime(r.created_at))}</span></td>`,`<td data-label="الإجراءات"><div class="row-actions">${actionHtml}</div></td>`];
+    const cells=[`<td data-label="رقم المرجع"><span class="tag tag-ref">${escapeHtml(refCode(r))}</span></td>`,`<td data-label="صاحب الطلب"><b class="request-title">${escapeHtml(r.full_name||'طلب بدون اسم')}</b><span class="subtext">${escapeHtml(r.phone||'-')} • ${escapeHtml(r.city||'-')}</span></td>`,...vals.map((v,i)=>`<td data-label="${escapeHtml(colLabels[i+2]||'تفصيل')}">${escapeHtml(v)}</td>`),`<td data-label="الحالة"><span class="tag ${statusClass(r.status||'new')}">${escapeHtml(getStatusLabel(r.status||'new'))}</span></td>`,`<td data-label="تاريخ الإرسال"><div>${escapeHtml(formatDate(r.created_at))}</div><span class="subtext">${escapeHtml(formatTime(r.created_at))}</span></td>`,`<td data-label="الإجراءات"><div class="row-actions row-actions-icons">${actionHtml}</div></td>`];
     return `<tr>${cells.join('')}</tr>`;
   }).join('');
   const colspan=cfg?cfg.cols.length+5:7; tbody.innerHTML=rows||`<tr><td colspan="${colspan}" class="empty-cell">لا توجد طلبات مطابقة حاليًا.</td></tr>`;
@@ -656,7 +665,7 @@ function ensureFileReviewUi(){
     const preview=document.createElement('div');
     preview.className='modal-overlay';
     preview.id='filePreviewModal';
-    preview.innerHTML=`<div class="modal"><div class="modal-head"><div><h3 id="filePreviewTitle">معاينة المرفق</h3><p class="subtext">عرض مباشر للصور وملفات PDF.</p></div><button class="close-btn" type="button" id="closeFilePreview">×</button></div><div class="modal-body" id="filePreviewBody"><div class="file-preview-empty">لا يوجد ملف للمعاينة.</div></div></div>`;
+    preview.innerHTML=`<div class="modal"><div class="modal-head"><div><h3 id="filePreviewTitle">معاينة المرفق</h3><p class="subtext">عرض مباشر للصور وملفات الطباعة.</p></div><button class="close-btn" type="button" id="closeFilePreview">×</button></div><div class="modal-body" id="filePreviewBody"><div class="file-preview-empty">لا يوجد ملف للمعاينة.</div></div></div>`;
     document.body.appendChild(preview);
     document.getElementById('closeFilePreview')?.addEventListener('click',closeFilePreview);
     preview.addEventListener('click',e=>{if(e.target===preview)closeFilePreview()});
@@ -682,9 +691,7 @@ async function loadCompletionForRequest(requestId){
     if(!stillCurrent()) return null;
     if(error){
       console.error(error);
-      const hint=/policy|permission|42501|JWT/i.test(String(error.message||''))
-        ? 'تحقق من تسجيل الدخول كإدارة (صلاحية admin).'
-        : 'راجع الاتصال أو نفّذ سياسات request_completions في Supabase.';
+      const hint='تحقق من تسجيل الدخول بحساب إدارة مفعّل وحاول مرة أخرى.';
       if(list) list.innerHTML=completionLoadErrorHtml('تعذر تحميل المرفقات. '+hint, loadId);
       return null;
     }
@@ -695,7 +702,7 @@ async function loadCompletionForRequest(requestId){
     console.error(err);
     if(!stillCurrent()) return null;
     const msg=String(err&&err.message||'')==='timeout'
-      ? 'انتهت مهلة التحميل (20 ثانية). قد يكون الاتصال بقاعدة البيانات بطيئاً.'
+      ? 'انتهت مهلة التحميل. تحقق من الاتصال وحاول مرة أخرى.'
       : 'حدث خطأ أثناء عرض المرفقات.';
     if(list) list.innerHTML=completionLoadErrorHtml(msg, loadId);
     return null;
@@ -879,8 +886,6 @@ function buildExtraDetails(r){const pairs=[]; const add=(k,v)=>{if(v!==undefined
     const m=staffMeta(r);
     add('المجال',AR_DOMAIN_LABEL(m.domain));
     add('الدور',m.roleLabel);
-    add('معرّف المجال',m.domain||'-');
-    add('معرّف الدور',m.roleId||'-');
     add('سنوات الخبرة',r.coach_experience);
     add('الوقت المتاح',r.availability);
     add('البريد (تفعيل حساب)',r.email);
@@ -902,7 +907,6 @@ function buildExtraDetails(r){const pairs=[]; const add=(k,v)=>{if(v!==undefined
     if(mode==='existing_player'){
       add('عدد الأبناء',r.children_count);
       add('اللاعبون للربط',window.GUARDIAN_GOALS?.linkedPlayerNames?window.GUARDIAN_GOALS.linkedPlayerNames(r):(r.existing_player_names||r.child_name));
-      add('معرّفات اللاعبين',Array.isArray(r.linked_player_ids)?r.linked_player_ids.join('، '):(r.linked_player_id||''));
     }
     if(!mode){add('تنبيه','غرض الطلب غير واضح — راجع البيانات قبل الاعتماد');}
   }
@@ -910,11 +914,8 @@ function buildExtraDetails(r){const pairs=[]; const add=(k,v)=>{if(v!==undefined
   if(r.request_type==='supporter'){
     const m=supporterMeta(r);
     add('نوع الداعم',m.typeLabel);
-    add('معرّف النوع',m.typeId||'-');
     add('مستوى الدعم',m.levelLabel);
-    add('معرّف المستوى',m.levelId||'-');
     add('طريقة الدعم',m.methodLabel);
-    add('معرّف الطريقة',m.methodId||'-');
     add('اسم الجهة / النشاط',m.entityName||r.entity_name);
     add('البريد',r.email);
   }
@@ -1003,6 +1004,11 @@ async function createPlayer(r){
       'تم الإنشاء تلقائيًا من طلب معتمد.'
   };
 
+  if (typeof playerPhotoFromRequest === 'function') {
+    const photoUrl = await playerPhotoFromRequest(supabaseClient, r);
+    if (photoUrl) payload.image = photoUrl;
+  }
+
   const { data: ex, error: e1 } =
     await supabaseClient
       .from('players')
@@ -1012,7 +1018,22 @@ async function createPlayer(r){
 
   if (e1) throw e1;
 
-  if (ex) return ex;
+  if (ex) {
+    if (payload.image) {
+      const { data: cur } = await supabaseClient
+        .from('players')
+        .select('id,image')
+        .eq('id', ex.id)
+        .maybeSingle();
+      if (cur && !String(cur.image || '').trim()) {
+        await supabaseClient
+          .from('players')
+          .update({ image: payload.image, updated_at: new Date().toISOString() })
+          .eq('id', ex.id);
+      }
+    }
+    return ex;
+  }
 
   const { data, error } =
     await supabaseClient
@@ -1313,8 +1334,8 @@ function humanizeAdminError(err){
   if(!msg) return 'تعذر تنفيذ العملية.';
   if(/duplicate key|23505/i.test(msg)) return 'السجل موجود مسبقاً — تم تجاهل التكرار.';
   if(/permission|policy|42501|not allowed|forbidden/i.test(msg)) return 'لا توجد صلاحية كافية لتنفيذ هذه العملية.';
-  if(/network|fetch|timeout|failed to fetch/i.test(msg)) return 'تعذر الاتصال بالخادم. تحقق من الإنترنت وحاول مرة أخرى.';
-  return msg;
+  if(/network|fetch|timeout|failed to fetch/i.test(msg)) return 'تعذر الاتصال. تحقق من الإنترنت وحاول مرة أخرى.';
+  return typeof sanitizeAdminMessage==='function'?sanitizeAdminMessage(msg,'تعذر تنفيذ العملية.'):'تعذر تنفيذ العملية.';
 }
 async function updateStatus(id,status){
   const r=findReq(id); if(!r)return;
@@ -1492,12 +1513,12 @@ function exportExcel(){
   if(window.AdminExport?.downloadExcel){
     const ok=window.AdminExport.downloadExcel(`academy_requests_${exportDateStamp()}.xlsx`,rows,[{wch:14},{wch:24},{wch:14},{wch:16},{wch:16},{wch:24},{wch:14},{wch:14},{wch:10},{wch:58},{wch:70}],'الطلبات');
     if(ok){
-      showToast(`تم تصدير Excel بنجاح (${rows.length-1} سجل).`);
+      showToast(`تم تصدير الجدول بنجاح (${rows.length-1} سجل).`);
       return;
     }
   }
   if(!window.XLSX){
-    showToast('مكتبة Excel غير متاحة حالياً.','error');
+    showToast('مكتبة الجداول غير متاحة حالياً.','error');
     return;
   }
   try{
@@ -1516,10 +1537,10 @@ function exportExcel(){
     }
     window.XLSX.utils.book_append_sheet(wb,ws,'الطلبات');
     window.XLSX.writeFile(wb,`academy_requests_${exportDateStamp()}.xlsx`);
-    showToast(`تم تصدير Excel بنجاح (${rows.length-1} سجل).`);
+    showToast(`تم تصدير الجدول بنجاح (${rows.length-1} سجل).`);
   }catch(err){
     console.error(err);
-    showToast('تعذر تصدير ملف Excel.','error');
+    showToast('تعذر تصدير الجدول.','error');
   }
 }
 function formatPdfCell(value, maxLen){
@@ -1687,11 +1708,11 @@ function exportPdf(){
     printWin.document.close();
     printWin.focus();
     setTimeout(()=>{printWin.print();},450);
-    showToast(`تم تجهيز نسخة الطباعة PDF (${rows.length-1} سجل).`);
+    showToast(`تم تجهيز نسخة الطباعة (${rows.length-1} سجل).`);
   }catch(err){
     console.error(err);
     try{printWin.close();}catch(_e){}
-    showToast('تعذر تصدير PDF حالياً.','error');
+    showToast('تعذر التصدير للطباعة حالياً.','error');
   }
 }
 

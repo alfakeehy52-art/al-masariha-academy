@@ -96,8 +96,8 @@
       <div class="actions">
         <button class="btn btn-primary" type="button" id="refreshStatsBtn">تحديث الأرقام</button>
         <div class="export-actions">
-          <button class="btn btn-secondary" type="button" id="exportStatsExcelBtn">تصدير Excel</button>
-          <button class="btn btn-secondary" type="button" id="exportStatsPdfBtn">تصدير PDF</button>
+          <button class="btn btn-secondary" type="button" id="exportStatsExcelBtn">تصدير جدول</button>
+          <button class="btn btn-secondary" type="button" id="exportStatsPdfBtn">تصدير للطباعة</button>
         </div>
       </div>
     </div>
@@ -416,10 +416,10 @@
     const AE = window.AdminExport;
     const stamp = AE ? AE.exportDateStamp() : String(Date.now());
     if (AE && AE.downloadExcel(`academy_stats_report_${stamp}.xlsx`, rows, [{wch:28},{wch:14}], "الإحصائيات")) {
-      showToast("تم تصدير تقرير الإحصائيات (Excel).", "success");
+      showToast("تم تصدير تقرير الإحصائيات (جدول).", "success");
       return;
     }
-    showToast("تعذر تصدير Excel.", "error");
+    showToast("تعذر تصدير جدول.", "error");
   }
 
   function exportStatsPdf(){
@@ -438,8 +438,8 @@
       twoRow: false,
       stampLabel: "ختم تقرير الإحصائيات"
     });
-    if (pdf.ok) showToast("تم تجهيز PDF للإحصائيات.", "success");
-    else showToast("تعذر فتح نافذة PDF.", "warn");
+    if (pdf.ok) showToast("تم تجهيز ملف الطباعة للإحصائيات.", "success");
+    else showToast("تعذر فتح نافذة الطباعة.", "warn");
   }
 
   async function refreshDashboard(){

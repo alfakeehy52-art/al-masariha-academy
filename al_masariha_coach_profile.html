@@ -468,7 +468,7 @@
         <div class="coach-side-top">
           <div class="license-badge">
             <strong>A</strong>
-            <span>License</span>
+            <span>رخصة</span>
           </div>
           <div class="coach-status">مدرب معتمد</div>
         </div>
@@ -494,7 +494,7 @@
             <h2>ملف المدرب الاحترافي</h2>
             <p>صفحة تعريفية فخمة لعرض خبرات المدرب ورخصه التدريبية وإنجازاته ومنهجيته الفنية، بأسلوب بصري منظم يعكس احترافية الأكاديمية ويمنح أولياء الأمور والزوار صورة واثقة عن الكادر الفني.</p>
           </div>
-          <div class="headline-chip" id="headlineChip">COA</div>
+          <div class="headline-chip" id="headlineChip">مدرب</div>
         </div>
 
         <div class="summary-grid">
@@ -509,7 +509,7 @@
           <div class="details-grid">
             <div class="detail-item"><strong>الاسم الكامل</strong><span>أحمد علي</span></div>
             <div class="detail-item"><strong>المنصب</strong><span>المدرب الأول</span></div>
-            <div class="detail-item"><strong>الرخصة التدريبية</strong><span>A License</span></div>
+            <div class="detail-item"><strong>الرخصة التدريبية</strong><span>رخصة A</span></div>
             <div class="detail-item"><strong>سنوات الخبرة</strong><span>12 سنة</span></div>
             <div class="detail-item"><strong>التخصص</strong><span>تطوير الفئات السنية</span></div>
             <div class="detail-item"><strong>مجال التركيز</strong><span>التأسيس الفني والانضباط</span></div>
@@ -623,7 +623,7 @@
     document.querySelector('.coach-side-info p').textContent = subtitle;
     document.querySelector('.coach-status').textContent = c.coachStatus || 'نشط';
     const chipEl = document.getElementById('headlineChip') || document.querySelector('.headline-chip');
-    if (chipEl) chipEl.textContent = c.code || 'COA';
+    if (chipEl) chipEl.textContent = (typeof formatEntityRef === 'function' ? formatEntityRef(c) : (c.reference_code || c.code)) || 'مدرب';
     document.querySelector('.license-badge strong').textContent = certBadge(c.certification);
 
     const pills = document.querySelector('.coach-side-meta');

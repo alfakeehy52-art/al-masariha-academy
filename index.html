@@ -72,6 +72,8 @@
 <script src="supabase-config.js"></script>
 <script src="js/supabase-client.js"></script>
 <script src="js/supabase-public-lookup.js"></script>
+<script src="js/ui-labels.js?v=20260529-launch"></script>
+<script src="js/player-image.js?v=20260529-launch"></script>
 <script>
 const supabaseClient = createSupabaseClient();
 
@@ -127,7 +129,11 @@ async function fetchPlayers(){
     return [];
   }
 
-  return (Array.isArray(data) ? data : []).map(normalizePlayer);
+  let rows = Array.isArray(data) ? data : [];
+  if (typeof enrichPlayersWithPhotos === 'function' && rows.length) {
+    await enrichPlayersWithPhotos(supabaseClient, rows);
+  }
+  return rows.map(normalizePlayer);
 }
 
 function countCategories(players){

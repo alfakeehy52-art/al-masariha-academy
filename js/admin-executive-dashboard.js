@@ -290,7 +290,7 @@
         {
           level: "warn",
           title: "تعذر تحميل بعض المؤشرات",
-          detail: "تحقق من الاتصال وRLS",
+          detail: "تحقق من الاتصال وصلاحيات القراءة",
           href: "admin_dashboard.html"
         }
       ]);

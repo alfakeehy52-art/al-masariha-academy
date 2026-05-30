@@ -408,7 +408,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="supabase-config.js"></script>
   <script src="js/supabase-client.js"></script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="supabase-config.js"></script><script src="js/supabase-client.js"></script><script src="js/admin-auth.js"></script><script>requireAdmin();</script>
+  <script src="js/admin-auth.js"></script>
+  <script>requireAdmin();</script>
 </head>
 <body>
   <div class="layout">
@@ -643,7 +644,7 @@
       const now = new Date();
       const stamp = `${now.getFullYear()}${String(now.getMonth()+1).padStart(2,"0")}${String(now.getDate()).padStart(2,"0")}`;
       const rand = String(Math.floor(Math.random() * 9000) + 1000);
-      return `PLY-${stamp}-${rand}`;
+      return `${stamp}-${rand}`;
     }
 
     async function fetchPlayers(){

@@ -288,9 +288,9 @@
 
         <section class="panel">
           <h2 class="page-section-title">أدوار كادر إضافية (من الإدارة)</h2>
-          <p class="page-section-desc">تظهر في صفحة «انضم إلينا» ضمن مجال الكادر بعد الحفظ. مثال: سائق فريق — معرّف إنجليزي بدون مسافات.</p>
+          <p class="page-section-desc">تظهر في صفحة «انضم إلينا» ضمن مجال الكادر بعد الحفظ. مثال: سائق فريق.</p>
           <div class="settings-grid" style="margin-top:12px">
-            <div class="field"><label for="newRoleId">معرّف الدور</label><input id="newRoleId" type="text" placeholder="team_driver" /></div>
+            <div class="field"><label for="newRoleId">رمز الدور الداخلي</label><input id="newRoleId" type="text" placeholder="مثال: سائق_فريق" dir="ltr" /></div>
             <div class="field"><label for="newRoleDomain">المجال</label><select id="newRoleDomain"><option value="sports">رياضي</option><option value="medical">طبي</option><option value="admin">إداري</option><option value="operations">تشغيلي</option><option value="media_tech">إعلامي وتقني</option></select></div>
             <div class="field"><label for="newRoleLabel">المسمى بالعربية</label><input id="newRoleLabel" type="text" placeholder="سائق فريق" /></div>
             <div class="field full" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end">
@@ -571,11 +571,11 @@
       const domain = document.getElementById("newRoleDomain")?.value || "";
       const label = String(document.getElementById("newRoleLabel")?.value || "").trim();
       if (!id || !domain || !label) {
-        showStatus("أكمل معرّف الدور والمجال والمسمى.", false);
+        showStatus("أكمل رمز الدور والمجال والمسمى.", false);
         return;
       }
       if (customStaffRoles.some((r) => r.id === id)) {
-        showStatus("المعرّف مستخدم مسبقاً.", false);
+        showStatus("الرمز مستخدم مسبقاً.", false);
         return;
       }
       customStaffRoles.push({ id, domain, label });

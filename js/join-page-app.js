@@ -777,7 +777,7 @@
     box.innerHTML = players
       .map(
         (p) =>
-          `<button type="button" class="player-suggestion" data-id="${escapeHtml(p.id)}"><span><strong>${escapeHtml(p.full_name || "بدون اسم")}</strong><small>${escapeHtml([p.code, p.category, p.position, p.phone].filter(Boolean).join(" • "))}</small></span><span>اختيار</span></button>`
+          `<button type="button" class="player-suggestion" data-id="${escapeHtml(p.id)}"><span><strong>${escapeHtml(p.full_name || "بدون اسم")}</strong><small>${escapeHtml(typeof playerPickSubtitle === "function" ? playerPickSubtitle(p) : [p.category, p.position, p.phone].filter(Boolean).join(" • "))}</small></span><span>اختيار</span></button>`
       )
       .join("");
     box.classList.add("show");
@@ -1057,7 +1057,6 @@
     if (activeType === "guardian") {
       if (cleanText(data.guardianNotes)) lines.push(cleanText(data.guardianNotes));
       if (selectedNames) lines.push(`اللاعبون المختارون: ${selectedNames}`);
-      if (selectedIds.length) lines.push(`معرّفات: ${selectedIds.join("، ")}`);
     }
     if (activeType === "staff") {
       const extra = [];

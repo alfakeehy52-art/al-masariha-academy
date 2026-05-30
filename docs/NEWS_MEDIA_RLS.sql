@@ -167,6 +167,7 @@ as $$
     n.created_at
   from public.academy_news n
   where n.status = 'published'
+    and trim(coalesce(n.title, '')) <> 'اختبار'
   order by n.is_featured desc, n.published_at desc nulls last, n.created_at desc;
 $$;
 
@@ -200,7 +201,9 @@ as $$
     n.is_featured,
     n.created_at
   from public.academy_news n
-  where n.id = p_id and n.status = 'published';
+  where n.id = p_id
+    and n.status = 'published'
+    and trim(coalesce(n.title, '')) <> 'اختبار';
 $$;
 
 create or replace function public.list_media_public()

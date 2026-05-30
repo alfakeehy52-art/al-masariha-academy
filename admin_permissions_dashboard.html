@@ -80,11 +80,11 @@
         <div class="perm-card">
           <h3>① البريد المسموح بدخول الإدارة</h3>
           <ul id="adminEmailsList"></ul>
-          <p style="margin-top:12px">يجب إضافة بريد الموظف في <code>supabase-config.js</code> ثم رفع الموقع.</p>
+          <p style="margin-top:12px">يجب إضافة بريد الموظف في <strong>إعدادات الموقع</strong> (ملف الاتصال) ثم رفع الموقع.</p>
         </div>
         <div class="perm-card">
-          <h3>② تفعيل قاعدة البيانات (مرة واحدة)</h3>
-          <p>نفّذ <strong>docs/RBAC_PANEL_GRANTS.sql</strong> في Supabase قبل أول حفظ للقوالب.</p>
+          <h3>② تفعيل الصلاحيات (مرة واحدة)</h3>
+          <p>تواصل مع مسؤول النظام لتفعيل صلاحيات لوحة التحكم قبل أول حفظ للقوالب.</p>
           <p>بعد الحفظ: اطلب من الموظف <strong>خروج ثم دخول</strong>.</p>
         </div>
         <div class="perm-card" style="grid-column:1/-1">
@@ -116,7 +116,7 @@
                   <th>النطاقات</th>
                   <th>الحالة</th>
                   <th>دخول الإدارة</th>
-                  <th>Auth</th>
+                  <th>حالة الدخول</th>
                 </tr>
               </thead>
               <tbody id="permTableBody">

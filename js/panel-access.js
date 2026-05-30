@@ -33,6 +33,9 @@
     viewer: ["store", "media", "ops", "members"]
   };
 
+  const PANEL_CTX_CACHE_KEY = "panel_access_ctx_v1";
+  const PANEL_CTX_CACHE_MS = 5 * 60 * 1000;
+
   function normalizeEmail(value) {
     return String(value || "").trim().toLowerCase();
   }
@@ -101,20 +104,89 @@
     }
   }
 
-  async function resolvePanelAccessContext(user) {
+  async function resolvePanelAccessContext(user, options) {
+    const opts = options || {};
+    const userId = user?.id;
+    if (!opts.force && !opts.background && userId) {
+      const bundle = getCachedPanelAccessBundle(userId);
+      if (bundle?.ctx) {
+        window.__panelAccessContext = bundle.ctx;
+        return bundle.ctx;
+      }
+    }
     const fullAdmin = typeof isAdminUser === "function" && user && isAdminUser(user);
     const profile = await fetchStaffProfileByEmail(user?.email);
     const rbac = RBAC();
+    let ctx;
     if (rbac && typeof rbac.resolveFromProfile === "function") {
-      return rbac.resolveFromProfile(profile, fullAdmin);
+      ctx = rbac.resolveFromProfile(profile, fullAdmin);
+    } else {
+      ctx = {
+        level: fullAdmin ? "L1" : "L4",
+        domains: fullAdmin ? ["*"] : ["requests"],
+        jobTitle: fullAdmin ? "المدير العام" : "موظف",
+        status: profile?.status || "active",
+        isFullAdmin: !!fullAdmin
+      };
     }
-    return {
-      level: fullAdmin ? "L1" : "L4",
-      domains: fullAdmin ? ["*"] : ["requests"],
-      jobTitle: fullAdmin ? "المدير العام" : "موظف",
-      status: profile?.status || "active",
-      isFullAdmin: !!fullAdmin
-    };
+    window.__panelAccessContext = ctx;
+    if (userId && !opts.background) {
+      writeCachedPanelAccessBundle(userId, user?.email, ctx, profile?.status);
+    }
+    return ctx;
+  }
+
+  function getCachedPanelAccessBundle(userId) {
+    if (!userId) return null;
+    try {
+      const raw = sessionStorage.getItem(PANEL_CTX_CACHE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (parsed.userId !== userId) return null;
+      if (Date.now() - Number(parsed.ts || 0) > PANEL_CTX_CACHE_MS) return null;
+      return parsed;
+    } catch (_e) {
+      return null;
+    }
+  }
+
+  function writeCachedPanelAccessBundle(userId, email, ctx, profileStatus) {
+    if (!userId || !ctx) return;
+    try {
+      sessionStorage.setItem(
+        PANEL_CTX_CACHE_KEY,
+        JSON.stringify({
+          userId,
+          email: normalizeEmail(email),
+          ts: Date.now(),
+          ctx,
+          profileStatus: String(profileStatus || ctx.status || "active").toLowerCase()
+        })
+      );
+    } catch (_e) {}
+  }
+
+  function hydratePanelAccessFromCache(user) {
+    const bundle = getCachedPanelAccessBundle(user?.id);
+    if (bundle?.ctx) {
+      window.__panelAccessContext = bundle.ctx;
+      return bundle.ctx;
+    }
+    return null;
+  }
+
+  function clearPanelAccessCache() {
+    try {
+      sessionStorage.removeItem(PANEL_CTX_CACHE_KEY);
+    } catch (_e) {}
+    window.__panelAccessContext = null;
+  }
+
+  function canAccessFromContext(ctx, domain, action) {
+    const rbac = RBAC();
+    if (!ctx || !rbac) return false;
+    if (String(ctx.status || "").toLowerCase() === "suspended") return false;
+    return rbac.canAccess(ctx, domain, action);
   }
 
   async function resolveEffectivePanelRole(user) {
@@ -241,9 +313,13 @@
     const session = typeof getAdminSession === "function" ? await getAdminSession() : null;
     const user = session?.user;
     if (!user) return false;
-    const ctx = window.__panelAccessContext || (await resolvePanelAccessContext(user));
-    const rbac = RBAC();
-    return rbac ? rbac.canAccess(ctx, domain, action) : false;
+    let ctx = window.__panelAccessContext;
+    if (!ctx) {
+      hydratePanelAccessFromCache(user);
+      ctx = window.__panelAccessContext;
+    }
+    if (!ctx) ctx = await resolvePanelAccessContext(user);
+    return canAccessFromContext(ctx, domain, action);
   }
 
   async function linkStaffProfileByEmail(user) {
@@ -306,7 +382,7 @@
   }
 
   const REQUESTS_FINAL_APPROVE_MSG =
-    "الاعتماد النهائي ورفض الطلب — للمشرف (مستوى L3) فما فوق فقط.";
+    "الاعتماد النهائي ورفض الطلب — للمشرف أو أعلى فقط.";
 
   function canApproveRequestsNow() {
     const ctx = window.__panelAccessContext;
@@ -362,10 +438,10 @@
 
   const STORE_DOMAIN = "store";
   const STORE_MSG = {
-    productsWrite: "إضافة وتعديل المنتجات — لنائب مدير المتجر (L3) أو مدير المتجر (L2).",
-    productsDelete: "حذف المنتجات — لمدير المتجر (L2) فقط.",
+    productsWrite: "إضافة وتعديل المنتجات — لنائب مدير المتجر أو مدير المتجر.",
+    productsDelete: "حذف المنتجات — لمدير المتجر فقط.",
     ordersUpdate: "تحديث حالة الطلب — غير مسموح لمستوى صلاحيتك.",
-    ordersDelete: "حذف الطلبات — لمدير المتجر (L2) فقط."
+    ordersDelete: "حذف الطلبات — لمدير المتجر فقط."
   };
 
   function storePanelLevel(ctx) {
@@ -431,9 +507,9 @@
   const MEDIA_DOMAIN = "media";
   const MEDIA_MSG = {
     create: "رفع وسائط جديدة — غير مسموح لمستوى صلاحيتك.",
-    edit: "تعديل الوسائط — لمشرف المحتوى (L3) أو مدير الإعلام (L2).",
-    publish: "نشر المحتوى — لمشرف المحتوى (L3) أو مدير الإعلام (L2).",
-    delete: "حذف الوسائط — لمدير الإعلام (L2) فقط."
+    edit: "تعديل الوسائط — لمشرف المحتوى أو مدير الإعلام.",
+    publish: "نشر المحتوى — لمشرف المحتوى أو مدير الإعلام.",
+    delete: "حذف الوسائط — لمدير الإعلام فقط."
   };
 
   function mediaPanelLevel(ctx) {
@@ -501,9 +577,9 @@
 
   const SUPPORT_DOMAIN = "support";
   const SUPPORT_MSG = {
-    create: "فتح تذكرة دعم — لنائب مدير الدعم (L3) أو مدير الدعم (L2).",
+    create: "فتح تذكرة دعم — لنائب مدير الدعم أو مدير الدعم.",
     update: "تحديث التذكرة — غير مسموح لمستوى صلاحيتك.",
-    delete: "حذف التذاكر — لمدير الدعم الفني (L2) فقط."
+    delete: "حذف التذاكر — لمدير الدعم الفني فقط."
   };
 
   function supportPanelLevel(ctx) {
@@ -605,6 +681,10 @@
   window.resolvePanelIdentity = resolvePanelIdentity;
   window.resolveEffectivePanelRole = resolveEffectivePanelRole;
   window.resolvePanelAccessContext = resolvePanelAccessContext;
+  window.getCachedPanelAccessBundle = getCachedPanelAccessBundle;
+  window.hydratePanelAccessFromCache = hydratePanelAccessFromCache;
+  window.clearPanelAccessCache = clearPanelAccessCache;
+  window.canAccessFromContext = canAccessFromContext;
   window.getStaffJobTitle = staffJobTitle;
   window.canPanel = canPanel;
   window.requirePanelPermission = requirePanelPermission;

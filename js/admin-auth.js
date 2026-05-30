@@ -54,18 +54,46 @@
     style.id = "panel-page-lock-style";
     style.textContent =
       "html.panel-page-locked,html.panel-page-locked body{visibility:hidden!important;background:#041009!important}" +
+      "#panel-page-loader{visibility:visible!important;display:none;position:fixed;inset:0;z-index:2147483646;" +
+      "align-items:center;justify-content:center;background:linear-gradient(180deg,#030a07,#041009);font-family:'Cairo',system-ui,sans-serif;direction:rtl}" +
+      "html.panel-page-locked #panel-page-loader{display:flex!important}" +
+      ".panel-loader-card{text-align:center;padding:28px 32px;border-radius:22px;border:1px solid rgba(213,177,90,.22);" +
+      "background:rgba(255,255,255,.04);box-shadow:0 18px 45px rgba(0,0,0,.35)}" +
+      ".panel-loader-spin{width:44px;height:44px;margin:0 auto 16px;border-radius:50%;border:3px solid rgba(213,177,90,.2);" +
+      "border-top-color:#f0d58f;animation:panelLoaderSpin .85s linear infinite}" +
+      ".panel-loader-card p{margin:0;color:#b6c1b8;font-weight:800;font-size:14px;line-height:1.7}" +
+      "@keyframes panelLoaderSpin{to{transform:rotate(360deg)}}" +
       ".admin-pro-menu.nav-policy-pending{visibility:hidden!important}" +
       ".admin-pro-menu [hidden],.menu-group[hidden],.nav-parent[hidden],.nav-link[hidden]{display:none!important}";
     (document.head || document.documentElement).appendChild(style);
   }
 
-  function lockPanelContent() {
+  function ensurePanelLoader() {
+    if (document.getElementById("panel-page-loader")) return;
+    const mount = document.body || document.documentElement;
+    const el = document.createElement("div");
+    el.id = "panel-page-loader";
+    el.setAttribute("role", "status");
+    el.setAttribute("aria-live", "polite");
+    el.setAttribute("aria-busy", "true");
+    el.innerHTML =
+      '<div class="panel-loader-card"><div class="panel-loader-spin" aria-hidden="true"></div>' +
+      "<p>جاري التحقق من الصلاحيات…</p></div>";
+    mount.appendChild(el);
+  }
+
+  function lockPanelContent(message) {
     injectLockStyle();
+    ensurePanelLoader();
+    const note = document.querySelector("#panel-page-loader p");
+    if (note && message) note.textContent = String(message);
     document.documentElement.classList.add("panel-page-locked");
   }
 
   function unlockPanelContent() {
     document.documentElement.classList.remove("panel-page-locked");
+    const loader = document.getElementById("panel-page-loader");
+    if (loader) loader.setAttribute("aria-busy", "false");
   }
 
   function flashPanelDenied(message) {
@@ -97,7 +125,12 @@
     return PANEL_PAGE_GUARDS[String(page || currentPage()).toLowerCase()] || null;
   }
 
-  if (getPageGuard()) lockPanelContent();
+  if (getPageGuard()) {
+    injectLockStyle();
+    if (document.body) ensurePanelLoader();
+    else document.addEventListener("DOMContentLoaded", ensurePanelLoader, { once: true });
+    lockPanelContent();
+  }
 
   window.PANEL_PAGE_GUARDS = PANEL_PAGE_GUARDS;
   window.PANEL_DENIED_DEFAULT = PANEL_DENIED_DEFAULT;
@@ -212,6 +245,15 @@
     const email = String(user.email || "").trim().toLowerCase();
     if (!email) return false;
 
+    if (typeof getCachedPanelAccessBundle === "function") {
+      const bundle = getCachedPanelAccessBundle(user.id);
+      if (bundle) {
+        const st = String(bundle.profileStatus || bundle.ctx?.status || "").toLowerCase();
+        if (st === "suspended") return false;
+        if (st === "active") return true;
+      }
+    }
+
     if (typeof fetchStaffProfileByEmail === "function") {
       try {
         const profile = await fetchStaffProfileByEmail(email);
@@ -262,8 +304,15 @@
   }
 
   async function ensurePanelAccessLoaded() {
-    if (!window.PanelRBAC) await loadScriptOnce("js/panel-rbac.js?v=20260529-rbac2");
-    if (typeof window.canPanel !== "function") await loadScriptOnce("js/panel-access.js?v=20260529-rbac2");
+    if (!window.PanelRBAC) await loadScriptOnce("js/panel-rbac.js?v=20260529-rbac3");
+    if (typeof window.canPanel !== "function") await loadScriptOnce("js/panel-access.js?v=20260529-rbac3");
+  }
+
+  function denyPanelPageAccess() {
+    if (typeof flashPanelDenied === "function") flashPanelDenied(window.PANEL_DENIED_DEFAULT);
+    lockPanelContent("جاري التحويل…");
+    window.location.replace("admin_dashboard.html");
+    return false;
   }
 
   async function checkPageDomainAccess() {
@@ -273,41 +322,81 @@
         : window.PANEL_PAGE_GUARDS && window.PANEL_PAGE_GUARDS[(location.pathname.split("/").pop() || "").toLowerCase()];
     if (!guard) return true;
     if (guard.account) {
-      if (typeof unlockPanelContent === "function") unlockPanelContent();
+      unlockPanelContent();
       return true;
     }
-    if (typeof lockPanelContent === "function") lockPanelContent();
-    await ensurePanelAccessLoaded();
-    const session = await getSession();
-    if (session?.user && typeof resolvePanelAccessContext === "function") {
-      window.__panelAccessContext = await resolvePanelAccessContext(session.user);
+    lockPanelContent();
+    const session = await Promise.all([ensurePanelAccessLoaded(), getSession()]).then(function (r) {
+      return r[1];
+    });
+    const user = session?.user;
+    if (!user) return denyPanelPageAccess();
+
+    if (typeof hydratePanelAccessFromCache === "function") {
+      hydratePanelAccessFromCache(user);
     }
-    const ok = typeof canPanel === "function" ? await canPanel(guard.domain, guard.action) : false;
-    if (!ok) {
-      if (typeof flashPanelDenied === "function") flashPanelDenied(window.PANEL_DENIED_DEFAULT);
-      window.location.replace("admin_dashboard.html");
-      return false;
+
+    const ctx = window.__panelAccessContext;
+    if (ctx && typeof canAccessFromContext === "function") {
+      const cachedOk = canAccessFromContext(ctx, guard.domain, guard.action);
+      if (!cachedOk) return denyPanelPageAccess();
+      unlockPanelContent();
+      if (typeof resolvePanelAccessContext === "function") {
+        resolvePanelAccessContext(user, { background: true }).catch(function () {});
+      }
+      return true;
     }
-    if (typeof unlockPanelContent === "function") unlockPanelContent();
+
+    if (typeof resolvePanelAccessContext === "function") {
+      window.__panelAccessContext = await resolvePanelAccessContext(user);
+    }
+    const ok =
+      typeof canAccessFromContext === "function"
+        ? canAccessFromContext(window.__panelAccessContext, guard.domain, guard.action)
+        : typeof canPanel === "function"
+          ? await canPanel(guard.domain, guard.action)
+          : false;
+    if (!ok) return denyPanelPageAccess();
+    unlockPanelContent();
     return true;
   }
 
   async function requireAdmin() {
     clearLegacySession();
     try {
-      const session = await getSession();
-      if (session?.user) await ensurePanelAccessLoaded();
+      const session = await Promise.all([getSession(), ensurePanelAccessLoaded()]).then(function (r) {
+        return r[0];
+      });
+      if (session?.user && typeof hydratePanelAccessFromCache === "function") {
+        hydratePanelAccessFromCache(session.user);
+      }
       if (session && (await canAccessAdminPanel(session.user))) {
         if (typeof fetchStaffProfileByEmail === "function") {
-          const profile = await fetchStaffProfileByEmail(session.user.email);
-          if (profile && String(profile.status || "").toLowerCase() === "suspended") {
+          const cached =
+            typeof getCachedPanelAccessBundle === "function"
+              ? getCachedPanelAccessBundle(session.user.id)
+              : null;
+          const suspended =
+            cached?.profileStatus === "suspended" ||
+            (cached?.ctx && String(cached.ctx.status || "").toLowerCase() === "suspended");
+          if (suspended) {
             await getAuthClient().auth.signOut();
+            if (typeof clearPanelAccessCache === "function") clearPanelAccessCache();
             window.location.replace(LOGIN_PAGE + "?suspended=1");
             return false;
           }
+          if (!cached) {
+            const profile = await fetchStaffProfileByEmail(session.user.email);
+            if (profile && String(profile.status || "").toLowerCase() === "suspended") {
+              await getAuthClient().auth.signOut();
+              if (typeof clearPanelAccessCache === "function") clearPanelAccessCache();
+              window.location.replace(LOGIN_PAGE + "?suspended=1");
+              return false;
+            }
+          }
         }
         const domainOk = await checkPageDomainAccess();
-        if (domainOk) ensurePanelAuditLoaded().catch(() => {});
+        if (domainOk) ensurePanelAuditLoaded().catch(function () {});
         return domainOk;
       }
     } catch (e) {
@@ -328,7 +417,9 @@
     if (/user not found/i.test(msg)) {
       return "لا يوجد حساب بهذا البريد. تواصل مع مسؤول النظام لتفعيل الحساب.";
     }
-    return msg || "تعذر تسجيل الدخول.";
+    return typeof sanitizeAdminMessage === "function"
+      ? sanitizeAdminMessage(msg, "تعذر تسجيل الدخول.")
+      : msg || "تعذر تسجيل الدخول.";
   }
 
   async function adminLogin(email, password) {
@@ -361,6 +452,12 @@
         console.warn("[admin-auth] staff link:", linkErr);
       }
     }
+    if (typeof clearPanelAccessCache === "function") clearPanelAccessCache();
+    if (typeof resolvePanelAccessContext === "function") {
+      try {
+        await resolvePanelAccessContext(data.user, { force: true });
+      } catch (_ctx) {}
+    }
     try {
       await ensurePanelAuditLoaded();
       if (typeof logPanelAudit === "function") {
@@ -381,6 +478,7 @@
     clearLegacySession();
     try {
       await ensurePanelAuditLoaded();
+      if (typeof clearPanelAccessCache === "function") clearPanelAccessCache();
       if (typeof logPanelAudit === "function") {
         await logPanelAudit({
           domain: "auth",

@@ -19,7 +19,7 @@ const ENTITY_CONFIGS = {
     labels: {
       full_name: "الاسم الكامل", phone: "رقم الجوال", email: "البريد الإلكتروني", city: "المدينة",
       relationship: "صلة القرابة", status: "الحالة", notes: "ملاحظات", reference_code: "رقم المرجع",
-      source_request_id: "رقم الطلب المصدر", created_at: "تاريخ الإنشاء", updated_at: "آخر تحديث"
+      source_request_id: "مرجع الطلب", created_at: "تاريخ الإنشاء", updated_at: "آخر تحديث"
     },
     textarea: ["notes"]
   },
@@ -41,7 +41,7 @@ const ENTITY_CONFIGS = {
     labels: {
       full_name: "الاسم الكامل", phone: "رقم الجوال", email: "البريد الإلكتروني", city: "المدينة",
       support_type: "نوع الداعم", support_level: "مستوى الدعم", entity_name: "اسم الجهة", support_method: "طريقة الدعم",
-      status: "الحالة", notes: "ملاحظات", reference_code: "رقم المرجع", source_request_id: "رقم الطلب المصدر",
+      status: "الحالة", notes: "ملاحظات", reference_code: "رقم المرجع", source_request_id: "مرجع الطلب",
       created_at: "تاريخ الإنشاء", updated_at: "آخر تحديث"
     },
     textarea: ["notes"]
@@ -101,15 +101,15 @@ const ENTITY_CONFIGS = {
       national_id: "رقم الهوية",
       nationality: "الجنسية",
       birth_date: "تاريخ الميلاد",
-      staff_category: "المجال (معرّف)",
-      staff_type: "الدور (معرّف)",
+      staff_category: "المجال",
+      staff_type: "الدور",
       qualification: "المؤهل / التخصص",
       experience_years: "سنوات الخبرة",
       status: "الحالة",
       role: "صلاحية النظام",
       notes: "ملاحظات",
-      join_request_id: "رقم طلب الانضمام",
-      auth_user_id: "معرّف حساب الدخول",
+      join_request_id: "مرجع طلب الانضمام",
+      auth_user_id: "حالة الدخول",
       created_at: "تاريخ الإنشاء",
       updated_at: "آخر تحديث"
     },
@@ -223,7 +223,7 @@ function isAcademyStaffPage() {
   return window.ENTITY_TYPE === "academy_staff";
 }
 
-const ACT_SVG = {
+const ACT_SVG = window.AdminActionIcons?.ACT_SVG || {
   view:
     '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s4-7 10-7 10 7 10 7-4 7-10 7-10-7-10-7z"/><circle cx="12" cy="12" r="3"/></svg>',
   edit:
@@ -243,12 +243,15 @@ const ACT_SVG = {
 };
 
 function actIconBtn(kind, label, onclick) {
+  if (window.AdminActionIcons?.actIconBtn) return window.AdminActionIcons.actIconBtn(kind, label, onclick);
   return (
     `<button type="button" class="act-icon act-icon-${kind}" title="${esc(label)}" aria-label="${esc(label)}" onclick="${onclick}">${ACT_SVG[kind] || ACT_SVG.view}</button>`
   );
 }
 
 function actIconLink(kind, label, href) {
+  if (window.AdminActionIcons?.actIconLinkExternal) return window.AdminActionIcons.actIconLinkExternal(kind, label, href);
+  if (window.AdminActionIcons?.actIconLink) return window.AdminActionIcons.actIconLink(kind, label, href);
   return (
     `<a class="act-icon act-icon-${kind}" href="${href}" target="_blank" rel="noopener" title="${esc(label)}" aria-label="${esc(label)}">${ACT_SVG[kind] || ACT_SVG.portal}</a>`
   );
@@ -287,6 +290,10 @@ function displayCell(row, key) {
   if (key === "staff_type") return staffTypeLabel(row[key]);
   if (key === "role") return systemRoleLabel(row[key]);
   if (key === "auth_user_id") return authLinkLabel(row);
+  if (key === "source_request_id" || key === "join_request_id") {
+    const ref = row.reference_code || row[key];
+    return typeof formatRequestRef === "function" ? formatRequestRef(ref) : short(ref);
+  }
   if (key === "experience_years") return row[key] != null ? `${row[key]} سنة` : "-";
   return short(row[key]);
 }
@@ -797,10 +804,10 @@ function exportPdf() {
     stampLabel: `ختم ${cfg.title || "السجلات"}`
   });
   if (!pdf.ok) {
-    showToast("تعذر فتح نافذة PDF. اسمح بالنوافذ المنبثقة.", "warn");
+    showToast("تعذر فتح نافذة الطباعة. اسمح بالنوافذ المنبثقة.", "warn");
     return;
   }
-  showToast(`تم تجهيز PDF (${data.length} سجل).`, "success");
+  showToast(`تم تجهيز ملف الطباعة (${data.length} سجل).`, "success");
 }
 
 function exportExcel() {
@@ -812,10 +819,10 @@ function exportExcel() {
   const AE = window.AdminExport;
   const stamp = AE ? AE.exportDateStamp() : String(Date.now());
   if (AE && AE.downloadExcel(`${cfg.table}_${stamp}.xlsx`, rows)) {
-    showToast(`تم تصدير ${data.length} سجل إلى Excel.`, "success");
+    showToast(`تم تصدير ${data.length} سجل إلى جدول.`, "success");
     return;
   }
-  showToast("مكتبة Excel غير متاحة.", "error");
+  showToast("مكتبة الجداول غير متاحة.", "error");
 }
 
 window.setEntityStatus = setEntityStatus;

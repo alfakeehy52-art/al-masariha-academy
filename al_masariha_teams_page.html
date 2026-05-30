@@ -26,13 +26,14 @@
 <div id="site-header"></div>
 <div class="teams-shell">
 <section class="hero"><div class="container hero-shell"><div class="hero-bg"></div><div class="hero-content"><div><h2>الفرق والفئات</h2><p>فرق الأكاديمية النشطة — مع عدد اللاعبين المرتبطين بكل فريق. الفرق قيد المراجعة أو الموقوفة لا تظهر هنا.</p></div><div class="hero-stats"><div class="hero-stat"><div class="n" id="heroTeamsCount">0</div><div class="t">فرق نشطة</div></div><div class="hero-stat"><div class="n" id="heroCategoriesCount">0</div><div class="t">فئات</div></div><div class="hero-stat"><div class="n" id="heroPlayersLinked">0</div><div class="t">لاعب مرتبط</div></div></div></div></div></section>
-<section class="main"><div class="container layout"><aside class="sidebar"><h3 class="side-title">تصفية</h3><input class="search" id="searchInput" type="text" placeholder="ابحث باسم الفريق أو الرمز..." /><div class="filter-block"><h4>الفئة</h4><div class="pills" id="categoryPills"></div></div><button class="reset-btn" id="resetFiltersBtn" type="button">إعادة تعيين</button></aside><div class="content-card"><div class="content-head"><h3 id="resultTitle">عرض الفرق</h3><span class="live-pill">بيانات حية</span></div><div class="teams-grid" id="teamsGrid"></div><div class="categories-strip" id="categoriesStrip"></div></div></div></section>
+<section class="main"><div class="container layout"><aside class="sidebar"><h3 class="side-title">تصفية</h3><input class="search" id="searchInput" type="text" placeholder="ابحث باسم الفريق أو الفئة..." /><div class="filter-block"><h4>الفئة</h4><div class="pills" id="categoryPills"></div></div><button class="reset-btn" id="resetFiltersBtn" type="button">إعادة تعيين</button></aside><div class="content-card"><div class="content-head"><h3 id="resultTitle">عرض الفرق</h3><span class="live-pill">بيانات حية</span></div><div class="teams-grid" id="teamsGrid"></div><div class="categories-strip" id="categoriesStrip"></div></div></div></section>
 </div>
 <div id="site-footer"></div>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script src="supabase-config.js"></script>
 <script src="js/supabase-client.js"></script>
 <script src="js/supabase-public-lookup.js"></script>
+<script src="js/ui-labels.js"></script>
 <script>
 let allTeams = [];
 let allPlayers = [];
@@ -102,7 +103,8 @@ function render(){
   grid.innerHTML = teams.map(t => {
     const playersN = countPlayers(t.name);
     const info = categoryInfo[t.category] || { range: '-', note: '' };
-    return `<article class="team-card"><div class="team-top"><div class="team-name">${escapeHtml(t.name)}</div><div class="team-code">${escapeHtml(t.code || '—')}</div></div><div class="team-meta">${escapeHtml(t.notes || info.note || 'فريق أكاديمية مسجّل في النظام.')}</div><div class="team-tags"><span class="tag cat">${escapeHtml(t.category)} • ${escapeHtml(info.range)}</span><span class="tag players">${playersN} لاعب</span><span class="tag">${escapeHtml(t.status)}</span></div><div class="team-actions"><a class="btn-view" href="al_masariha_players_page.html">عرض اللاعبين</a></div></article>`;
+    const badge = typeof teamPublicBadge === 'function' ? teamPublicBadge(t, playersN) : (t.category || 'فريق نشط');
+    return `<article class="team-card"><div class="team-top"><div class="team-name">${escapeHtml(t.name)}</div><div class="team-code">${escapeHtml(badge)}</div></div><div class="team-meta">${escapeHtml(t.notes || info.note || 'فريق أكاديمية مسجّل في النظام.')}</div><div class="team-tags"><span class="tag cat">${escapeHtml(t.category)} • ${escapeHtml(info.range)}</span><span class="tag players">${playersN} لاعب</span></div><div class="team-actions"><a class="btn-view" href="al_masariha_players_page.html">عرض اللاعبين</a></div></article>`;
   }).join('');
   renderCategoriesStrip(allTeams);
 }

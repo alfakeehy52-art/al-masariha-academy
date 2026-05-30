@@ -122,7 +122,7 @@ async function loadMembers(){
   if(error){
     console.error(error);
     members=[];
-    if(tbody) tbody.innerHTML=`<tr><td colspan="8" class="empty-cell error-cell">تعذر تحميل عضويات الأكاديمية. تأكد من RLS وسياسات القراءة.</td></tr>`;
+    if(tbody) tbody.innerHTML=`<tr><td colspan="8" class="empty-cell error-cell">تعذر تحميل عضويات الأكاديمية. تحقق من الاتصال أو تواصل مع مسؤول النظام.</td></tr>`;
     showToast("تعذر تحميل العضويات حالياً.","error");
     renderStats();
     return;
@@ -253,8 +253,8 @@ function exportPdf(){
     mainColCount:6,
     stampLabel:"ختم عضويات الأكاديمية"
   });
-  if(!pdf.ok){ showToast("تعذر فتح نافذة PDF.","warn"); return; }
-  showToast(`تم تجهيز PDF (${data.length} عضوية).`,"success");
+  if(!pdf.ok){ showToast("تعذر فتح نافذة الطباعة.","warn"); return; }
+  showToast(`تم تجهيز ملف الطباعة (${data.length} عضوية).`,"success");
 }
 function exportExcel(){
   const { data, rows }=buildMemberExportRows();
@@ -262,10 +262,10 @@ function exportExcel(){
   const AE=window.AdminExport;
   const stamp=AE?AE.exportDateStamp():String(Date.now());
   if(AE && AE.downloadExcel(`academy_members_${stamp}.xlsx`, rows, [{wch:14},{wch:22},{wch:14},{wch:24},{wch:12},{wch:20},{wch:12},{wch:18},{wch:24}])){
-    showToast(`تم تصدير ${data.length} عضوية إلى Excel.`,"success");
+    showToast(`تم تصدير ${data.length} عضوية إلى جدول.`,"success");
     return;
   }
-  showToast("مكتبة Excel غير متاحة.","error");
+  showToast("مكتبة الجداول غير متاحة.","error");
 }
 
 document.addEventListener("DOMContentLoaded",()=>{

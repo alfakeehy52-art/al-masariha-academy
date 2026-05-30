@@ -95,7 +95,7 @@ async function loadNotifications(){
   const result=await sb.from('admin_notifications').select('*').order('created_at',{ascending:false}).limit(50);
   if(result.error){
     console.error(result.error);
-    $('notificationsList').innerHTML='<div class="empty">تعذر تحميل الإشعارات. تأكد من تشغيل SQL.</div>';
+    $('notificationsList').innerHTML='<div class="empty">تعذر تحميل الإشعارات. تواصل مع مسؤول النظام.</div>';
     return;
   }
   const rows=result.data||[];

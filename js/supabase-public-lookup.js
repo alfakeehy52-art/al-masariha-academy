@@ -109,8 +109,10 @@
   window.lookupRequestCompletion = lookupRequestCompletion;
   window.upsertRequestCompletion = upsertRequestCompletion;
   window.markJoinRequestReviewing = markJoinRequestReviewing;
-  function coachPublicCode(id) {
-    return "COA-" + String(id || "").replace(/-/g, "").slice(0, 8).toUpperCase();
+  function coachPublicCode(row) {
+    if (typeof formatEntityRef === "function") return formatEntityRef(row);
+    const ref = String(row?.reference_code || row?.code || "").trim();
+    return ref && !/^[0-9A-F]{6,16}$/i.test(ref) ? ref : "—";
   }
 
   function normalizeCoachRecord(row) {
@@ -127,7 +129,7 @@
       coachStatus: row.status || "نشط",
       bio: row.bio || "",
       image: row.image || "",
-      code: coachPublicCode(row.id)
+      code: coachPublicCode(row)
     };
   }
 
@@ -363,10 +365,24 @@
     };
   }
 
+  function isLaunchTestNews(row) {
+    const title = String(row?.title ?? "").trim();
+    if (!title) return false;
+    if (title === "اختبار") return true;
+    if (/^اختبار$/i.test(title)) return true;
+    return false;
+  }
+
+  function filterPublicNews(rows) {
+    return (Array.isArray(rows) ? rows : [])
+      .filter((row) => !isLaunchTestNews(row))
+      .map(normalizeNewsRecord);
+  }
+
   async function listNewsPublic() {
     try {
       const rows = await rpc("list_news_public", {});
-      return (Array.isArray(rows) ? rows : []).map(normalizeNewsRecord);
+      return filterPublicNews(rows);
     } catch (error) {
       if (!isMissingRpc(error)) throw error;
     }
@@ -378,7 +394,7 @@
       .order("is_featured", { ascending: false })
       .order("published_at", { ascending: false });
     if (qErr) throw qErr;
-    return (Array.isArray(data) ? data : []).map(normalizeNewsRecord);
+    return filterPublicNews(data);
   }
 
   async function getNewsPublic(newsId) {
@@ -387,6 +403,7 @@
     try {
       const rows = await rpc("get_news_public", { p_id: id });
       const row = Array.isArray(rows) && rows.length ? rows[0] : null;
+      if (isLaunchTestNews(row)) return null;
       return normalizeNewsRecord(row);
     } catch (error) {
       if (!isMissingRpc(error)) throw error;
@@ -399,6 +416,7 @@
       .eq("status", "published")
       .maybeSingle();
     if (qErr) throw qErr;
+    if (isLaunchTestNews(data)) return null;
     return normalizeNewsRecord(data);
   }
 

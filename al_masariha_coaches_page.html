@@ -40,6 +40,7 @@
 <script src="supabase-config.js"></script>
 <script src="js/supabase-client.js"></script>
 <script src="js/supabase-public-lookup.js"></script>
+<script src="js/ui-labels.js?v=20260530-launch"></script>
 <script>
 let allCoaches=[];
 let currentCategory='الكل'; let currentSpecialty='الكل'; let currentSort='experience';
@@ -64,10 +65,10 @@ function render(){
   document.getElementById('resultTitle').textContent=`عرض ${coaches.length} مدرب${coaches.length!==1?'ين':''}`;
   const grid=document.getElementById('coachesGrid');
   if(!coaches.length){
-    grid.innerHTML=`<div class="empty-card" style="grid-column:1/-1"><h4>لا توجد نتائج مطابقة</h4><p>جرّب تغيير البحث أو الفلاتر.</p></div>`;
+    grid.innerHTML=`<div class="empty-card" style="grid-column:1/-1"><h4>لا توجد نتائج مطابقة</h4><p>جرّب تغيير البحث أو خيارات التصفية.</p></div>`;
     return;
   }
-  grid.innerHTML=coaches.map(c=>`<article class="coach"><div class="photo">${c.image?`<img src="${escapeHtml(c.image)}" alt="${escapeHtml(c.fullName)}">`:`<div class="avatar-fallback">${escapeHtml(getInitials(c.fullName))}</div>`}<div class="badge">${escapeHtml(c.specialty||'مدرب')}</div><div class="code">${escapeHtml(c.code||'COA')}</div></div><div class="meta"><b>${escapeHtml(c.fullName)}</b><span class="job">${escapeHtml(c.jobTitle||'-')}</span><small>${escapeHtml(c.category||'-')} • ${escapeHtml(c.certification||'بدون شهادة مضافة')}</small><div class="coach-stats"><div><strong>${escapeHtml(String(c.experienceYears||0))}</strong><em>سنوات خبرة</em></div><div><strong>${escapeHtml(c.coachStatus||c.status||'نشط')}</strong><em>الحالة</em></div><div><strong>${escapeHtml(c.phone||'-')}</strong><em>الجوال</em></div></div><div class="coach-bio">${escapeHtml((c.bio||'لا توجد نبذة تعريفية حاليًا.')).slice(0,140)}</div><a class="view-btn" href="al_masariha_coach_profile.html?id=${encodeURIComponent(c.id)}">ملف المدرب</a></div></article>`).join('');
+  grid.innerHTML=coaches.map(c=>{const badge=typeof coachPublicBadge==='function'?coachPublicBadge(c):(c.specialty||'مدرب');return `<article class="coach"><div class="photo">${c.image?`<img src="${escapeHtml(c.image)}" alt="${escapeHtml(c.fullName)}">`:`<div class="avatar-fallback">${escapeHtml(getInitials(c.fullName))}</div>`}<div class="badge">${escapeHtml(c.specialty||'مدرب')}</div><div class="code">${escapeHtml(badge)}</div></div><div class="meta"><b>${escapeHtml(c.fullName)}</b><span class="job">${escapeHtml(c.jobTitle||'-')}</span><small>${escapeHtml(c.category||'-')} • ${escapeHtml(c.certification||'بدون شهادة مضافة')}</small><div class="coach-stats"><div><strong>${escapeHtml(String(c.experienceYears||0))}</strong><em>سنوات خبرة</em></div><div><strong>${escapeHtml(c.coachStatus||c.status||'نشط')}</strong><em>الحالة</em></div><div><strong>${escapeHtml(c.phone||'-')}</strong><em>الجوال</em></div></div><div class="coach-bio">${escapeHtml((c.bio||'لا توجد نبذة تعريفية حاليًا.')).slice(0,140)}</div><a class="view-btn" href="al_masariha_coach_profile.html?id=${encodeURIComponent(c.id)}">ملف المدرب</a></div></article>`}).join('');
 }
 function showCoachesLoading(){
   const grid=document.getElementById('coachesGrid');

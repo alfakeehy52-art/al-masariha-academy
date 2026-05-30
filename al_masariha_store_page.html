@@ -285,7 +285,7 @@ function renderStoreProducts(){
   if(!grid) return;
   const products = getFilteredProducts();
   if(!products.length){
-    grid.innerHTML = '<div class="empty-box">لا توجد منتجات مطابقة. جرّب تغيير البحث أو الفلتر.</div>';
+    grid.innerHTML = '<div class="empty-box">لا توجد منتجات مطابقة. جرّب تغيير البحث أو التصفية.</div>';
     return;
   }
   grid.innerHTML = products.map(renderProductCard).join('');

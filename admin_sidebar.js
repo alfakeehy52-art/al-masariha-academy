@@ -348,6 +348,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
       if (!window.SUPABASE_CONFIG) await loadScriptOnce("supabase-config.js");
       if (!window.createSupabaseClient) await loadScriptOnce("js/supabase-client.js");
+      if (!window.sanitizeAdminMessage) await loadScriptOnce("js/visitor-message.js?v=20260529-launch");
+      if (!window.UiLabels) await loadScriptOnce("js/ui-labels.js?v=20260529-launch");
+      if (!window.formatPlayerDisplayNumber) await loadScriptOnce("js/player-image.js?v=20260529-launch");
       if (!window.PanelRBAC) await loadScriptOnce("js/panel-rbac.js?v=20260529-rbac2");
       if (!window.PANEL_ROLES) await loadScriptOnce("js/panel-access.js?v=20260529-rbac2");
       if (!window.loadAcademySettings) await loadScriptOnce("js/academy-settings.js");
@@ -676,6 +679,9 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!window.supabase) await loadScriptOnce("https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2");
       if (!window.SUPABASE_CONFIG) await loadScriptOnce("supabase-config.js");
       if (!window.createSupabaseClient) await loadScriptOnce("js/supabase-client.js");
+      if (!window.sanitizeAdminMessage) await loadScriptOnce("js/visitor-message.js?v=20260529-launch");
+      if (!window.UiLabels) await loadScriptOnce("js/ui-labels.js?v=20260529-launch");
+      if (!window.formatPlayerDisplayNumber) await loadScriptOnce("js/player-image.js?v=20260529-launch");
       if (!window.PanelRBAC) await loadScriptOnce("js/panel-rbac.js?v=20260529-rbac2");
       if (!window.canPanel) await loadScriptOnce("js/panel-access.js?v=20260529-rbac2");
     } catch (e) {

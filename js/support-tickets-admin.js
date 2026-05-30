@@ -209,7 +209,7 @@
       console.error(error);
       rows = [];
       if (els.tbody) {
-        els.tbody.innerHTML = `<tr><td colspan="7" class="empty-state">تعذر التحميل — نفّذ docs/SUPPORT_TICKETS_SCHEMA.sql في Supabase</td></tr>`;
+        els.tbody.innerHTML = `<tr><td colspan="7" class="empty-state">تعذر تحميل التذاكر. تواصل مع مسؤول النظام.</td></tr>`;
       }
       return;
     }
